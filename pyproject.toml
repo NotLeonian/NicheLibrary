@@ -1,0 +1,10 @@
+[project]
+name = "nichelibrary"
+version = "1.0.0"
+description = "C++ library for competitive programming"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "competitive-verifier>=3.4.1",
+    "ruff>=0.14.10",
+]
