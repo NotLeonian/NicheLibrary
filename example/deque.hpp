@@ -23,7 +23,7 @@ template <class T> struct deque {
 
     void pop_right() { --end; }
 
-    T &operator[](int i) { return data[i]; }
+    T &operator[](int i) { return data[begin + i]; }
 };
 
 #endif
