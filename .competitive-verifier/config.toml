@@ -1,0 +1,7 @@
+[[languages.cpp.environments]]
+CXX = "g++"
+CXXFLAGS = ["-std=c++20, "-Wall", "-Wextra", "-g"]
+
+[[languages.cpp.environments]]
+CXX = "clang++"
+CXXFLAGS = ["-std=c++20, "-Wall", "-Wextra", "-g"]
