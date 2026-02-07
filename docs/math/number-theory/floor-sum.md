@@ -1,5 +1,5 @@
 ---
-title: floor-sum
+title: floor sum
 documentation_of: math/number-theory/floor-sum.hpp
 ---
 
@@ -18,4 +18,4 @@ documentation_of: math/number-theory/floor-sum.hpp
 
 ## 計算量
 
-- `O(log m)`
+- $O(\log m)$
