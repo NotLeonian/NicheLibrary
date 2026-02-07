@@ -1,6 +1,8 @@
 #ifndef EXAMPLE_DEQUE_HPP
 #define EXAMPLE_DEQUE_HPP
 
+// CI のテスト用のヘッダであり、使用は非推奨。
+
 #include <vector>
 
 template <class T> struct deque {

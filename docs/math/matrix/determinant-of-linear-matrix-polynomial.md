@@ -1,5 +1,5 @@
 ---
-title: determinant-of-linear-matrix-polynomial
+title: 正方行列の 1 次式の行列式 (yukicoder No.1907 DETERMINATION)
 documentation_of: math/matrix/determinant-of-linear-matrix-polynomial.hpp
 ---
 
@@ -26,6 +26,6 @@ documentation_of: math/matrix/determinant-of-linear-matrix-polynomial.hpp
 
 ## 計算量
 
-- `hessenberg_reduction`：`O(N^3)`
-- `characteristic_polynomial`：`O(N^3)`
-- `determinant_of_linear_matrix_polynomial`：`O(N^3)`
+- `hessenberg_reduction`：$O(N^3)$
+- `characteristic_polynomial`：$O(N^3)$
+- `determinant_of_linear_matrix_polynomial`：$O(N^3)$
