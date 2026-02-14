@@ -20,6 +20,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  formatting-check:
+    name: formatting check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: install clang-format 20
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget lsb-release ca-certificates gnupg
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 20
+        sudo apt-get install -y clang-format-20
+        CF_BIN="$(command -v clang-format-20 || command -v clang-format)"
+        "$CF_BIN" --version
+
+    - name: clang-format check
+      run: |
+        set -euo pipefail
+
+        CF_BIN="$(command -v clang-format-20 || command -v clang-format)"
+        STYLE="file"
+        if [ ! -f .clang-format ]; then STYLE="LLVM"; fi
+
+        git ls-files -z \
+          '*.c' '*.C' '*.cpp' '*.cc' '*.cxx' '*.c++' \
+          '*.h' '*.H' '*.hpp' '*.hh' '*.hxx' '*.h++' \
+          '*.ino' '*.pde' '*.cu' '*.proto' \
+          | xargs -0 -r "$CF_BIN" --dry-run --Werror -style="$STYLE"
+
   setup:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -174,3 +206,12 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-status:
+    if: ${{ always() }}
+    needs: [formatting-check, setup, verify, docs-and-check]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
