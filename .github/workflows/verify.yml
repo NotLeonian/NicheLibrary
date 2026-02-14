@@ -26,12 +26,27 @@ jobs:
     timeout-minutes: 30
     steps:
     - uses: actions/checkout@v4
-    - name: Run clang-format style check for C/C++/Protobuf programs.
-      uses: jidicula/clang-format-action@v4.16.0
-      with:
-        clang-format-version: '20'
-        check-path: '.'
-        fallback-style: 'LLVM'
+    
+    - name: install clang-format 20
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget lsb-release ca-certificates gnupg
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 20
+        clang-format-20 --version
+
+    - name: clang-format check (tracked files)
+      run: |
+        set -euo pipefail
+        STYLE="file"
+        if [ ! -f .clang-format ]; then STYLE="LLVM"; fi
+
+        git ls-files -z \
+          '*.c' '*.C' '*.cpp' '*.cc' '*.cxx' '*.c++' \
+          '*.h' '*.H' '*.hpp' '*.hh' '*.hxx' '*.h++' \
+          '*.ino' '*.pde' '*.cu' '*.proto' \
+          | xargs -0 -r clang-format-20 --dry-run --Werror -style="$STYLE"
 
   setup:
     runs-on: ubuntu-latest
