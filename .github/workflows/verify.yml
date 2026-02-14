@@ -34,11 +34,15 @@ jobs:
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh 20
-        clang-format-20 --version
+        sudo apt-get install -y clang-format-20
+        CF_BIN="$(command -v clang-format-20 || command -v clang-format)"
+        "$CF_BIN" --version
 
     - name: clang-format check (tracked files)
       run: |
         set -euo pipefail
+
+        CF_BIN="$(command -v clang-format-20 || command -v clang-format)"
         STYLE="file"
         if [ ! -f .clang-format ]; then STYLE="LLVM"; fi
 
@@ -46,7 +50,7 @@ jobs:
           '*.c' '*.C' '*.cpp' '*.cc' '*.cxx' '*.c++' \
           '*.h' '*.H' '*.hpp' '*.hh' '*.hxx' '*.h++' \
           '*.ino' '*.pde' '*.cu' '*.proto' \
-          | xargs -0 -r clang-format-20 --dry-run --Werror -style="$STYLE"
+          | xargs -0 -r "$CF_BIN" --dry-run --Werror -style="$STYLE"
 
   setup:
     runs-on: ubuntu-latest
