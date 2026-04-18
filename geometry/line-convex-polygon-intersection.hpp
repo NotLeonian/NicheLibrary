@@ -393,109 +393,112 @@ template <class Point>
 LinePolygonIntersectionResult<Point>
 line_polygon_intersection(const std::vector<Point> &polygon,
                           const Point &line_a, const Point &line_b) {
-    using namespace line_convex_polygon_intersection_internal;
-    using Calc = calc_t<Point>;
+    namespace lpi = line_convex_polygon_intersection_internal;
+    using Coord = lpi::coordinate_t<Point>;
+    using Calc = lpi::calc_t<Point>;
 
-    static_assert(!is_integral<coordinate_t<Point>>::value ||
-                      is_signed<coordinate_t<Point>>::value,
+    static_assert(!lpi::is_integral<Coord>::value ||
+                      lpi::is_signed<Coord>::value,
                   "integral coordinate type must be signed");
 
     const int n = static_cast<int>(polygon.size());
     assert(n >= 3);
-    assert(!equals_value(static_cast<Calc>(get_x(line_a)),
-                         static_cast<Calc>(get_x(line_b))) ||
-           !equals_value(static_cast<Calc>(get_y(line_a)),
-                         static_cast<Calc>(get_y(line_b))));
+    assert(!lpi::equals_value(static_cast<Calc>(lpi::get_x(line_a)),
+                              static_cast<Calc>(lpi::get_x(line_b))) ||
+           !lpi::equals_value(static_cast<Calc>(lpi::get_y(line_a)),
+                              static_cast<Calc>(lpi::get_y(line_b))));
 
     const Point direction = line_b - line_a;
     auto vertex = [&](int index) -> const Point & {
-        return polygon[positive_mod(index, n)];
+        return polygon[lpi::positive_mod(index, n)];
     };
     auto height = [&](int index) -> Calc {
-        return cross(vertex(index) - line_a, direction);
+        return lpi::cross(vertex(index) - line_a, direction);
     };
     auto chain_index = [&](int start, int step, int offset) {
-        return positive_mod(start + step * offset, n);
+        return lpi::positive_mod(start + step * offset, n);
     };
 
     const auto [minimum_index, maximum_index] =
-        find_extreme_vertices<Point>(n, height);
+        lpi::find_extreme_vertices<Point>(n, height);
     const Calc minimum_value = height(minimum_index);
     const Calc maximum_value = height(maximum_index);
 
     LinePolygonIntersectionResult<Point> result;
-    if (sign_value(minimum_value) > 0 || sign_value(maximum_value) < 0) {
+    if (lpi::sign_value(minimum_value) > 0 ||
+        lpi::sign_value(maximum_value) < 0) {
         return result;
     }
 
     const int forward_length =
-        distance_forward(minimum_index, maximum_index, n);
+        lpi::distance_forward(minimum_index, maximum_index, n);
     const int backward_length = n - forward_length;
 
-    if (sign_value(minimum_value) == 0) {
+    if (lpi::sign_value(minimum_value) == 0) {
         const int forward_zero =
-            last_non_positive(forward_length, [&](int offset) {
+            lpi::last_non_positive(forward_length, [&](int offset) {
                 return height(minimum_index + offset);
             });
         const int backward_zero =
-            last_non_positive(backward_length, [&](int offset) {
+            lpi::last_non_positive(backward_length, [&](int offset) {
                 return height(minimum_index - offset);
             });
         const int forward_index = chain_index(minimum_index, +1, forward_zero);
         const int backward_index =
             chain_index(minimum_index, -1, backward_zero);
-        result.push_back(make_vertex_result(vertex(forward_index)));
+        result.push_back(lpi::make_vertex_result(vertex(forward_index)));
         if (forward_index != backward_index) {
-            result.push_back(make_vertex_result(vertex(backward_index)));
+            result.push_back(lpi::make_vertex_result(vertex(backward_index)));
         }
         return result;
     }
 
-    if (sign_value(maximum_value) == 0) {
+    if (lpi::sign_value(maximum_value) == 0) {
         const int forward_length_from_max =
-            distance_forward(maximum_index, minimum_index, n);
+            lpi::distance_forward(maximum_index, minimum_index, n);
         const int backward_length_from_max = n - forward_length_from_max;
         const int forward_zero =
-            last_non_negative(forward_length_from_max, [&](int offset) {
+            lpi::last_non_negative(forward_length_from_max, [&](int offset) {
                 return height(maximum_index + offset);
             });
         const int backward_zero =
-            last_non_negative(backward_length_from_max, [&](int offset) {
+            lpi::last_non_negative(backward_length_from_max, [&](int offset) {
                 return height(maximum_index - offset);
             });
         const int forward_index = chain_index(maximum_index, +1, forward_zero);
         const int backward_index =
             chain_index(maximum_index, -1, backward_zero);
-        result.push_back(make_vertex_result(vertex(forward_index)));
+        result.push_back(lpi::make_vertex_result(vertex(forward_index)));
         if (forward_index != backward_index) {
-            result.push_back(make_vertex_result(vertex(backward_index)));
+            result.push_back(lpi::make_vertex_result(vertex(backward_index)));
         }
         return result;
     }
 
-    const int first_cross = first_non_negative(forward_length, [&](int offset) {
-        return height(minimum_index + offset);
-    });
+    const int first_cross =
+        lpi::first_non_negative(forward_length, [&](int offset) {
+            return height(minimum_index + offset);
+        });
     const int first_cross_index = chain_index(minimum_index, +1, first_cross);
-    if (sign_value(height(first_cross_index)) == 0) {
-        result.push_back(make_vertex_result(vertex(first_cross_index)));
+    if (lpi::sign_value(height(first_cross_index)) == 0) {
+        result.push_back(lpi::make_vertex_result(vertex(first_cross_index)));
     } else {
         const int prev_index = chain_index(minimum_index, +1, first_cross - 1);
-        result.push_back(make_edge_result(line_a, line_b, vertex(prev_index),
-                                          vertex(first_cross_index)));
+        result.push_back(lpi::make_edge_result(
+            line_a, line_b, vertex(prev_index), vertex(first_cross_index)));
     }
 
     const int second_cross =
-        first_non_negative(backward_length, [&](int offset) {
+        lpi::first_non_negative(backward_length, [&](int offset) {
             return height(minimum_index - offset);
         });
     const int second_cross_index = chain_index(minimum_index, -1, second_cross);
-    if (sign_value(height(second_cross_index)) == 0) {
-        result.push_back(make_vertex_result(vertex(second_cross_index)));
+    if (lpi::sign_value(height(second_cross_index)) == 0) {
+        result.push_back(lpi::make_vertex_result(vertex(second_cross_index)));
     } else {
         const int prev_index = chain_index(minimum_index, -1, second_cross - 1);
-        result.push_back(make_edge_result(line_a, line_b, vertex(prev_index),
-                                          vertex(second_cross_index)));
+        result.push_back(lpi::make_edge_result(
+            line_a, line_b, vertex(prev_index), vertex(second_cross_index)));
     }
 
     return result;
