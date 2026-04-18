@@ -1,237 +1,509 @@
 #ifndef MATH_MATRIX_DYNAMIC_MATRIX_RANK_HPP
 #define MATH_MATRIX_DYNAMIC_MATRIX_RANK_HPP
 
-// 行列の階数と、1 列ベクトルと 1 行ベクトルの外積を加えた後の階数を求める。
+// 行列の階数を求め、外積 1 項更新後の階数を判定する。
+// さらに、内部状態を O(k(r + c)) で更新しつつ変更後の階数を返せる。
+// 現在の行列は左右の階数分解と片側逆元で保持する。
 // 1 行差し替え・1 列差し替えはそれぞれ e_i (b-a_i)^T, (b-a_j) e_j^T に帰着する。
-// 体上の非正方行列を含む一般の r×c 行列に対応する。
-// 前処理 O(rc min(r, c) + k^2(r + c))、外積 1 項更新は O(k(r + c))。
-// 行差し替えは O(kc)、列差し替えは O(kr)。ここで k = rank(A) である。
-// T は零判定と四則演算ができることを仮定し、添字やサイズ不一致は assert する。
+// 前処理は O(rc min(r, c) + k^2(r + c))、各更新・各判定は O(k(r + c)) である。
+// T は体を成し、零判定と四則演算ができることを仮定する。
 
 #include <cassert>
-#include <utility>
 #include <vector>
 
 template <class T> struct DynamicMatrixRank {
-    std::vector<std::vector<T>> matrix;
     int row_size = 0;
     int column_size = 0;
     int matrix_rank = 0;
 
-    std::vector<int> basis_rows;
-    std::vector<int> basis_columns;
-    std::vector<int> basis_row_position;
-    std::vector<int> basis_column_position;
+    std::vector<std::vector<T>> column_space_basis;
+    std::vector<std::vector<T>> row_space_basis;
+    std::vector<std::vector<T>> column_space_left_inverse;
+    std::vector<std::vector<T>> row_space_right_inverse;
 
-    std::vector<std::vector<T>> intersection_inverse_matrix;
-    std::vector<std::vector<T>> column_space_reconstructor;
-    std::vector<std::vector<T>> row_space_reconstructor;
+    DynamicMatrixRank() = default;
 
-    std::vector<bool> standard_column_in_column_space;
-    std::vector<bool> standard_row_in_row_space;
-
-    explicit DynamicMatrixRank(const std::vector<std::vector<T>> &matrix_)
-        : matrix(matrix_) {
-        build();
+    explicit DynamicMatrixRank(const std::vector<std::vector<T>> &matrix) {
+        build(matrix);
     }
 
-    void build() {
+    void build(const std::vector<std::vector<T>> &matrix) {
         row_size = static_cast<int>(matrix.size());
         column_size = row_size == 0 ? 0 : static_cast<int>(matrix[0].size());
         for (int i = 1; i < row_size; ++i)
             assert(static_cast<int>(matrix[i].size()) == column_size);
 
-        basis_columns = find_independent_columns(matrix);
-        basis_rows = find_independent_columns(transpose_matrix(matrix));
+        const std::vector<int> basis_columns = find_independent_columns(matrix);
+        const std::vector<int> basis_rows =
+            find_independent_columns(transpose_matrix(matrix));
         matrix_rank = static_cast<int>(basis_columns.size());
         assert(static_cast<int>(basis_rows.size()) == matrix_rank);
 
-        basis_row_position.assign(row_size, -1);
-        basis_column_position.assign(column_size, -1);
-        for (int i = 0; i < matrix_rank; ++i) {
-            basis_row_position[basis_rows[i]] = i;
-            basis_column_position[basis_columns[i]] = i;
-        }
-
-        std::vector<std::vector<T>> basis_minor(
+        std::vector<std::vector<T>> intersection_matrix(
             matrix_rank, std::vector<T>(matrix_rank, T()));
         for (int i = 0; i < matrix_rank; ++i) {
             for (int j = 0; j < matrix_rank; ++j) {
-                basis_minor[i][j] = matrix[basis_rows[i]][basis_columns[j]];
+                intersection_matrix[i][j] =
+                    matrix[basis_rows[i]][basis_columns[j]];
             }
         }
-        intersection_inverse_matrix = inverse_matrix(basis_minor);
+        const std::vector<std::vector<T>> intersection_inverse =
+            inverse_matrix(intersection_matrix);
 
-        column_space_reconstructor.assign(row_size,
-                                          std::vector<T>(matrix_rank, T()));
+        column_space_basis.assign(row_size, std::vector<T>(matrix_rank, T()));
         for (int i = 0; i < row_size; ++i) {
-            for (int mid = 0; mid < matrix_rank; ++mid) {
-                const T value = matrix[i][basis_columns[mid]];
-                if (value == T())
-                    continue;
-                for (int j = 0; j < matrix_rank; ++j) {
-                    column_space_reconstructor[i][j] +=
-                        value * intersection_inverse_matrix[mid][j];
-                }
+            for (int j = 0; j < matrix_rank; ++j) {
+                column_space_basis[i][j] = matrix[i][basis_columns[j]];
             }
         }
 
-        row_space_reconstructor.assign(matrix_rank,
-                                       std::vector<T>(column_size, T()));
+        row_space_basis.assign(matrix_rank, std::vector<T>(column_size, T()));
         for (int i = 0; i < matrix_rank; ++i) {
             for (int mid = 0; mid < matrix_rank; ++mid) {
-                const T value = intersection_inverse_matrix[i][mid];
+                const T value = intersection_inverse[i][mid];
                 if (value == T())
                     continue;
                 for (int j = 0; j < column_size; ++j) {
-                    row_space_reconstructor[i][j] +=
-                        value * matrix[basis_rows[mid]][j];
+                    row_space_basis[i][j] += value * matrix[basis_rows[mid]][j];
                 }
             }
         }
 
-        standard_column_in_column_space.assign(row_size, false);
-        for (int row = 0; row < row_size; ++row) {
-            const int pos = basis_row_position[row];
-            if (pos < 0)
-                continue;
-            bool ok = true;
-            for (int i = 0; i < row_size; ++i) {
-                if (column_space_reconstructor[i][pos] !=
-                    (i == row ? T(1) : T())) {
-                    ok = false;
-                    break;
-                }
+        column_space_left_inverse.assign(matrix_rank,
+                                         std::vector<T>(row_size, T()));
+        for (int i = 0; i < matrix_rank; ++i) {
+            for (int j = 0; j < matrix_rank; ++j) {
+                column_space_left_inverse[i][basis_rows[j]] =
+                    intersection_inverse[i][j];
             }
-            standard_column_in_column_space[row] = ok;
         }
 
-        standard_row_in_row_space.assign(column_size, false);
-        for (int column = 0; column < column_size; ++column) {
-            const int pos = basis_column_position[column];
-            if (pos < 0)
-                continue;
-            bool ok = true;
-            for (int j = 0; j < column_size; ++j) {
-                if (row_space_reconstructor[pos][j] !=
-                    (j == column ? T(1) : T())) {
-                    ok = false;
-                    break;
-                }
-            }
-            standard_row_in_row_space[column] = ok;
-        }
+        row_space_right_inverse.assign(column_size,
+                                       std::vector<T>(matrix_rank, T()));
+        for (int i = 0; i < matrix_rank; ++i)
+            row_space_right_inverse[basis_columns[i]][i] = T(1);
     }
+
+    void build() { build(materialize_matrix()); }
 
     int rank() const { return matrix_rank; }
 
+    std::vector<T> get_row(int row_index) const {
+        assert(0 <= row_index && row_index < row_size);
+        std::vector<T> row(column_size, T());
+        for (int i = 0; i < matrix_rank; ++i) {
+            const T value = column_space_basis[row_index][i];
+            if (value == T())
+                continue;
+            for (int j = 0; j < column_size; ++j)
+                row[j] += value * row_space_basis[i][j];
+        }
+        return row;
+    }
+
+    std::vector<T> get_column(int column_index) const {
+        assert(0 <= column_index && column_index < column_size);
+        std::vector<T> column(row_size, T());
+        for (int i = 0; i < row_size; ++i) {
+            for (int j = 0; j < matrix_rank; ++j)
+                column[i] +=
+                    column_space_basis[i][j] * row_space_basis[j][column_index];
+        }
+        return column;
+    }
+
+    std::vector<std::vector<T>> materialize_matrix() const {
+        std::vector<std::vector<T>> matrix(row_size,
+                                           std::vector<T>(column_size, T()));
+        for (int i = 0; i < row_size; ++i) {
+            for (int mid = 0; mid < matrix_rank; ++mid) {
+                const T value = column_space_basis[i][mid];
+                if (value == T())
+                    continue;
+                for (int j = 0; j < column_size; ++j)
+                    matrix[i][j] += value * row_space_basis[mid][j];
+            }
+        }
+        return matrix;
+    }
+
     int rank_after_rank_one_update(const std::vector<T> &column_vector,
                                    const std::vector<T> &row_vector) const {
-        assert(static_cast<int>(column_vector.size()) == row_size);
-        assert(static_cast<int>(row_vector.size()) == column_size);
-
-        const std::vector<T> basis_row_values =
-            restrict_to_basis_rows(column_vector);
-        const std::vector<T> basis_column_values =
-            restrict_to_basis_columns(row_vector);
-
-        const bool column_inside =
-            reconstruct_column_vector(basis_row_values) == column_vector;
-        const bool row_inside =
-            reconstruct_row_vector(basis_column_values) == row_vector;
-
-        if (!column_inside && !row_inside)
-            return matrix_rank + 1;
-        if (column_inside != row_inside)
-            return matrix_rank;
-
-        const std::vector<T> alpha =
-            multiply_inverse_from_left(basis_row_values);
-        T s = T(1);
-        for (int i = 0; i < matrix_rank; ++i)
-            s += basis_column_values[i] * alpha[i];
-        return s == T() ? matrix_rank - 1 : matrix_rank;
+        return analyze_rank_one_update(column_vector, row_vector).next_rank;
     }
 
     int rank_after_row_replacement(int row_index,
                                    const std::vector<T> &new_row) const {
         assert(0 <= row_index && row_index < row_size);
         assert(static_cast<int>(new_row.size()) == column_size);
-
-        std::vector<T> difference(column_size, T());
+        std::vector<T> difference = new_row;
+        const std::vector<T> current_row = get_row(row_index);
         for (int j = 0; j < column_size; ++j)
-            difference[j] = new_row[j] - matrix[row_index][j];
-
-        const std::vector<T> basis_column_values =
-            restrict_to_basis_columns(difference);
-        const bool row_inside =
-            reconstruct_row_vector(basis_column_values) == difference;
-        const bool column_inside = standard_column_in_column_space[row_index];
-
-        if (!column_inside && !row_inside)
-            return matrix_rank + 1;
-        if (column_inside != row_inside)
-            return matrix_rank;
-
-        const int pos = basis_row_position[row_index];
-        assert(pos >= 0);
-        T s = T(1);
-        for (int i = 0; i < matrix_rank; ++i)
-            s += basis_column_values[i] * intersection_inverse_matrix[i][pos];
-        return s == T() ? matrix_rank - 1 : matrix_rank;
+            difference[j] -= current_row[j];
+        std::vector<T> column_vector(row_size, T());
+        column_vector[row_index] = T(1);
+        return rank_after_rank_one_update(column_vector, difference);
     }
 
     int rank_after_column_replacement(int column_index,
                                       const std::vector<T> &new_column) const {
         assert(0 <= column_index && column_index < column_size);
         assert(static_cast<int>(new_column.size()) == row_size);
-
-        std::vector<T> difference(row_size, T());
+        std::vector<T> difference = new_column;
+        const std::vector<T> current_column = get_column(column_index);
         for (int i = 0; i < row_size; ++i)
-            difference[i] = new_column[i] - matrix[i][column_index];
+            difference[i] -= current_column[i];
+        std::vector<T> row_vector(column_size, T());
+        row_vector[column_index] = T(1);
+        return rank_after_rank_one_update(difference, row_vector);
+    }
 
-        const std::vector<T> basis_row_values =
-            restrict_to_basis_rows(difference);
-        const bool column_inside =
-            reconstruct_column_vector(basis_row_values) == difference;
-        const bool row_inside = standard_row_in_row_space[column_index];
+    int apply_rank_one_update(const std::vector<T> &column_vector,
+                              const std::vector<T> &row_vector) {
+        RankOneUpdateInfo info =
+            analyze_rank_one_update(column_vector, row_vector);
 
-        if (!column_inside && !row_inside)
-            return matrix_rank + 1;
-        if (column_inside != row_inside)
+        if (info.next_rank == matrix_rank + 1) {
+            const int pivot_row = first_nonzero(info.column_residual);
+            const int pivot_column = first_nonzero(info.row_residual);
+            const std::vector<T> lambda = normalized_left_annihilator(
+                pivot_row, info.column_residual[pivot_row]);
+            const std::vector<T> rho = normalized_right_annihilator(
+                pivot_column, info.row_residual[pivot_column]);
+
+            const std::vector<std::vector<T>> old_row_space_right_inverse =
+                row_space_right_inverse;
+
+            append_column(column_space_basis, info.column_residual);
+            column_space_left_inverse.push_back(lambda);
+
+            row_space_basis.push_back(row_vector);
+            for (int i = 0; i < matrix_rank; ++i) {
+                for (int j = 0; j < column_size; ++j)
+                    row_space_basis[i][j] += info.alpha[i] * row_vector[j];
+            }
+
+            std::vector<T> right_alpha(column_size, T());
+            for (int i = 0; i < column_size; ++i) {
+                for (int j = 0; j < matrix_rank; ++j)
+                    right_alpha[i] +=
+                        old_row_space_right_inverse[i][j] * info.alpha[j];
+            }
+
+            row_space_right_inverse.assign(
+                column_size, std::vector<T>(matrix_rank + 1, T()));
+            for (int i = 0; i < column_size; ++i) {
+                for (int j = 0; j < matrix_rank; ++j)
+                    row_space_right_inverse[i][j] =
+                        old_row_space_right_inverse[i][j] -
+                        rho[i] * info.beta[j];
+                row_space_right_inverse[i][matrix_rank] =
+                    T() - right_alpha[i] + rho[i] * info.schur;
+            }
+            ++matrix_rank;
             return matrix_rank;
+        }
 
-        const int pos = basis_column_position[column_index];
-        assert(pos >= 0);
-        T s = T(1);
-        for (int i = 0; i < matrix_rank; ++i)
-            s += intersection_inverse_matrix[pos][i] * basis_row_values[i];
-        return s == T() ? matrix_rank - 1 : matrix_rank;
+        if (!info.column_inside && info.row_inside) {
+            const int pivot_row = first_nonzero(info.column_residual);
+            const std::vector<T> lambda = normalized_left_annihilator(
+                pivot_row, info.column_residual[pivot_row]);
+            for (int i = 0; i < row_size; ++i) {
+                for (int j = 0; j < matrix_rank; ++j)
+                    column_space_basis[i][j] += column_vector[i] * info.beta[j];
+            }
+            std::vector<std::vector<T>> new_left_inverse =
+                column_space_left_inverse;
+            for (int i = 0; i < matrix_rank; ++i) {
+                for (int j = 0; j < row_size; ++j)
+                    new_left_inverse[i][j] -= info.alpha[i] * lambda[j];
+            }
+            column_space_left_inverse.swap(new_left_inverse);
+            return matrix_rank;
+        }
+
+        if (info.column_inside && !info.row_inside) {
+            const int pivot_column = first_nonzero(info.row_residual);
+            const std::vector<T> rho = normalized_right_annihilator(
+                pivot_column, info.row_residual[pivot_column]);
+            for (int i = 0; i < matrix_rank; ++i) {
+                for (int j = 0; j < column_size; ++j)
+                    row_space_basis[i][j] += info.alpha[i] * row_vector[j];
+            }
+            std::vector<std::vector<T>> new_right_inverse =
+                row_space_right_inverse;
+            for (int i = 0; i < column_size; ++i) {
+                for (int j = 0; j < matrix_rank; ++j)
+                    new_right_inverse[i][j] -= rho[i] * info.beta[j];
+            }
+            row_space_right_inverse.swap(new_right_inverse);
+            return matrix_rank;
+        }
+
+        if (info.schur != T()) {
+            std::vector<T> right_alpha(column_size, T());
+            for (int i = 0; i < column_size; ++i) {
+                for (int j = 0; j < matrix_rank; ++j)
+                    right_alpha[i] +=
+                        row_space_right_inverse[i][j] * info.alpha[j];
+            }
+            for (int i = 0; i < matrix_rank; ++i) {
+                for (int j = 0; j < column_size; ++j)
+                    row_space_basis[i][j] += info.alpha[i] * row_vector[j];
+            }
+            for (int i = 0; i < column_size; ++i) {
+                for (int j = 0; j < matrix_rank; ++j)
+                    row_space_right_inverse[i][j] -=
+                        right_alpha[i] * (info.beta[j] / info.schur);
+            }
+            return matrix_rank;
+        }
+
+        const int removed = first_nonzero(info.alpha);
+        const T removed_inverse = T(1) / info.alpha[removed];
+
+        std::vector<T> right_alpha(column_size, T());
+        for (int i = 0; i < column_size; ++i) {
+            for (int j = 0; j < matrix_rank; ++j)
+                right_alpha[i] += row_space_right_inverse[i][j] * info.alpha[j];
+        }
+
+        std::vector<std::vector<T>> new_column_space_basis(
+            row_size, std::vector<T>(matrix_rank - 1, T()));
+        std::vector<std::vector<T>> new_row_space_basis(
+            matrix_rank - 1, std::vector<T>(column_size, T()));
+        std::vector<std::vector<T>> new_column_space_left_inverse(
+            matrix_rank - 1, std::vector<T>(row_size, T()));
+        std::vector<std::vector<T>> new_row_space_right_inverse(
+            column_size, std::vector<T>(matrix_rank - 1, T()));
+
+        int new_index = 0;
+        for (int old = 0; old < matrix_rank; ++old) {
+            if (old == removed)
+                continue;
+            for (int i = 0; i < row_size; ++i)
+                new_column_space_basis[i][new_index] =
+                    column_space_basis[i][old] +
+                    column_vector[i] * info.beta[old];
+            const T factor = info.alpha[old] * removed_inverse;
+            for (int j = 0; j < column_size; ++j)
+                new_row_space_basis[new_index][j] =
+                    row_space_basis[old][j] -
+                    factor * row_space_basis[removed][j];
+            for (int j = 0; j < row_size; ++j)
+                new_column_space_left_inverse[new_index][j] =
+                    column_space_left_inverse[old][j] -
+                    factor * column_space_left_inverse[removed][j];
+            for (int i = 0; i < column_size; ++i)
+                new_row_space_right_inverse[i][new_index] =
+                    row_space_right_inverse[i][old] +
+                    right_alpha[i] * info.beta[old];
+            ++new_index;
+        }
+
+        column_space_basis.swap(new_column_space_basis);
+        row_space_basis.swap(new_row_space_basis);
+        column_space_left_inverse.swap(new_column_space_left_inverse);
+        row_space_right_inverse.swap(new_row_space_right_inverse);
+        --matrix_rank;
+        return matrix_rank;
+    }
+
+    int apply_row_replacement(int row_index, const std::vector<T> &new_row) {
+        assert(0 <= row_index && row_index < row_size);
+        assert(static_cast<int>(new_row.size()) == column_size);
+        std::vector<T> difference = new_row;
+        const std::vector<T> current_row = get_row(row_index);
+        for (int j = 0; j < column_size; ++j)
+            difference[j] -= current_row[j];
+        std::vector<T> column_vector(row_size, T());
+        column_vector[row_index] = T(1);
+        return apply_rank_one_update(column_vector, difference);
+    }
+
+    int apply_column_replacement(int column_index,
+                                 const std::vector<T> &new_column) {
+        assert(0 <= column_index && column_index < column_size);
+        assert(static_cast<int>(new_column.size()) == row_size);
+        std::vector<T> difference = new_column;
+        const std::vector<T> current_column = get_column(column_index);
+        for (int i = 0; i < row_size; ++i)
+            difference[i] -= current_column[i];
+        std::vector<T> row_vector(column_size, T());
+        row_vector[column_index] = T(1);
+        return apply_rank_one_update(difference, row_vector);
     }
 
   private:
+    struct RankOneUpdateInfo {
+        std::vector<T> alpha;
+        std::vector<T> beta;
+        std::vector<T> column_residual;
+        std::vector<T> row_residual;
+        bool column_inside = false;
+        bool row_inside = false;
+        T schur = T();
+        int next_rank = 0;
+    };
+
+    RankOneUpdateInfo
+    analyze_rank_one_update(const std::vector<T> &column_vector,
+                            const std::vector<T> &row_vector) const {
+        assert(static_cast<int>(column_vector.size()) == row_size);
+        assert(static_cast<int>(row_vector.size()) == column_size);
+
+        RankOneUpdateInfo info;
+        info.alpha = multiply_left_inverse(column_vector);
+        info.beta = multiply_right_inverse(row_vector);
+
+        const std::vector<T> projected_column =
+            reconstruct_column_vector(info.alpha);
+        const std::vector<T> projected_row = reconstruct_row_vector(info.beta);
+
+        info.column_residual.resize(row_size, T());
+        info.row_residual.resize(column_size, T());
+        info.column_inside = true;
+        info.row_inside = true;
+        for (int i = 0; i < row_size; ++i) {
+            info.column_residual[i] = column_vector[i] - projected_column[i];
+            if (info.column_residual[i] != T())
+                info.column_inside = false;
+        }
+        for (int j = 0; j < column_size; ++j) {
+            info.row_residual[j] = row_vector[j] - projected_row[j];
+            if (info.row_residual[j] != T())
+                info.row_inside = false;
+        }
+
+        info.schur = T(1);
+        for (int i = 0; i < matrix_rank; ++i)
+            info.schur += info.beta[i] * info.alpha[i];
+
+        if (!info.column_inside && !info.row_inside) {
+            info.next_rank = matrix_rank + 1;
+        } else if (info.column_inside != info.row_inside) {
+            info.next_rank = matrix_rank;
+        } else {
+            info.next_rank = info.schur == T() ? matrix_rank - 1 : matrix_rank;
+        }
+        return info;
+    }
+
+    std::vector<T>
+    multiply_left_inverse(const std::vector<T> &column_vector) const {
+        std::vector<T> result(matrix_rank, T());
+        for (int i = 0; i < matrix_rank; ++i) {
+            for (int j = 0; j < row_size; ++j)
+                result[i] += column_space_left_inverse[i][j] * column_vector[j];
+        }
+        return result;
+    }
+
+    std::vector<T>
+    multiply_right_inverse(const std::vector<T> &row_vector) const {
+        std::vector<T> result(matrix_rank, T());
+        for (int j = 0; j < column_size; ++j) {
+            const T value = row_vector[j];
+            if (value == T())
+                continue;
+            for (int i = 0; i < matrix_rank; ++i)
+                result[i] += value * row_space_right_inverse[j][i];
+        }
+        return result;
+    }
+
+    std::vector<T>
+    reconstruct_column_vector(const std::vector<T> &coefficients) const {
+        std::vector<T> result(row_size, T());
+        for (int i = 0; i < row_size; ++i) {
+            for (int j = 0; j < matrix_rank; ++j)
+                result[i] += column_space_basis[i][j] * coefficients[j];
+        }
+        return result;
+    }
+
+    std::vector<T>
+    reconstruct_row_vector(const std::vector<T> &coefficients) const {
+        std::vector<T> result(column_size, T());
+        for (int i = 0; i < matrix_rank; ++i) {
+            const T value = coefficients[i];
+            if (value == T())
+                continue;
+            for (int j = 0; j < column_size; ++j)
+                result[j] += value * row_space_basis[i][j];
+        }
+        return result;
+    }
+
+    std::vector<T> normalized_left_annihilator(int pivot_row,
+                                               const T &pivot_value) const {
+        std::vector<T> result(row_size, T());
+        result[pivot_row] = T(1);
+        for (int j = 0; j < matrix_rank; ++j) {
+            const T value = column_space_basis[pivot_row][j];
+            if (value == T())
+                continue;
+            for (int i = 0; i < row_size; ++i)
+                result[i] -= value * column_space_left_inverse[j][i];
+        }
+        for (int i = 0; i < row_size; ++i)
+            result[i] /= pivot_value;
+        return result;
+    }
+
+    std::vector<T> normalized_right_annihilator(int pivot_column,
+                                                const T &pivot_value) const {
+        std::vector<T> result(column_size, T());
+        result[pivot_column] = T(1);
+        for (int i = 0; i < column_size; ++i) {
+            for (int j = 0; j < matrix_rank; ++j)
+                result[i] -= row_space_right_inverse[i][j] *
+                             row_space_basis[j][pivot_column];
+        }
+        for (int i = 0; i < column_size; ++i)
+            result[i] /= pivot_value;
+        return result;
+    }
+
+    static void append_column(std::vector<std::vector<T>> &matrix,
+                              const std::vector<T> &column) {
+        assert(static_cast<int>(matrix.size()) ==
+               static_cast<int>(column.size()));
+        for (int i = 0; i < static_cast<int>(matrix.size()); ++i)
+            matrix[i].push_back(column[i]);
+    }
+
+    static int first_nonzero(const std::vector<T> &vector) {
+        for (int i = 0; i < static_cast<int>(vector.size()); ++i) {
+            if (vector[i] != T())
+                return i;
+        }
+        assert(false);
+        return -1;
+    }
+
     static std::vector<std::vector<T>>
-    transpose_matrix(const std::vector<std::vector<T>> &a) {
-        const int h = static_cast<int>(a.size());
+    transpose_matrix(const std::vector<std::vector<T>> &matrix) {
+        const int h = static_cast<int>(matrix.size());
         if (h == 0)
             return {};
-        const int w = static_cast<int>(a[0].size());
+        const int w = static_cast<int>(matrix[0].size());
         std::vector<std::vector<T>> transposed(w, std::vector<T>(h, T()));
         for (int i = 0; i < h; ++i) {
-            assert(static_cast<int>(a[i].size()) == w);
+            assert(static_cast<int>(matrix[i].size()) == w);
             for (int j = 0; j < w; ++j)
-                transposed[j][i] = a[i][j];
+                transposed[j][i] = matrix[i][j];
         }
         return transposed;
     }
 
     static std::vector<int>
-    find_independent_columns(const std::vector<std::vector<T>> &a) {
-        const int h = static_cast<int>(a.size());
+    find_independent_columns(const std::vector<std::vector<T>> &matrix) {
+        const int h = static_cast<int>(matrix.size());
         if (h == 0)
             return {};
-        const int w = static_cast<int>(a[0].size());
-        std::vector<std::vector<T>> b = a;
+        const int w = static_cast<int>(matrix[0].size());
+        std::vector<std::vector<T>> b = matrix;
         int rank = 0;
         std::vector<int> pivot_columns;
         for (int column = 0; column < w; ++column) {
@@ -245,7 +517,7 @@ template <class T> struct DynamicMatrixRank {
             if (pivot < 0)
                 continue;
             if (pivot != rank)
-                std::swap(b[pivot], b[rank]);
+                b[pivot].swap(b[rank]);
 
             const T inverse = T(1) / b[rank][column];
             for (int j = column; j < w; ++j)
@@ -266,10 +538,10 @@ template <class T> struct DynamicMatrixRank {
     }
 
     static std::vector<std::vector<T>>
-    inverse_matrix(std::vector<std::vector<T>> a) {
-        const int n = static_cast<int>(a.size());
+    inverse_matrix(std::vector<std::vector<T>> matrix) {
+        const int n = static_cast<int>(matrix.size());
         for (int i = 0; i < n; ++i)
-            assert(static_cast<int>(a[i].size()) == n);
+            assert(static_cast<int>(matrix[i].size()) == n);
 
         std::vector<std::vector<T>> inverse(n, std::vector<T>(n, T()));
         for (int i = 0; i < n; ++i)
@@ -278,92 +550,35 @@ template <class T> struct DynamicMatrixRank {
         for (int column = 0; column < n; ++column) {
             int pivot = -1;
             for (int row = column; row < n; ++row) {
-                if (a[row][column] != T()) {
+                if (matrix[row][column] != T()) {
                     pivot = row;
                     break;
                 }
             }
             assert(pivot >= 0);
             if (pivot != column) {
-                std::swap(a[pivot], a[column]);
-                std::swap(inverse[pivot], inverse[column]);
+                matrix[pivot].swap(matrix[column]);
+                inverse[pivot].swap(inverse[column]);
             }
 
-            const T diagonal_inverse = T(1) / a[column][column];
+            const T diagonal_inverse = T(1) / matrix[column][column];
             for (int j = 0; j < n; ++j) {
-                a[column][j] *= diagonal_inverse;
+                matrix[column][j] *= diagonal_inverse;
                 inverse[column][j] *= diagonal_inverse;
             }
             for (int row = 0; row < n; ++row) {
                 if (row == column)
                     continue;
-                const T factor = a[row][column];
+                const T factor = matrix[row][column];
                 if (factor == T())
                     continue;
                 for (int j = 0; j < n; ++j) {
-                    a[row][j] -= a[column][j] * factor;
+                    matrix[row][j] -= matrix[column][j] * factor;
                     inverse[row][j] -= inverse[column][j] * factor;
                 }
             }
         }
         return inverse;
-    }
-
-    std::vector<T>
-    restrict_to_basis_rows(const std::vector<T> &column_vector) const {
-        std::vector<T> values(matrix_rank, T());
-        for (int i = 0; i < matrix_rank; ++i)
-            values[i] = column_vector[basis_rows[i]];
-        return values;
-    }
-
-    std::vector<T>
-    restrict_to_basis_columns(const std::vector<T> &row_vector) const {
-        std::vector<T> values(matrix_rank, T());
-        for (int i = 0; i < matrix_rank; ++i)
-            values[i] = row_vector[basis_columns[i]];
-        return values;
-    }
-
-    std::vector<T>
-    reconstruct_column_vector(const std::vector<T> &basis_row_values) const {
-        assert(static_cast<int>(basis_row_values.size()) == matrix_rank);
-        std::vector<T> reconstructed(row_size, T());
-        for (int i = 0; i < row_size; ++i) {
-            for (int j = 0; j < matrix_rank; ++j) {
-                reconstructed[i] +=
-                    column_space_reconstructor[i][j] * basis_row_values[j];
-            }
-        }
-        return reconstructed;
-    }
-
-    std::vector<T>
-    reconstruct_row_vector(const std::vector<T> &basis_column_values) const {
-        assert(static_cast<int>(basis_column_values.size()) == matrix_rank);
-        std::vector<T> reconstructed(column_size, T());
-        for (int i = 0; i < matrix_rank; ++i) {
-            const T value = basis_column_values[i];
-            if (value == T())
-                continue;
-            for (int j = 0; j < column_size; ++j) {
-                reconstructed[j] += value * row_space_reconstructor[i][j];
-            }
-        }
-        return reconstructed;
-    }
-
-    std::vector<T>
-    multiply_inverse_from_left(const std::vector<T> &basis_row_values) const {
-        assert(static_cast<int>(basis_row_values.size()) == matrix_rank);
-        std::vector<T> product(matrix_rank, T());
-        for (int i = 0; i < matrix_rank; ++i) {
-            for (int j = 0; j < matrix_rank; ++j) {
-                product[i] +=
-                    intersection_inverse_matrix[i][j] * basis_row_values[j];
-            }
-        }
-        return product;
     }
 };
 
