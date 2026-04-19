@@ -5,7 +5,7 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
 
 ## 概要
 
-* 体上の \(r \times c\) 行列を前処理し、現在の階数と \(A + uv^\top\) の階数を求める。
+* 体上の $r \times c$ 行列を前処理し、現在の階数と $A + uv^\top$ の階数を求める。
 * さらに、1 行差し替え・1 列差し替え・外積 1 項更新を内部状態に反映できる。
 * 現在の行列は左右の階数分解と片側逆元で保持する。
 
@@ -51,15 +51,15 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
 
 ## 計算量
 
-* ここで \(k\) は現在の階数である。
-* `build`：\(O(rc\min(r, c) + k^2(r + c))\)
-* `rank`：\(O(1)\)
-* `get_row`：\(O(kc)\)
-* `get_column`：\(O(kr)\)
-* `materialize_matrix`：\(O(krc)\)
-* `rank_after_rank_one_update`：\(O(k(r + c))\)
-* `rank_after_row_replacement`：\(O(k(r + c))\)
-* `rank_after_column_replacement`：\(O(k(r + c))\)
-* `apply_rank_one_update`：\(O(k(r + c))\)
-* `apply_row_replacement`：\(O(k(r + c))\)
-* `apply_column_replacement`：\(O(k(r + c))\)
+* ここで $k$ は現在の階数である。
+* `build`：$O(rc\min(r, c) + k^2(r + c))$
+* `rank`：$O(1)$
+* `get_row`：$O(kc)$
+* `get_column`：$O(kr)$
+* `materialize_matrix`：$O(krc)$
+* `rank_after_rank_one_update`：$O(k(r + c))$
+* `rank_after_row_replacement`：$O(k(r + c))$
+* `rank_after_column_replacement`：$O(k(r + c))$
+* `apply_rank_one_update`：$O(k(r + c))$
+* `apply_row_replacement`：$O(k(r + c))$
+* `apply_column_replacement`：$O(k(r + c))$
