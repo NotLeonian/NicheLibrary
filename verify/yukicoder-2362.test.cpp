@@ -17,10 +17,6 @@ long long floor_div_ll(long long x, long long m) {
     return q;
 }
 
-long long floor_mod_ll(long long x, long long m) {
-    return x - floor_div_ll(x, m) * m;
-}
-
 void self_test() {
     for (long long n = 0; n <= 10; ++n) {
         for (long long m = 1; m <= 10; ++m) {
