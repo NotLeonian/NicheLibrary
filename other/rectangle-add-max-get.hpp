@@ -4,12 +4,13 @@
 // 2 次元平面上の重み付き半開長方形を加算し、最大値を求める。
 // 座標は整数型とし、最大座標は整数格子点として扱う。
 // calc の指定範囲に各長方形を切り詰めて平面走査する。
-// 重みは負でもよい。
+// 重みは負でもよいが、符号付き整数型の最小値は使わない。
 // 面積計算では座標差と面積が T2 に収まることを仮定する。
 // 計算量 O(N log N)。
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -36,6 +37,7 @@ template <class T, class C> struct RectangleAddMaxGet {
     void add_rectangle(T l, T d, T r, T u, C w = C(1)) {
         assert(l < r);
         assert(d < u);
+        assert_valid_weight(w);
         rectangles.emplace_back(Rectangle{l, d, r, u, w});
     }
 
@@ -85,8 +87,7 @@ template <class T, class C> struct RectangleAddMaxGet {
     }
 
   private:
-    using CoordinateLength = std::make_unsigned_t<
-        std::conditional_t<std::is_same_v<T, bool>, int, T>>;
+    using CoordinateLength = std::make_unsigned_t<T>;
 
     struct QueryRange {
         T l, d, r, u;
@@ -97,6 +98,7 @@ template <class T, class C> struct RectangleAddMaxGet {
         T x;
         int d, u;
         C w;
+        bool add;
     };
 
     struct Node {
@@ -147,37 +149,52 @@ template <class T, class C> struct RectangleAddMaxGet {
                         b.maximum_y};
         }
 
-        void apply(int l, int r, C w) { apply(1, 0, size, l, r, w); }
+        void apply(int l, int r, C w, bool add) {
+            apply(1, 0, size, l, r, w, add);
+        }
 
         const Node &all_prod() const { return data[1]; }
 
-        void add_node(int v, C w) {
-            data[v].max_value += w;
-            lazy[v] += w;
+        void add_node(int v, C w, bool add) {
+            if (add) {
+                data[v].max_value += w;
+                lazy[v] += w;
+            } else {
+                data[v].max_value -= w;
+                lazy[v] -= w;
+            }
         }
 
         void push(int v) {
             if (lazy[v] == C())
                 return;
-            add_node(v << 1, lazy[v]);
-            add_node(v << 1 | 1, lazy[v]);
+            add_node(v << 1, lazy[v], true);
+            add_node(v << 1 | 1, lazy[v], true);
             lazy[v] = C();
         }
 
-        void apply(int v, int l, int r, int ql, int qr, C w) {
+        void apply(int v, int l, int r, int ql, int qr, C w, bool add) {
             if (qr <= l || r <= ql)
                 return;
             if (ql <= l && r <= qr) {
-                add_node(v, w);
+                add_node(v, w, add);
                 return;
             }
             push(v);
             const int m = (l + r) >> 1;
-            apply(v << 1, l, m, ql, qr, w);
-            apply(v << 1 | 1, m, r, ql, qr, w);
+            apply(v << 1, l, m, ql, qr, w, add);
+            apply(v << 1 | 1, m, r, ql, qr, w, add);
             data[v] = merge(data[v << 1], data[v << 1 | 1]);
         }
     };
+
+    static void assert_valid_weight(C w) {
+        if constexpr (std::numeric_limits<C>::is_specialized &&
+                      std::numeric_limits<C>::is_integer &&
+                      std::numeric_limits<C>::is_signed) {
+            assert(w != std::numeric_limits<C>::lowest());
+        }
+    }
 
     static CoordinateLength coordinate_difference(T l, T r) {
         assert(l <= r);
@@ -238,11 +255,15 @@ template <class T, class C> struct RectangleAddMaxGet {
                 std::lower_bound(ys.begin(), ys.end(), rect.d) - ys.begin());
             const int u = static_cast<int>(
                 std::lower_bound(ys.begin(), ys.end(), rect.u) - ys.begin());
-            events.emplace_back(Event{rect.l, d, u, rect.w});
-            events.emplace_back(Event{rect.r, d, u, -rect.w});
+            events.emplace_back(Event{rect.l, d, u, rect.w, true});
+            events.emplace_back(Event{rect.r, d, u, rect.w, false});
         }
         std::sort(events.begin(), events.end(),
-                  [](const Event &a, const Event &b) { return a.x < b.x; });
+                  [](const Event &a, const Event &b) {
+                      if (a.x != b.x)
+                          return a.x < b.x;
+                      return a.add < b.add;
+                  });
 
         std::vector<Node> leaves;
         leaves.reserve(ys.size() - 1);
@@ -260,7 +281,7 @@ template <class T, class C> struct RectangleAddMaxGet {
             while (event_index < static_cast<int>(events.size()) &&
                    events[event_index].x == xs[i]) {
                 seg.apply(events[event_index].d, events[event_index].u,
-                          events[event_index].w);
+                          events[event_index].w, events[event_index].add);
                 ++event_index;
             }
             const Node &now = seg.all_prod();

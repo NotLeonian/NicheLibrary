@@ -108,6 +108,7 @@ void check(const std::vector<TestRectangle> &rectangles, int l, int d, int r,
 }
 
 void self_test() {
+    const long long max_weight = std::numeric_limits<long long>::max();
     const std::vector<std::vector<TestRectangle>> cases = {
         {},
         {{0, 0, 2, 2, 1}},
@@ -115,9 +116,11 @@ void self_test() {
         {{0, 0, 3, 2, 2}, {1, 1, 4, 4, 3}},
         {{-1, -1, 2, 1, 5}, {0, -2, 3, 2, -2}, {1, 0, 2, 3, 4}},
         {{0, 0, 2, 2, 1}, {0, 0, 2, 2, 1}, {1, 1, 3, 3, -3}},
+        {{0, 0, 1, 1, max_weight}, {1, 0, 2, 1, max_weight}},
     };
     const std::vector<std::tuple<int, int, int, int>> queries = {
-        {-2, -2, 4, 4}, {0, 0, 3, 3}, {1, 1, 4, 5}, {-1, 0, 2, 2}, {2, 2, 5, 5},
+        {-2, -2, 4, 4}, {0, 0, 3, 3}, {1, 1, 4, 5},
+        {-1, 0, 2, 2},  {2, 2, 5, 5}, {0, 0, 2, 1},
     };
     for (const auto &rectangles : cases) {
         for (const auto &[l, d, r, u] : queries)

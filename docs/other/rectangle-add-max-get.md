@@ -17,7 +17,7 @@ documentation_of: other/rectangle-add-max-get.hpp
 - `RectangleAddMaxGet<T, C>()`
   - 空で構築する。
   - 前提：`T` は `bool` でない整数型である。
-  - 前提：`C` は重みの総和が収まる型である。
+  - 前提：`C` は `0`, `+=`, `-=`, `==`, 比較を持つ。
 
 - `RectangleAddMaxGet<T, C>(int n)`
   - 長方形の個数 `n` を指定して構築する。
@@ -27,6 +27,7 @@ documentation_of: other/rectangle-add-max-get.hpp
 - `void add_rectangle(T l, T d, T r, T u, C w = 1)`
   - $[l,r)\times[d,u)$ に重み `w` の長方形を追加する。
   - 前提：`l < r`, `d < u`。
+  - 前提：`C` が符号付き整数型の場合、`std::numeric_limits<C>::lowest()` は指定しない。
   - 備考：`w` は負でもよい。
 
 - `std::tuple<C, T, T> calc_max_lexicographically_minimum_point() const`
