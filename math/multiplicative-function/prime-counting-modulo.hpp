@@ -13,7 +13,7 @@
 
 namespace prime_counting_modulo_internal {
 
-long long integer_sqrt(long long n) {
+inline long long integer_sqrt(long long n) {
     assert(n >= 0);
     long long ok = 0, ng = 1;
     while (ng <= n / ng)
@@ -29,7 +29,7 @@ long long integer_sqrt(long long n) {
     return ok;
 }
 
-long long count_residue_2_to_n(long long n, long long m, long long r) {
+inline long long count_residue_2_to_n(long long n, long long m, long long r) {
     assert(n >= 0);
     assert(m > 0);
     assert(0 <= r && r < m);
@@ -43,7 +43,7 @@ long long count_residue_2_to_n(long long n, long long m, long long r) {
     return res;
 }
 
-void add_mod(long long &x, long long a, long long m) {
+inline void add_mod(long long &x, long long a, long long m) {
     assert(0 <= x && x < m);
     assert(0 <= a && a < m);
     if (a == 0)
@@ -57,7 +57,7 @@ void add_mod(long long &x, long long a, long long m) {
 
 } // namespace prime_counting_modulo_internal
 
-std::pair<std::vector<long long>, std::vector<std::vector<long long>>>
+inline std::pair<std::vector<long long>, std::vector<std::vector<long long>>>
 prime_counting_modulo_table(long long N, long long m) {
     assert(N >= 0);
     assert(m > 0);
@@ -100,7 +100,7 @@ prime_counting_modulo_table(long long N, long long m) {
     return {ns, h};
 }
 
-std::vector<long long> prime_counting_modulo(long long N, long long m) {
+inline std::vector<long long> prime_counting_modulo(long long N, long long m) {
     assert(N >= 0);
     assert(m > 0);
     std::vector<long long> res(m);
