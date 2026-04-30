@@ -1,5 +1,5 @@
 ---
-title: 法 $m$ ごとの素数個数
+title: $m$ で割った余りごとの $N$ 以下の素数の個数の列挙
 documentation_of: math/multiplicative-function/prime-counting-modulo.hpp
 ---
 
