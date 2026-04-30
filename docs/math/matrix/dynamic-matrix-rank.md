@@ -31,7 +31,7 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
 - `std::vector<std::vector<T>> materialize_matrix() const`
   - 現在の行列を密行列として返す。
 - `int rank_after_rank_one_update(const std::vector<T>& column_vector, const std::vector<T>& row_vector) const`
-  - `A + column_vector - row_vector^\top` の階数を返す。
+  - `A + column_vector * row_vector^\top` の階数を返す。
   - 前提：`column_vector` の長さは行数、`row_vector` の長さは列数。
   - 備考：内部状態は変更しない。
 - `int rank_after_row_replacement(int row_index, const std::vector<T>& new_row) const`
@@ -43,7 +43,7 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
   - 前提：`0 <= column_index <` 列数、`new_column` の長さは行数。
   - 備考：内部状態は変更しない。
 - `int apply_rank_one_update(const std::vector<T>& column_vector, const std::vector<T>& row_vector)`
-  - `A + column_vector - row_vector^\top` に内部状態を更新し、その階数を返す。
+  - `A + column_vector * row_vector^\top` に内部状態を更新し、その階数を返す。
 - `int apply_row_replacement(int row_index, const std::vector<T>& new_row)`
   - `row_index` 行目を `new_row` に差し替え、変更後の階数を返す。
 - `int apply_column_replacement(int column_index, const std::vector<T>& new_column)`
