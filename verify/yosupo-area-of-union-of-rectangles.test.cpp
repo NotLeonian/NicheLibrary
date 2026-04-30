@@ -117,6 +117,7 @@ void self_test() {
         {{-1, -1, 2, 1, 5}, {0, -2, 3, 2, -2}, {1, 0, 2, 3, 4}},
         {{0, 0, 2, 2, 1}, {0, 0, 2, 2, 1}, {1, 1, 3, 3, -3}},
         {{0, 0, 1, 1, max_weight}, {1, 0, 2, 1, max_weight}},
+        {{0, 0, 2, 2, 3}, {0, 0, 0, 2, 100}, {1, 1, 2, 1, -100}},
     };
     const std::vector<std::tuple<int, int, int, int>> queries = {
         {-2, -2, 4, 4}, {0, 0, 3, 3}, {1, 1, 4, 5},
@@ -180,6 +181,23 @@ void self_test() {
         assert(bbox_value == -5);
         assert(bbox_x == -1);
         assert(bbox_y == -1);
+    }
+    {
+        RectangleAddMaxGet<int, long long> solver;
+        solver.add_rectangle(0, 0, 0, 5,
+                             std::numeric_limits<long long>::lowest());
+        solver.add_rectangle(2, 2, 7, 2,
+                             std::numeric_limits<long long>::lowest());
+        assert(solver.rectangles.empty());
+
+        const auto [value, x, y] =
+            solver.calc_max_lexicographically_minimum_point();
+        const auto [area_value, area] = solver.calc_max_area<long long>();
+        assert(value == 0);
+        assert(x == 0);
+        assert(y == 0);
+        assert(area_value == 0);
+        assert(area == 0);
     }
     RectangleAddMaxGet<int, long long> empty_solver;
     const auto [value, x, y] =
