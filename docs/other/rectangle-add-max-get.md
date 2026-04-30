@@ -26,9 +26,11 @@ documentation_of: other/rectangle-add-max-get.hpp
 
 - `void add_rectangle(T l, T d, T r, T u, C w = 1)`
   - $[l,r)\times[d,u)$ に重み `w` の長方形を追加する。
-  - 前提：`l < r`, `d < u`。
-  - 前提：`C` が符号付き整数型の場合、`std::numeric_limits<C>::lowest()` は指定しない。
+  - 前提：`l <= r`, `d <= u`。
+  - 前提：`l < r`, `d < u` かつ `C` が符号付き整数型の場合、`std::numeric_limits<C>::lowest()` は指定しない。
+  - 備考：`l == r` または `d == u` の場合は追加しない。
   - 備考：`w` は負でもよい。
+  - 備考：面積 0 の長方形は、無引数版 `calc_...()` の外接長方形にも含まれない。
 
 - `std::tuple<C, T, T> calc_max_lexicographically_minimum_point() const`
   - 追加された長方形全体の外接長方形で、重み総和の最大値と、それを達成する辞書順最小の整数格子点を返す。

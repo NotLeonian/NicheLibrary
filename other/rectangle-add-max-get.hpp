@@ -4,7 +4,8 @@
 // 2 次元平面上の重み付き半開長方形を加算し、最大値を求める。
 // 座標は整数型とし、最大座標は整数格子点として扱う。
 // calc の指定範囲に各長方形を切り詰めて平面走査する。
-// 重みは負でもよいが、符号付き整数型の最小値は使わない。
+// 面積 0 の長方形は無視する。
+// 重みは負でもよいが、正の面積で符号付き整数型の最小値は使わない。
 // 面積計算では座標差と面積が T2 に収まることを仮定する。
 // 計算量 O(N log N)。
 
@@ -35,8 +36,10 @@ template <class T, class C> struct RectangleAddMaxGet {
     }
 
     void add_rectangle(T l, T d, T r, T u, C w = C(1)) {
-        assert(l < r);
-        assert(d < u);
+        assert(l <= r);
+        assert(d <= u);
+        if (l == r || d == u)
+            return;
         assert_valid_weight(w);
         rectangles.emplace_back(Rectangle{l, d, r, u, w});
     }
