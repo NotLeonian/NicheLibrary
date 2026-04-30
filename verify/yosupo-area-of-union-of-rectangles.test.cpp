@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <limits>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -152,6 +153,30 @@ void self_test() {
         assert(max_y == expected.maximum_y);
         assert(area_value == expected.max_value);
         assert(area == expected.area);
+    }
+    {
+        RectangleAddMaxGet<int, long long> solver;
+        solver.add_rectangle(-1, -1, 1, 1, -5);
+        const int l = std::numeric_limits<int>::lowest();
+        const int d = std::numeric_limits<int>::lowest();
+        const int r = std::numeric_limits<int>::max();
+        const int u = std::numeric_limits<int>::max();
+        const auto [min_value, min_x, min_y] =
+            solver.calc_max_lexicographically_minimum_point(l, d, r, u);
+        const auto [max_value, max_x, max_y] =
+            solver.calc_max_lexicographically_maximum_point(l, d, r, u);
+        assert(min_value == 0);
+        assert(min_x == l);
+        assert(min_y == d);
+        assert(max_value == 0);
+        assert(max_x == r - 1);
+        assert(max_y == u - 1);
+
+        const auto [bbox_value, bbox_x, bbox_y] =
+            solver.calc_max_lexicographically_minimum_point();
+        assert(bbox_value == -5);
+        assert(bbox_x == -1);
+        assert(bbox_y == -1);
     }
     RectangleAddMaxGet<int, long long> empty_solver;
     const auto [value, x, y] =
