@@ -309,7 +309,7 @@ apply_rank_one(std::vector<std::vector<F2>> matrix,
     return matrix;
 }
 
-void self_check() {
+void self_test() {
     for (int h = 1; h <= 2; ++h) {
         for (int w = 1; w <= 2; ++w) {
             const int states = 1 << (h * w);
@@ -407,7 +407,9 @@ int main() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    self_check();
+#ifndef ONLINE_JUDGE
+    self_test();
+#endif
 
     int n, m;
     std::cin >> n >> m;

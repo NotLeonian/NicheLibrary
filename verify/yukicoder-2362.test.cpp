@@ -47,7 +47,9 @@ int main() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
+#ifndef ONLINE_JUDGE
     self_test();
+#endif
 
     int T;
     std::cin >> T;
