@@ -4,7 +4,10 @@ version = "1.0.0"
 description = "C++ library for competitive programming"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "competitive-verifier>=3.4.1",
-    "ruff>=0.14.10",
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "competitive-verifier>=4.1.1",
+    "ruff>=0.15.12",
 ]
