@@ -24,26 +24,26 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
   - 現在の行列の階数を返す。
 - `std::vector<T> get_row(int row_index) const`
   - 現在の `row_index` 行目を返す。
-  - 前提：`0 <= row_index <` 行数。
+  - 前提：$0\le \mathrm{row\_index}<r$（$r$ は行数）。
 - `std::vector<T> get_column(int column_index) const`
   - 現在の `column_index` 列目を返す。
-  - 前提：`0 <= column_index <` 列数。
+  - 前提：$0\le \mathrm{column\_index}<c$（$c$ は列数）。
 - `std::vector<std::vector<T>> materialize_matrix() const`
   - 現在の行列を密行列として返す。
 - `int rank_after_rank_one_update(const std::vector<T>& column_vector, const std::vector<T>& row_vector) const`
-  - `A + column_vector * row_vector^\top` の階数を返す。
+  - $A+CR^{\top}$ の階数を返す（ただし、$C=\mathrm{column\_vector},\,R=\mathrm{row\_vector}$）。
   - 前提：`column_vector` の長さは行数、`row_vector` の長さは列数。
   - 備考：内部状態は変更しない。
 - `int rank_after_row_replacement(int row_index, const std::vector<T>& new_row) const`
   - `row_index` 行目を `new_row` に差し替えた行列の階数を返す。
-  - 前提：`0 <= row_index <` 行数、`new_row` の長さは列数。
+  - 前提：$0\le \mathrm{row\_index}<r$（$r$ は行数）、`new_row` の長さは列数。
   - 備考：内部状態は変更しない。
 - `int rank_after_column_replacement(int column_index, const std::vector<T>& new_column) const`
   - `column_index` 列目を `new_column` に差し替えた行列の階数を返す。
-  - 前提：`0 <= column_index <` 列数、`new_column` の長さは行数。
+  - 前提：$0\le \mathrm{column\_index}<c$（$c$ は列数）、`new_column` の長さは行数。
   - 備考：内部状態は変更しない。
 - `int apply_rank_one_update(const std::vector<T>& column_vector, const std::vector<T>& row_vector)`
-  - `A + column_vector * row_vector^\top` に内部状態を更新し、その階数を返す。
+  - $A+CR^{\top}$（ただし、$C=\mathrm{column\_vector},\,R=\mathrm{row\_vector}$）に内部状態を更新し、その階数を返す。
 - `int apply_row_replacement(int row_index, const std::vector<T>& new_row)`
   - `row_index` 行目を `new_row` に差し替え、変更後の階数を返す。
 - `int apply_column_replacement(int column_index, const std::vector<T>& new_column)`
