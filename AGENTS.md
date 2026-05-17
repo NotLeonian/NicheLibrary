@@ -20,7 +20,7 @@
 - そのファイルで使う標準ヘッダは明示的に列挙されている。
   - `bits/stdc++.h` は使っていない。
   - 未使用 include がない。
-- GCC 拡張, `__gnu_pbds`, `#pragma GCC optimize`, `typeof`, VLA などを使っていない。
+- GCC 拡張および、`__gnu_pbds`, `#pragma GCC optimize`, `typeof`, VLA などを使っていない。
 - g++ および clang++ の C++20（`-std=c++20`）でコンパイルできる。
   - コンパイラ依存の実装になっていない。
 - 前提を満たさない入力に対する救済処理を過度に入れていない。
