@@ -43,7 +43,6 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
   - 前提：$0\le \mathrm{column\_index}<c$（$c$ は列数）、`new_column` の長さは行数。
   - 備考：内部状態は変更しない。
 - `int apply_rank_one_update(const std::vector<T>& column_vector, const std::vector<T>& row_vector)`
-- 
   - $A+CR^{\top}$（ただし、$C=\mathrm{column\_vector},\,R=\mathrm{row\_vector}$）に内部状態を更新し、その階数を返す。
 - `int apply_row_replacement(int row_index, const std::vector<T>& new_row)`
   - `row_index` 行目を `new_row` に差し替え、変更後の階数を返す。
