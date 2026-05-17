@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <set>
+#include <type_traits>
 
 enum class DynamicMedianMode { Lower, Upper, Average };
 
@@ -61,14 +62,19 @@ template <class T> struct DynamicMedian {
         }
 
         assert(mode == DynamicMedianMode::Average);
-        if constexpr (requires(T lhs, T rhs) {
-                          (static_cast<Result>(lhs) +
-                           static_cast<Result>(rhs)) /
-                              Result(2);
-                      }) {
-            return (static_cast<Result>(lower_median) +
-                    static_cast<Result>(upper_median)) /
-                   Result(2);
+        const Result lower = static_cast<Result>(lower_median);
+        const Result upper = static_cast<Result>(upper_median);
+        if constexpr (std::is_integral_v<Result>) {
+            if constexpr (std::is_signed_v<Result>) {
+                if (lower < 0 && 0 < upper) {
+                    return (lower + upper) / 2;
+                }
+            }
+            return lower / 2 + upper / 2 + (lower % 2 + upper % 2) / 2;
+        } else if constexpr (requires(Result lhs, Result rhs) {
+                                 (lhs + rhs) / Result(2);
+                             }) {
+            return (lower + upper) / Result(2);
         } else {
             assert(false);
             return static_cast<Result>(lower_median);

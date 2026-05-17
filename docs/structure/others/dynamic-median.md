@@ -30,6 +30,7 @@ documentation_of: structure/others/dynamic-median.hpp
   - `mode` で指定した中央値を返す。
   - 前提：要素数が $1$ 以上である。
   - 前提：`Average` を使う場合、`Result` へ変換した値の加算と $2$ での除算ができる。
+  - 備考：`Result` が整数型の場合は、中央 $2$ 値の和を $2$ で割る整数除算の値を、和のオーバーフローを避けて返す。
   - 備考：平均を小数で返したい場合は `median<long double>(DynamicMedianMode::Average)` のように指定する。
 - `std::multiset<T> lower_values`
   - 小さい側の値を持つ。
