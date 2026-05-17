@@ -64,4 +64,5 @@
   - AtCoder の問題 URL を使っていない。
   - Library Checker (Yosupo Judge), yukicoder, AOJ のいずれかの問題 URL、または `STANDALONE` を使っている。
 - オンラインジャッジ上の問題を使いつつ自己検証も行う verify ソースコードについて、自己検証を行う関数の関数名が `self_test` であり、呼び出す際は `#ifndef ONLINE_JUDGE`, `#endif` で囲んでいる。
+  - `self_test` 関数の定義は `#ifndef ONLINE_JUDGE`, `#endif` で囲まれていなくてもよい。
 - AOJ の URL は `https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=...` の形式である（`http://...` などでない）。
