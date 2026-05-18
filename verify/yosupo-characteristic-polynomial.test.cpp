@@ -13,8 +13,9 @@ class modint998244353 {
     modint998244353() : v_(0) {}
     modint998244353(long long x) {
         long long y = x % static_cast<long long>(mod);
-        if (y < 0)
+        if (y < 0) {
             y += mod;
+        }
         v_ = static_cast<std::uint32_t>(y);
     }
 
@@ -24,8 +25,9 @@ class modint998244353 {
 
     modint998244353 &operator+=(const modint998244353 &rhs) {
         std::uint32_t x = v_ + rhs.v_;
-        if (x >= mod)
+        if (x >= mod) {
             x -= mod;
+        }
         v_ = x;
         return *this;
     }
@@ -73,8 +75,9 @@ class modint998244353 {
     static modint998244353 pow(modint998244353 a, long long e) {
         modint998244353 r(1);
         while (e > 0) {
-            if (e & 1)
+            if (e & 1) {
                 r *= a;
+            }
             a *= a;
             e >>= 1;
         }
@@ -104,8 +107,9 @@ int main() {
     const std::vector<modint998244353> p = characteristic_polynomial(A);
 
     for (int i = 0; i < static_cast<int>(p.size()); ++i) {
-        if (i)
+        if (i) {
             std::cout << ' ';
+        }
         std::cout << p[i].val();
     }
     std::cout << '\n';

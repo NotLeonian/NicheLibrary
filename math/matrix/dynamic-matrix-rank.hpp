@@ -30,8 +30,9 @@ template <class T> struct DynamicMatrixRank {
     void build(const std::vector<std::vector<T>> &matrix) {
         row_size = static_cast<int>(matrix.size());
         column_size = row_size == 0 ? 0 : static_cast<int>(matrix[0].size());
-        for (int i = 1; i < row_size; ++i)
+        for (int i = 1; i < row_size; ++i) {
             assert(static_cast<int>(matrix[i].size()) == column_size);
+        }
 
         const std::vector<int> basis_columns = find_independent_columns(matrix);
         const std::vector<int> basis_rows =
@@ -61,8 +62,9 @@ template <class T> struct DynamicMatrixRank {
         for (int i = 0; i < matrix_rank; ++i) {
             for (int mid = 0; mid < matrix_rank; ++mid) {
                 const T value = intersection_inverse[i][mid];
-                if (value == T())
+                if (value == T()) {
                     continue;
+                }
                 for (int j = 0; j < column_size; ++j) {
                     row_space_basis[i][j] += value * matrix[basis_rows[mid]][j];
                 }
@@ -80,8 +82,9 @@ template <class T> struct DynamicMatrixRank {
 
         row_space_right_inverse.assign(column_size,
                                        std::vector<T>(matrix_rank, T()));
-        for (int i = 0; i < matrix_rank; ++i)
+        for (int i = 0; i < matrix_rank; ++i) {
             row_space_right_inverse[basis_columns[i]][i] = T(1);
+        }
     }
 
     void build() { build(materialize_matrix()); }
@@ -93,10 +96,12 @@ template <class T> struct DynamicMatrixRank {
         std::vector<T> row(column_size, T());
         for (int i = 0; i < matrix_rank; ++i) {
             const T value = column_space_basis[row_index][i];
-            if (value == T())
+            if (value == T()) {
                 continue;
-            for (int j = 0; j < column_size; ++j)
+            }
+            for (int j = 0; j < column_size; ++j) {
                 row[j] += value * row_space_basis[i][j];
+            }
         }
         return row;
     }
@@ -105,9 +110,10 @@ template <class T> struct DynamicMatrixRank {
         assert(0 <= column_index && column_index < column_size);
         std::vector<T> column(row_size, T());
         for (int i = 0; i < row_size; ++i) {
-            for (int j = 0; j < matrix_rank; ++j)
+            for (int j = 0; j < matrix_rank; ++j) {
                 column[i] +=
                     column_space_basis[i][j] * row_space_basis[j][column_index];
+            }
         }
         return column;
     }
@@ -118,10 +124,12 @@ template <class T> struct DynamicMatrixRank {
         for (int i = 0; i < row_size; ++i) {
             for (int mid = 0; mid < matrix_rank; ++mid) {
                 const T value = column_space_basis[i][mid];
-                if (value == T())
+                if (value == T()) {
                     continue;
-                for (int j = 0; j < column_size; ++j)
+                }
+                for (int j = 0; j < column_size; ++j) {
                     matrix[i][j] += value * row_space_basis[mid][j];
+                }
             }
         }
         return matrix;
@@ -138,8 +146,9 @@ template <class T> struct DynamicMatrixRank {
         assert(static_cast<int>(new_row.size()) == column_size);
         std::vector<T> difference = new_row;
         const std::vector<T> current_row = get_row(row_index);
-        for (int j = 0; j < column_size; ++j)
+        for (int j = 0; j < column_size; ++j) {
             difference[j] -= current_row[j];
+        }
         std::vector<T> column_vector(row_size, T());
         column_vector[row_index] = T(1);
         return rank_after_rank_one_update(column_vector, difference);
@@ -151,8 +160,9 @@ template <class T> struct DynamicMatrixRank {
         assert(static_cast<int>(new_column.size()) == row_size);
         std::vector<T> difference = new_column;
         const std::vector<T> current_column = get_column(column_index);
-        for (int i = 0; i < row_size; ++i)
+        for (int i = 0; i < row_size; ++i) {
             difference[i] -= current_column[i];
+        }
         std::vector<T> row_vector(column_size, T());
         row_vector[column_index] = T(1);
         return rank_after_rank_one_update(difference, row_vector);
@@ -179,24 +189,27 @@ template <class T> struct DynamicMatrixRank {
 
             row_space_basis.push_back(row_vector);
             for (int i = 0; i < matrix_rank; ++i) {
-                for (int j = 0; j < column_size; ++j)
+                for (int j = 0; j < column_size; ++j) {
                     row_space_basis[i][j] += info.alpha[i] * row_vector[j];
+                }
             }
 
             std::vector<T> right_alpha(column_size, T());
             for (int i = 0; i < column_size; ++i) {
-                for (int j = 0; j < matrix_rank; ++j)
+                for (int j = 0; j < matrix_rank; ++j) {
                     right_alpha[i] +=
                         old_row_space_right_inverse[i][j] * info.alpha[j];
+                }
             }
 
             row_space_right_inverse.assign(
                 column_size, std::vector<T>(matrix_rank + 1, T()));
             for (int i = 0; i < column_size; ++i) {
-                for (int j = 0; j < matrix_rank; ++j)
+                for (int j = 0; j < matrix_rank; ++j) {
                     row_space_right_inverse[i][j] =
                         old_row_space_right_inverse[i][j] -
                         rho[i] * info.beta[j];
+                }
                 row_space_right_inverse[i][matrix_rank] =
                     T() - right_alpha[i] + rho[i] * info.schur;
             }
@@ -209,14 +222,16 @@ template <class T> struct DynamicMatrixRank {
             const std::vector<T> lambda = normalized_left_annihilator(
                 pivot_row, info.column_residual[pivot_row]);
             for (int i = 0; i < row_size; ++i) {
-                for (int j = 0; j < matrix_rank; ++j)
+                for (int j = 0; j < matrix_rank; ++j) {
                     column_space_basis[i][j] += column_vector[i] * info.beta[j];
+                }
             }
             std::vector<std::vector<T>> new_left_inverse =
                 column_space_left_inverse;
             for (int i = 0; i < matrix_rank; ++i) {
-                for (int j = 0; j < row_size; ++j)
+                for (int j = 0; j < row_size; ++j) {
                     new_left_inverse[i][j] -= info.alpha[i] * lambda[j];
+                }
             }
             column_space_left_inverse.swap(new_left_inverse);
             return matrix_rank;
@@ -227,14 +242,16 @@ template <class T> struct DynamicMatrixRank {
             const std::vector<T> rho = normalized_right_annihilator(
                 pivot_column, info.row_residual[pivot_column]);
             for (int i = 0; i < matrix_rank; ++i) {
-                for (int j = 0; j < column_size; ++j)
+                for (int j = 0; j < column_size; ++j) {
                     row_space_basis[i][j] += info.alpha[i] * row_vector[j];
+                }
             }
             std::vector<std::vector<T>> new_right_inverse =
                 row_space_right_inverse;
             for (int i = 0; i < column_size; ++i) {
-                for (int j = 0; j < matrix_rank; ++j)
+                for (int j = 0; j < matrix_rank; ++j) {
                     new_right_inverse[i][j] -= rho[i] * info.beta[j];
+                }
             }
             row_space_right_inverse.swap(new_right_inverse);
             return matrix_rank;
@@ -243,18 +260,21 @@ template <class T> struct DynamicMatrixRank {
         if (info.schur != T()) {
             std::vector<T> right_alpha(column_size, T());
             for (int i = 0; i < column_size; ++i) {
-                for (int j = 0; j < matrix_rank; ++j)
+                for (int j = 0; j < matrix_rank; ++j) {
                     right_alpha[i] +=
                         row_space_right_inverse[i][j] * info.alpha[j];
+                }
             }
             for (int i = 0; i < matrix_rank; ++i) {
-                for (int j = 0; j < column_size; ++j)
+                for (int j = 0; j < column_size; ++j) {
                     row_space_basis[i][j] += info.alpha[i] * row_vector[j];
+                }
             }
             for (int i = 0; i < column_size; ++i) {
-                for (int j = 0; j < matrix_rank; ++j)
+                for (int j = 0; j < matrix_rank; ++j) {
                     row_space_right_inverse[i][j] -=
                         right_alpha[i] * (info.beta[j] / info.schur);
+                }
             }
             return matrix_rank;
         }
@@ -264,8 +284,9 @@ template <class T> struct DynamicMatrixRank {
 
         std::vector<T> right_alpha(column_size, T());
         for (int i = 0; i < column_size; ++i) {
-            for (int j = 0; j < matrix_rank; ++j)
+            for (int j = 0; j < matrix_rank; ++j) {
                 right_alpha[i] += row_space_right_inverse[i][j] * info.alpha[j];
+            }
         }
 
         std::vector<std::vector<T>> new_column_space_basis(
@@ -279,25 +300,30 @@ template <class T> struct DynamicMatrixRank {
 
         int new_index = 0;
         for (int old = 0; old < matrix_rank; ++old) {
-            if (old == removed)
+            if (old == removed) {
                 continue;
-            for (int i = 0; i < row_size; ++i)
+            }
+            for (int i = 0; i < row_size; ++i) {
                 new_column_space_basis[i][new_index] =
                     column_space_basis[i][old] +
                     column_vector[i] * info.beta[old];
+            }
             const T factor = info.alpha[old] * removed_inverse;
-            for (int j = 0; j < column_size; ++j)
+            for (int j = 0; j < column_size; ++j) {
                 new_row_space_basis[new_index][j] =
                     row_space_basis[old][j] -
                     factor * row_space_basis[removed][j];
-            for (int j = 0; j < row_size; ++j)
+            }
+            for (int j = 0; j < row_size; ++j) {
                 new_column_space_left_inverse[new_index][j] =
                     column_space_left_inverse[old][j] -
                     factor * column_space_left_inverse[removed][j];
-            for (int i = 0; i < column_size; ++i)
+            }
+            for (int i = 0; i < column_size; ++i) {
                 new_row_space_right_inverse[i][new_index] =
                     row_space_right_inverse[i][old] +
                     right_alpha[i] * info.beta[old];
+            }
             ++new_index;
         }
 
@@ -314,8 +340,9 @@ template <class T> struct DynamicMatrixRank {
         assert(static_cast<int>(new_row.size()) == column_size);
         std::vector<T> difference = new_row;
         const std::vector<T> current_row = get_row(row_index);
-        for (int j = 0; j < column_size; ++j)
+        for (int j = 0; j < column_size; ++j) {
             difference[j] -= current_row[j];
+        }
         std::vector<T> column_vector(row_size, T());
         column_vector[row_index] = T(1);
         return apply_rank_one_update(column_vector, difference);
@@ -327,8 +354,9 @@ template <class T> struct DynamicMatrixRank {
         assert(static_cast<int>(new_column.size()) == row_size);
         std::vector<T> difference = new_column;
         const std::vector<T> current_column = get_column(column_index);
-        for (int i = 0; i < row_size; ++i)
+        for (int i = 0; i < row_size; ++i) {
             difference[i] -= current_column[i];
+        }
         std::vector<T> row_vector(column_size, T());
         row_vector[column_index] = T(1);
         return apply_rank_one_update(difference, row_vector);
@@ -366,18 +394,21 @@ template <class T> struct DynamicMatrixRank {
         info.row_inside = true;
         for (int i = 0; i < row_size; ++i) {
             info.column_residual[i] = column_vector[i] - projected_column[i];
-            if (info.column_residual[i] != T())
+            if (info.column_residual[i] != T()) {
                 info.column_inside = false;
+            }
         }
         for (int j = 0; j < column_size; ++j) {
             info.row_residual[j] = row_vector[j] - projected_row[j];
-            if (info.row_residual[j] != T())
+            if (info.row_residual[j] != T()) {
                 info.row_inside = false;
+            }
         }
 
         info.schur = T(1);
-        for (int i = 0; i < matrix_rank; ++i)
+        for (int i = 0; i < matrix_rank; ++i) {
             info.schur += info.beta[i] * info.alpha[i];
+        }
 
         if (!info.column_inside && !info.row_inside) {
             info.next_rank = matrix_rank + 1;
@@ -393,8 +424,9 @@ template <class T> struct DynamicMatrixRank {
     multiply_left_inverse(const std::vector<T> &column_vector) const {
         std::vector<T> result(matrix_rank, T());
         for (int i = 0; i < matrix_rank; ++i) {
-            for (int j = 0; j < row_size; ++j)
+            for (int j = 0; j < row_size; ++j) {
                 result[i] += column_space_left_inverse[i][j] * column_vector[j];
+            }
         }
         return result;
     }
@@ -404,10 +436,12 @@ template <class T> struct DynamicMatrixRank {
         std::vector<T> result(matrix_rank, T());
         for (int j = 0; j < column_size; ++j) {
             const T value = row_vector[j];
-            if (value == T())
+            if (value == T()) {
                 continue;
-            for (int i = 0; i < matrix_rank; ++i)
+            }
+            for (int i = 0; i < matrix_rank; ++i) {
                 result[i] += value * row_space_right_inverse[j][i];
+            }
         }
         return result;
     }
@@ -416,8 +450,9 @@ template <class T> struct DynamicMatrixRank {
     reconstruct_column_vector(const std::vector<T> &coefficients) const {
         std::vector<T> result(row_size, T());
         for (int i = 0; i < row_size; ++i) {
-            for (int j = 0; j < matrix_rank; ++j)
+            for (int j = 0; j < matrix_rank; ++j) {
                 result[i] += column_space_basis[i][j] * coefficients[j];
+            }
         }
         return result;
     }
@@ -427,10 +462,12 @@ template <class T> struct DynamicMatrixRank {
         std::vector<T> result(column_size, T());
         for (int i = 0; i < matrix_rank; ++i) {
             const T value = coefficients[i];
-            if (value == T())
+            if (value == T()) {
                 continue;
-            for (int j = 0; j < column_size; ++j)
+            }
+            for (int j = 0; j < column_size; ++j) {
                 result[j] += value * row_space_basis[i][j];
+            }
         }
         return result;
     }
@@ -441,13 +478,16 @@ template <class T> struct DynamicMatrixRank {
         result[pivot_row] = T(1);
         for (int j = 0; j < matrix_rank; ++j) {
             const T value = column_space_basis[pivot_row][j];
-            if (value == T())
+            if (value == T()) {
                 continue;
-            for (int i = 0; i < row_size; ++i)
+            }
+            for (int i = 0; i < row_size; ++i) {
                 result[i] -= value * column_space_left_inverse[j][i];
+            }
         }
-        for (int i = 0; i < row_size; ++i)
+        for (int i = 0; i < row_size; ++i) {
             result[i] /= pivot_value;
+        }
         return result;
     }
 
@@ -456,12 +496,14 @@ template <class T> struct DynamicMatrixRank {
         std::vector<T> result(column_size, T());
         result[pivot_column] = T(1);
         for (int i = 0; i < column_size; ++i) {
-            for (int j = 0; j < matrix_rank; ++j)
+            for (int j = 0; j < matrix_rank; ++j) {
                 result[i] -= row_space_right_inverse[i][j] *
                              row_space_basis[j][pivot_column];
+            }
         }
-        for (int i = 0; i < column_size; ++i)
+        for (int i = 0; i < column_size; ++i) {
             result[i] /= pivot_value;
+        }
         return result;
     }
 
@@ -469,14 +511,16 @@ template <class T> struct DynamicMatrixRank {
                               const std::vector<T> &column) {
         assert(static_cast<int>(matrix.size()) ==
                static_cast<int>(column.size()));
-        for (int i = 0; i < static_cast<int>(matrix.size()); ++i)
+        for (int i = 0; i < static_cast<int>(matrix.size()); ++i) {
             matrix[i].push_back(column[i]);
+        }
     }
 
     static int first_nonzero(const std::vector<T> &vector) {
         for (int i = 0; i < static_cast<int>(vector.size()); ++i) {
-            if (vector[i] != T())
+            if (vector[i] != T()) {
                 return i;
+            }
         }
         assert(false);
         return -1;
@@ -485,14 +529,16 @@ template <class T> struct DynamicMatrixRank {
     static std::vector<std::vector<T>>
     transpose_matrix(const std::vector<std::vector<T>> &matrix) {
         const int h = static_cast<int>(matrix.size());
-        if (h == 0)
+        if (h == 0) {
             return {};
+        }
         const int w = static_cast<int>(matrix[0].size());
         std::vector<std::vector<T>> transposed(w, std::vector<T>(h, T()));
         for (int i = 0; i < h; ++i) {
             assert(static_cast<int>(matrix[i].size()) == w);
-            for (int j = 0; j < w; ++j)
+            for (int j = 0; j < w; ++j) {
                 transposed[j][i] = matrix[i][j];
+            }
         }
         return transposed;
     }
@@ -500,8 +546,9 @@ template <class T> struct DynamicMatrixRank {
     static std::vector<int>
     find_independent_columns(const std::vector<std::vector<T>> &matrix) {
         const int h = static_cast<int>(matrix.size());
-        if (h == 0)
+        if (h == 0) {
             return {};
+        }
         const int w = static_cast<int>(matrix[0].size());
         std::vector<std::vector<T>> b = matrix;
         int rank = 0;
@@ -514,25 +561,31 @@ template <class T> struct DynamicMatrixRank {
                     break;
                 }
             }
-            if (pivot < 0)
+            if (pivot < 0) {
                 continue;
-            if (pivot != rank)
+            }
+            if (pivot != rank) {
                 b[pivot].swap(b[rank]);
+            }
 
             const T inverse = T(1) / b[rank][column];
-            for (int j = column; j < w; ++j)
+            for (int j = column; j < w; ++j) {
                 b[rank][j] *= inverse;
+            }
             for (int row = rank + 1; row < h; ++row) {
                 const T factor = b[row][column];
-                if (factor == T())
+                if (factor == T()) {
                     continue;
-                for (int j = column; j < w; ++j)
+                }
+                for (int j = column; j < w; ++j) {
                     b[row][j] -= b[rank][j] * factor;
+                }
             }
             pivot_columns.push_back(column);
             ++rank;
-            if (rank == h)
+            if (rank == h) {
                 break;
+            }
         }
         return pivot_columns;
     }
@@ -540,12 +593,14 @@ template <class T> struct DynamicMatrixRank {
     static std::vector<std::vector<T>>
     inverse_matrix(std::vector<std::vector<T>> matrix) {
         const int n = static_cast<int>(matrix.size());
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; ++i) {
             assert(static_cast<int>(matrix[i].size()) == n);
+        }
 
         std::vector<std::vector<T>> inverse(n, std::vector<T>(n, T()));
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; ++i) {
             inverse[i][i] = T(1);
+        }
 
         for (int column = 0; column < n; ++column) {
             int pivot = -1;
@@ -567,11 +622,13 @@ template <class T> struct DynamicMatrixRank {
                 inverse[column][j] *= diagonal_inverse;
             }
             for (int row = 0; row < n; ++row) {
-                if (row == column)
+                if (row == column) {
                     continue;
+                }
                 const T factor = matrix[row][column];
-                if (factor == T())
+                if (factor == T()) {
                     continue;
+                }
                 for (int j = 0; j < n; ++j) {
                     matrix[row][j] -= matrix[column][j] * factor;
                     inverse[row][j] -= inverse[column][j] * factor;

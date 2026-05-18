@@ -9,15 +9,19 @@ namespace {
 
 std::vector<int> prime_table(int N) {
     std::vector<int> is_prime(N + 1, 1);
-    if (N >= 0)
+    if (N >= 0) {
         is_prime[0] = 0;
-    if (N >= 1)
+    }
+    if (N >= 1) {
         is_prime[1] = 0;
+    }
     for (int p = 2; p <= N / p; ++p) {
-        if (!is_prime[p])
+        if (!is_prime[p]) {
             continue;
-        for (int q = p * p; q <= N; q += p)
+        }
+        for (int q = p * p; q <= N; q += p) {
             is_prime[q] = 0;
+        }
     }
     return is_prime;
 }
@@ -36,8 +40,9 @@ void self_test() {
                      ++i) {
                     long long naive = 0;
                     for (long long p = 2; p <= ns[i]; ++p) {
-                        if (is_prime[p] && p % m == r)
+                        if (is_prime[p] && p % m == r) {
                             ++naive;
+                        }
                     }
                     assert(h[r][i] == naive);
                 }
@@ -47,8 +52,9 @@ void self_test() {
             for (long long r = 0; r < m; ++r) {
                 long long naive = 0;
                 for (long long p = 2; p <= N; ++p) {
-                    if (is_prime[p] && p % m == r)
+                    if (is_prime[p] && p % m == r) {
                         ++naive;
+                    }
                 }
                 assert(res[r] == naive);
             }

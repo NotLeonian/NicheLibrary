@@ -46,10 +46,12 @@ __int128_t cross_value(const Point &a, const Point &b) {
 }
 
 int sign_value(__int128_t x) {
-    if (x < 0)
+    if (x < 0) {
         return -1;
-    if (x > 0)
+    }
+    if (x > 0) {
         return 1;
+    }
     return 0;
 }
 
@@ -78,8 +80,9 @@ bool same_point(const RealPoint &a, const RealPoint &b) {
 
 void add_unique(std::vector<RealPoint> &points, const RealPoint &point) {
     for (const auto &q : points) {
-        if (same_point(q, point))
+        if (same_point(q, point)) {
             return;
+        }
     }
     points.push_back(point);
 }
@@ -121,16 +124,19 @@ std::vector<RealPoint> brute_intersections(const std::vector<Point> &polygon,
             add_unique(points, line_intersection(line_a, line_b, u, v));
         }
     }
-    if (points.size() <= 2)
+    if (points.size() <= 2) {
         return points;
+    }
     const RealPoint dir = to_real_point(direction);
     int min_index = 0;
     int max_index = 0;
     for (int i = 1; i < static_cast<int>(points.size()); ++i) {
-        if (dot_ld(points[i], dir) < dot_ld(points[min_index], dir))
+        if (dot_ld(points[i], dir) < dot_ld(points[min_index], dir)) {
             min_index = i;
-        if (dot_ld(points[i], dir) > dot_ld(points[max_index], dir))
+        }
+        if (dot_ld(points[i], dir) > dot_ld(points[max_index], dir)) {
             max_index = i;
+        }
     }
     return {points[min_index], points[max_index]};
 }
@@ -148,8 +154,9 @@ std::vector<RealPoint> convex_cut(const std::vector<Point> &polygon,
         const __int128_t current = cross_value(direction, now - line_a);
         const __int128_t next_value = cross_value(direction, next - line_a);
 
-        if (sign_value(current) >= 0)
+        if (sign_value(current) >= 0) {
             result.push_back(to_real_point(now));
+        }
         if ((current < 0 && next_value > 0) ||
             (current > 0 && next_value < 0)) {
             result.push_back(line_intersection(line_a, line_b, now, next));
@@ -176,8 +183,9 @@ remove_collinear_vertices(const std::vector<Point> &polygon) {
         const Point &prev = polygon[(i + n - 1) % n];
         const Point &cur = polygon[i];
         const Point &next = polygon[(i + 1) % n];
-        if (sign_value(cross_value(cur - prev, next - cur)) == 0)
+        if (sign_value(cross_value(cur - prev, next - cur)) == 0) {
             continue;
+        }
         result.push_back(cur);
     }
     assert(result.size() >= 3);
@@ -189,8 +197,9 @@ void verify_intersection(const std::vector<Point> &polygon, const Point &line_a,
     const auto fast = line_polygon_intersection(polygon, line_a, line_b);
     const auto slow = brute_intersections(polygon, line_a, line_b);
     assert(fast.size() == slow.size());
-    if (fast.empty())
+    if (fast.empty()) {
         return;
+    }
 
     auto to_real = [](const auto &point) {
         return RealPoint(point.template x_as<long double>(),
@@ -212,8 +221,9 @@ int main() {
     int n;
     std::cin >> n;
     std::vector<Point> polygon(n);
-    for (auto &p : polygon)
+    for (auto &p : polygon) {
         p = read_point();
+    }
     polygon = remove_collinear_vertices(polygon);
 
     int q;

@@ -33,8 +33,9 @@ BruteResult brute_force_rectangle(const std::vector<TestRectangle> &rectangles,
         for (int y = d; y < u; ++y) {
             long long value = 0;
             for (const auto &rect : rectangles) {
-                if (rect.l <= x && x < rect.r && rect.d <= y && y < rect.u)
+                if (rect.l <= x && x < rect.r && rect.d <= y && y < rect.u) {
                     value += rect.w;
+                }
             }
             if (!found || ret.max_value < value) {
                 ret = BruteResult{value, x, y, x, y, 1};
@@ -70,8 +71,9 @@ BruteResult brute_force_variable(const std::vector<TestRectangle> &rectangles,
         for (int y = d; y < u; ++y) {
             long long value = 0;
             for (const auto &rect : rectangles) {
-                if (rect.l <= x && x < rect.r && rect.d <= y && y < rect.u)
+                if (rect.l <= x && x < rect.r && rect.d <= y && y < rect.u) {
                     value += rect.w;
+                }
             }
             if (!found || ret.max_value < value) {
                 ret = BruteResult{value, x, y, x, y, 1};
@@ -97,8 +99,9 @@ BruteResult brute_force_variable(const std::vector<TestRectangle> &rectangles,
 
 template <class Solver>
 void add_all(Solver &solver, const std::vector<TestRectangle> &rectangles) {
-    for (const auto &rect : rectangles)
+    for (const auto &rect : rectangles) {
         solver.add_rectangle(rect.l, rect.d, rect.r, rect.u, rect.w);
+    }
 }
 
 template <class Solver>
@@ -137,8 +140,9 @@ void check_rectangle(const std::vector<TestRectangle> &rectangles, int l, int d,
         for (int y = d; y < u; ++y) {
             long long value = 0;
             for (const auto &rect : rectangles) {
-                if (rect.l <= x && x < rect.r && rect.d <= y && y < rect.u)
+                if (rect.l <= x && x < rect.r && rect.d <= y && y < rect.u) {
                     value += rect.w;
+                }
             }
             const auto [point_value, point_x, point_y] =
                 solver.calc_max_lexicographically_minimum_point(x, y, x + 1,
@@ -194,8 +198,9 @@ void check_no_argument(const std::vector<TestRectangle> &rectangles) {
     for (const auto &rect : rectangles) {
         solver.add_rectangle(rect.l, rect.d, rect.r, rect.u, rect.w);
         compressed_solver.add_rectangle(rect.l, rect.d, rect.r, rect.u, rect.w);
-        if (rect.l == rect.r || rect.d == rect.u)
+        if (rect.l == rect.r || rect.d == rect.u) {
             continue;
+        }
         if (!found) {
             l = rect.l;
             d = rect.d;
@@ -209,8 +214,9 @@ void check_no_argument(const std::vector<TestRectangle> &rectangles) {
             u = std::max(u, rect.u);
         }
     }
-    if (!found)
+    if (!found) {
         return;
+    }
     const auto expected = brute_force_rectangle(rectangles, l, d, r, u);
     const auto [min_value, min_x, min_y] =
         solver.calc_max_lexicographically_minimum_point();
@@ -246,8 +252,9 @@ void self_test() {
         {-1, 0, 2, 2},  {2, 2, 5, 5}, {0, 0, 2, 1},
     };
     for (const auto &rectangles : cases) {
-        for (const auto &[l, d, r, u] : queries)
+        for (const auto &[l, d, r, u] : queries) {
             check_rectangle(rectangles, l, d, r, u);
+        }
         check_no_argument(rectangles);
     }
 
@@ -338,8 +345,9 @@ int main() {
         solver.calc_max_area<long long>(min_l, min_d, max_r, max_u);
     const long long total_area = (max_r - min_l) * (max_u - min_d);
     long long answer = total_area;
-    if (max_value == 0)
+    if (max_value == 0) {
         answer -= outside_area;
+    }
     std::cout << answer << '\n';
     return 0;
 }

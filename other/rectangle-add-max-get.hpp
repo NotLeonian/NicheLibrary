@@ -67,25 +67,32 @@ template <class T, class C> struct SegmentTree {
     explicit SegmentTree(const std::vector<Node> &leaves) {
         const int n = static_cast<int>(leaves.size());
         assert(n > 0);
-        while (size < n)
+        while (size < n) {
             size <<= 1;
+        }
         data.assign(size << 1, Node{C(), Length(), T(), T()});
         lazy.assign(size << 1, C());
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; ++i) {
             data[size + i] = leaves[i];
-        for (int i = size - 1; i >= 1; --i)
+        }
+        for (int i = size - 1; i >= 1; --i) {
             data[i] = merge(data[i << 1], data[i << 1 | 1]);
+        }
     }
 
     static Node merge(const Node &a, const Node &b) {
-        if (a.length == Length())
+        if (a.length == Length()) {
             return b;
-        if (b.length == Length())
+        }
+        if (b.length == Length()) {
             return a;
-        if (a.max_value > b.max_value)
+        }
+        if (a.max_value > b.max_value) {
             return a;
-        if (a.max_value < b.max_value)
+        }
+        if (a.max_value < b.max_value) {
             return b;
+        }
         return Node{a.max_value, a.length + b.length, a.minimum_y, b.maximum_y};
     }
 
@@ -106,16 +113,18 @@ template <class T, class C> struct SegmentTree {
     }
 
     void push(int v) {
-        if (lazy[v] == C())
+        if (lazy[v] == C()) {
             return;
+        }
         add_node(v << 1, lazy[v], true);
         add_node(v << 1 | 1, lazy[v], true);
         lazy[v] = C();
     }
 
     void apply(int v, int l, int r, int ql, int qr, C w, bool add) {
-        if (qr <= l || r <= ql)
+        if (qr <= l || r <= ql) {
             return;
+        }
         if (ql <= l && r <= qr) {
             add_node(v, w, add);
             return;
@@ -128,10 +137,12 @@ template <class T, class C> struct SegmentTree {
     }
 
     Node prod(int v, int l, int r, int ql, int qr) {
-        if (qr <= l || r <= ql)
+        if (qr <= l || r <= ql) {
             return Node{C(), Length(), T(), T()};
-        if (ql <= l && r <= qr)
+        }
+        if (ql <= l && r <= qr) {
             return data[v];
+        }
         push(v);
         const int m = (l + r) >> 1;
         return merge(prod(v << 1, l, m, ql, qr),
@@ -159,16 +170,18 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
     void add_rectangle(T l, T d, T r, T u, C w = C(1)) {
         assert(l <= r);
         assert(d <= u);
-        if (l == r || d == u)
+        if (l == r || d == u) {
             return;
+        }
         rectangle_add_max_get_internal::assert_valid_weight(w);
         rectangles.emplace_back(Rectangle{l, d, r, u, w});
     }
 
     std::tuple<C, T, T> calc_max_lexicographically_minimum_point() const {
         const auto query = make_bounding_query_range();
-        if (query.empty)
+        if (query.empty) {
             return {C(), T(), T()};
+        }
         const auto result = calc_impl<T, false>(query);
         return {result.max_value, result.minimum_x, result.minimum_y};
     }
@@ -182,8 +195,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
 
     std::tuple<C, T, T> calc_max_lexicographically_maximum_point() const {
         const auto query = make_bounding_query_range();
-        if (query.empty)
+        if (query.empty) {
             return {C(), T(), T()};
+        }
         const auto result = calc_impl<T, false>(query);
         return {result.max_value, result.maximum_x, result.maximum_y};
     }
@@ -197,8 +211,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
 
     template <class T2 = T> std::pair<C, T2> calc_max_area() const {
         const auto query = make_bounding_query_range();
-        if (query.empty)
+        if (query.empty) {
             return {C(), T2()};
+        }
         const auto result = calc_impl<T2, true>(query);
         return {result.max_value, result.max_area};
     }
@@ -236,8 +251,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
     };
 
     QueryRange make_bounding_query_range() const {
-        if (rectangles.empty())
+        if (rectangles.empty()) {
             return QueryRange{T(), T(), T(), T(), true};
+        }
         T l = rectangles[0].l;
         T d = rectangles[0].d;
         T r = rectangles[0].r;
@@ -268,8 +284,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
             const T d = std::max(rect.d, query.d);
             const T r = std::min(rect.r, query.r);
             const T u = std::min(rect.u, query.u);
-            if (l >= r || d >= u)
+            if (l >= r || d >= u) {
                 continue;
+            }
             clipped.emplace_back(Rectangle{l, d, r, u, rect.w});
             xs.emplace_back(l);
             xs.emplace_back(r);
@@ -293,8 +310,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
         }
         std::sort(events.begin(), events.end(),
                   [](const Event &a, const Event &b) {
-                      if (a.x != b.x)
+                      if (a.x != b.x) {
                           return a.x < b.x;
+                      }
                       return a.add < b.add;
                   });
 
@@ -335,8 +353,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
                 ret.minimum_y = now.minimum_y;
                 ret.maximum_x = maximum_x;
                 ret.maximum_y = now.maximum_y;
-                if constexpr (NeedArea)
+                if constexpr (NeedArea) {
                     ret.max_area = area;
+                }
                 found = true;
             } else if (ret.max_value == now.max_value) {
                 if (std::make_pair(minimum_x, now.minimum_y) <
@@ -349,8 +368,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
                     ret.maximum_x = maximum_x;
                     ret.maximum_y = now.maximum_y;
                 }
-                if constexpr (NeedArea)
+                if constexpr (NeedArea) {
                     ret.max_area += area;
+                }
             }
         }
         return ret;
@@ -375,16 +395,18 @@ template <class T, class C> struct RectangleAddMaxGet {
     void add_rectangle(T l, T d, T r, T u, C w = C(1)) {
         assert(l <= r);
         assert(d <= u);
-        if (l == r || d == u)
+        if (l == r || d == u) {
             return;
+        }
         rectangle_add_max_get_internal::assert_valid_weight(w);
         rectangles.emplace_back(Rectangle{l, d, r, u, w});
     }
 
     std::tuple<C, T, T> calc_max_lexicographically_minimum_point() const {
         const auto query = make_bounding_query_range();
-        if (query.empty)
+        if (query.empty) {
             return {C(), T(), T()};
+        }
         const auto result = calc_rectangle_impl<T, false>(query);
         return {result.max_value, result.minimum_x, result.minimum_y};
     }
@@ -407,8 +429,9 @@ template <class T, class C> struct RectangleAddMaxGet {
 
     std::tuple<C, T, T> calc_max_lexicographically_maximum_point() const {
         const auto query = make_bounding_query_range();
-        if (query.empty)
+        if (query.empty) {
             return {C(), T(), T()};
+        }
         const auto result = calc_rectangle_impl<T, false>(query);
         return {result.max_value, result.maximum_x, result.maximum_y};
     }
@@ -431,8 +454,9 @@ template <class T, class C> struct RectangleAddMaxGet {
 
     template <class T2 = T> std::pair<C, T2> calc_max_area() const {
         const auto query = make_bounding_query_range();
-        if (query.empty)
+        if (query.empty) {
             return {C(), T2()};
+        }
         const auto result = calc_rectangle_impl<T2, true>(query);
         return {result.max_value, result.max_area};
     }
@@ -488,8 +512,9 @@ template <class T, class C> struct RectangleAddMaxGet {
     };
 
     QueryRange make_bounding_query_range() const {
-        if (rectangles.empty())
+        if (rectangles.empty()) {
             return QueryRange{T(), T(), T(), T(), true};
+        }
         T l = rectangles[0].l;
         T d = rectangles[0].d;
         T r = rectangles[0].r;
@@ -525,8 +550,9 @@ template <class T, class C> struct RectangleAddMaxGet {
             assert(lower <= upper);
             lower_values[i] = lower;
             upper_values[i] = upper;
-            if (lower == upper)
+            if (lower == upper) {
                 continue;
+            }
             if (!found) {
                 d = lower;
                 u = upper;
@@ -557,8 +583,9 @@ template <class T, class C> struct RectangleAddMaxGet {
             const T cd = std::max(rect.d, d);
             const T cr = std::min(rect.r, r);
             const T cu = std::min(rect.u, u);
-            if (cl >= cr || cd >= cu)
+            if (cl >= cr || cd >= cu) {
                 continue;
+            }
             const int xl = rectangle_add_max_get_internal::checked_size(
                 rectangle_add_max_get_internal::coordinate_difference(l, cl));
             const int xr = rectangle_add_max_get_internal::checked_size(
@@ -611,8 +638,9 @@ template <class T, class C> struct RectangleAddMaxGet {
             ret.minimum_y = minimum_y;
             ret.maximum_x = maximum_x;
             ret.maximum_y = maximum_y;
-            if constexpr (NeedArea)
+            if constexpr (NeedArea) {
                 ret.max_area = area;
+            }
             found = true;
         } else if (ret.max_value == value) {
             if (std::make_pair(minimum_x, minimum_y) <
@@ -625,8 +653,9 @@ template <class T, class C> struct RectangleAddMaxGet {
                 ret.maximum_x = maximum_x;
                 ret.maximum_y = maximum_y;
             }
-            if constexpr (NeedArea)
+            if constexpr (NeedArea) {
                 ret.max_area += area;
+            }
         }
     }
 
@@ -649,8 +678,9 @@ template <class T, class C> struct RectangleAddMaxGet {
             const Node &now = seg.all_prod();
             const T x = rectangle_add_max_get_internal::add_length(query.l, i);
             T2 area = T2();
-            if constexpr (NeedArea)
+            if constexpr (NeedArea) {
                 area = static_cast<T2>(now.length);
+            }
             update_result<T2, NeedArea>(ret, found, now.max_value, x,
                                         now.minimum_y, x, now.maximum_y, area);
         }
@@ -672,8 +702,9 @@ template <class T, class C> struct RectangleAddMaxGet {
         bool found = false;
         for (int i = 0; i < x_count; ++i) {
             apply_events(seg, event_list, i);
-            if (query.lower_y[i] == query.upper_y[i])
+            if (query.lower_y[i] == query.upper_y[i]) {
                 continue;
+            }
             const int d = rectangle_add_max_get_internal::checked_size(
                 rectangle_add_max_get_internal::coordinate_difference(
                     query.d, query.lower_y[i]));
@@ -683,8 +714,9 @@ template <class T, class C> struct RectangleAddMaxGet {
             const Node now = seg.prod(d, u);
             const T x = rectangle_add_max_get_internal::add_length(query.l, i);
             T2 area = T2();
-            if constexpr (NeedArea)
+            if constexpr (NeedArea) {
                 area = static_cast<T2>(now.length);
+            }
             update_result<T2, NeedArea>(ret, found, now.max_value, x,
                                         now.minimum_y, x, now.maximum_y, area);
         }

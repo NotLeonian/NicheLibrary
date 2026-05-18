@@ -53,14 +53,16 @@ template <class T>
 std::vector<std::vector<T>>
 transpose_matrix(const std::vector<std::vector<T>> &a) {
     const int h = static_cast<int>(a.size());
-    if (h == 0)
+    if (h == 0) {
         return {};
+    }
     const int w = static_cast<int>(a[0].size());
     std::vector<std::vector<T>> transposed(w, std::vector<T>(h, T()));
     for (int i = 0; i < h; ++i) {
         assert(static_cast<int>(a[i].size()) == w);
-        for (int j = 0; j < w; ++j)
+        for (int j = 0; j < w; ++j) {
             transposed[j][i] = a[i][j];
+        }
     }
     return transposed;
 }
@@ -68,8 +70,9 @@ transpose_matrix(const std::vector<std::vector<T>> &a) {
 template <class T>
 std::vector<int> find_independent_columns(std::vector<std::vector<T>> a) {
     const int h = static_cast<int>(a.size());
-    if (h == 0)
+    if (h == 0) {
         return {};
+    }
     const int w = static_cast<int>(a[0].size());
     int rank = 0;
     std::vector<int> pivot_columns;
@@ -81,24 +84,30 @@ std::vector<int> find_independent_columns(std::vector<std::vector<T>> a) {
                 break;
             }
         }
-        if (pivot < 0)
+        if (pivot < 0) {
             continue;
-        if (pivot != rank)
+        }
+        if (pivot != rank) {
             a[pivot].swap(a[rank]);
+        }
         const T inverse = T(1) / a[rank][column];
-        for (int j = column; j < w; ++j)
+        for (int j = column; j < w; ++j) {
             a[rank][j] *= inverse;
+        }
         for (int row = rank + 1; row < h; ++row) {
             const T factor = a[row][column];
-            if (factor == T())
+            if (factor == T()) {
                 continue;
-            for (int j = column; j < w; ++j)
+            }
+            for (int j = column; j < w; ++j) {
                 a[row][j] -= a[rank][j] * factor;
+            }
         }
         pivot_columns.push_back(column);
         ++rank;
-        if (rank == h)
+        if (rank == h) {
             break;
+        }
     }
     return pivot_columns;
 }
@@ -106,12 +115,14 @@ std::vector<int> find_independent_columns(std::vector<std::vector<T>> a) {
 template <class T>
 std::vector<std::vector<T>> inverse_matrix(std::vector<std::vector<T>> a) {
     const int n = static_cast<int>(a.size());
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n; ++i) {
         assert(static_cast<int>(a[i].size()) == n);
+    }
 
     std::vector<std::vector<T>> inverse(n, std::vector<T>(n, T()));
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n; ++i) {
         inverse[i][i] = T(1);
+    }
 
     for (int column = 0; column < n; ++column) {
         int pivot = -1;
@@ -132,11 +143,13 @@ std::vector<std::vector<T>> inverse_matrix(std::vector<std::vector<T>> a) {
             inverse[column][j] *= diagonal_inverse;
         }
         for (int row = 0; row < n; ++row) {
-            if (row == column)
+            if (row == column) {
                 continue;
+            }
             const T factor = a[row][column];
-            if (factor == T())
+            if (factor == T()) {
                 continue;
+            }
             for (int j = 0; j < n; ++j) {
                 a[row][j] -= a[column][j] * factor;
                 inverse[row][j] -= inverse[column][j] * factor;
@@ -148,8 +161,9 @@ std::vector<std::vector<T>> inverse_matrix(std::vector<std::vector<T>> a) {
 
 template <class T> int brute_rank(std::vector<std::vector<T>> matrix) {
     const int h = static_cast<int>(matrix.size());
-    if (h == 0)
+    if (h == 0) {
         return 0;
+    }
     const int w = static_cast<int>(matrix[0].size());
     int rank = 0;
     for (int column = 0; column < w; ++column) {
@@ -160,23 +174,29 @@ template <class T> int brute_rank(std::vector<std::vector<T>> matrix) {
                 break;
             }
         }
-        if (pivot < 0)
+        if (pivot < 0) {
             continue;
-        if (pivot != rank)
+        }
+        if (pivot != rank) {
             matrix[pivot].swap(matrix[rank]);
+        }
         const T inverse = T(1) / matrix[rank][column];
-        for (int j = column; j < w; ++j)
+        for (int j = column; j < w; ++j) {
             matrix[rank][j] *= inverse;
+        }
         for (int row = rank + 1; row < h; ++row) {
             const T factor = matrix[row][column];
-            if (factor == T())
+            if (factor == T()) {
                 continue;
-            for (int j = column; j < w; ++j)
+            }
+            for (int j = column; j < w; ++j) {
                 matrix[row][j] -= matrix[rank][j] * factor;
+            }
         }
         ++rank;
-        if (rank == h)
+        if (rank == h) {
             break;
+        }
     }
     return rank;
 }
@@ -225,8 +245,9 @@ struct StaticFlipRankF2 {
         for (int i = 0; i < row_size; ++i) {
             for (int mid = 0; mid < matrix_rank; ++mid) {
                 const F2 value = matrix[i][basis_columns[mid]];
-                if (value == F2())
+                if (value == F2()) {
                     continue;
+                }
                 for (int j = 0; j < matrix_rank; ++j) {
                     column_space_reconstructor[i][j] +=
                         value * intersection_inverse_matrix[mid][j];
@@ -239,8 +260,9 @@ struct StaticFlipRankF2 {
         for (int i = 0; i < matrix_rank; ++i) {
             for (int mid = 0; mid < matrix_rank; ++mid) {
                 const F2 value = intersection_inverse_matrix[i][mid];
-                if (value == F2())
+                if (value == F2()) {
                     continue;
+                }
                 for (int j = 0; j < column_size; ++j) {
                     row_space_reconstructor[i][j] +=
                         value * matrix[basis_rows[mid]][j];
@@ -251,8 +273,9 @@ struct StaticFlipRankF2 {
         standard_column_in_column_space.assign(row_size, false);
         for (int row = 0; row < row_size; ++row) {
             const int pos = basis_row_position[row];
-            if (pos < 0)
+            if (pos < 0) {
                 continue;
+            }
             bool ok = true;
             for (int i = 0; i < row_size; ++i) {
                 if (column_space_reconstructor[i][pos] !=
@@ -267,8 +290,9 @@ struct StaticFlipRankF2 {
         standard_row_in_row_space.assign(column_size, false);
         for (int column = 0; column < column_size; ++column) {
             const int pos = basis_column_position[column];
-            if (pos < 0)
+            if (pos < 0) {
                 continue;
+            }
             bool ok = true;
             for (int j = 0; j < column_size; ++j) {
                 if (row_space_reconstructor[pos][j] !=
@@ -284,10 +308,12 @@ struct StaticFlipRankF2 {
     char classify(int row, int column) const {
         const bool column_inside = standard_column_in_column_space[row];
         const bool row_inside = standard_row_in_row_space[column];
-        if (!column_inside && !row_inside)
+        if (!column_inside && !row_inside) {
             return '+';
-        if (column_inside != row_inside)
+        }
+        if (column_inside != row_inside) {
             return '0';
+        }
         const int row_pos = basis_row_position[row];
         const int column_pos = basis_column_position[column];
         assert(row_pos >= 0 && column_pos >= 0);
@@ -303,8 +329,9 @@ apply_rank_one(std::vector<std::vector<F2>> matrix,
     const int h = static_cast<int>(matrix.size());
     const int w = h == 0 ? 0 : static_cast<int>(matrix[0].size());
     for (int i = 0; i < h; ++i) {
-        for (int j = 0; j < w; ++j)
+        for (int j = 0; j < w; ++j) {
             matrix[i][j] += column_vector[i] * row_vector[j];
+        }
     }
     return matrix;
 }
@@ -328,12 +355,14 @@ void self_test() {
                 for (int column_mask = 0; column_mask < (1 << h);
                      ++column_mask) {
                     std::vector<F2> column_vector(h, F2());
-                    for (int i = 0; i < h; ++i)
+                    for (int i = 0; i < h; ++i) {
                         column_vector[i] = F2((column_mask >> i) & 1);
+                    }
                     for (int row_mask = 0; row_mask < (1 << w); ++row_mask) {
                         std::vector<F2> row_vector(w, F2());
-                        for (int j = 0; j < w; ++j)
+                        for (int j = 0; j < w; ++j) {
                             row_vector[j] = F2((row_mask >> j) & 1);
+                        }
                         const auto updated =
                             apply_rank_one(matrix, column_vector, row_vector);
                         const int expected = brute_rank(updated);
@@ -353,8 +382,9 @@ void self_test() {
                             for (int new_row_mask = 0; new_row_mask < (1 << w);
                                  ++new_row_mask) {
                                 std::vector<F2> new_row(w, F2());
-                                for (int j = 0; j < w; ++j)
+                                for (int j = 0; j < w; ++j) {
                                     new_row[j] = F2((new_row_mask >> j) & 1);
+                                }
                                 auto row_updated = updated;
                                 row_updated[row] = new_row;
                                 const int row_expected =
@@ -375,12 +405,14 @@ void self_test() {
                                  new_column_mask < (1 << h);
                                  ++new_column_mask) {
                                 std::vector<F2> new_column(h, F2());
-                                for (int i = 0; i < h; ++i)
+                                for (int i = 0; i < h; ++i) {
                                     new_column[i] =
                                         F2((new_column_mask >> i) & 1);
+                                }
                                 auto column_updated = updated;
-                                for (int i = 0; i < h; ++i)
+                                for (int i = 0; i < h; ++i) {
                                     column_updated[i][column] = new_column[i];
+                                }
                                 const int column_expected =
                                     brute_rank(column_updated);
                                 assert(applied.rank_after_column_replacement(
@@ -417,15 +449,17 @@ int main() {
     for (int i = 0; i < n; ++i) {
         std::string s;
         std::cin >> s;
-        for (int j = 0; j < m; ++j)
+        for (int j = 0; j < m; ++j) {
             matrix[i][j] = F2(s[j] - '0');
+        }
     }
 
     StaticFlipRankF2 solver(matrix);
     for (int i = 0; i < n; ++i) {
         std::string answer(m, '0');
-        for (int j = 0; j < m; ++j)
+        for (int j = 0; j < m; ++j) {
             answer[j] = solver.classify(i, j);
+        }
         std::cout << answer << '\n';
     }
 }

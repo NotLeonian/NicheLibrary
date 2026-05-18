@@ -16,8 +16,9 @@ namespace prime_counting_modulo_internal {
 inline long long integer_sqrt(long long n) {
     assert(n >= 0);
     long long ok = 0, ng = 1;
-    while (ng <= n / ng)
+    while (ng <= n / ng) {
         ng <<= 1;
+    }
     while (ng - ok > 1) {
         const long long mid = ok + (ng - ok) / 2;
         if (mid <= n / mid) {
@@ -34,20 +35,24 @@ inline long long count_residue_2_to_n(long long n, long long m, long long r) {
     assert(m > 0);
     assert(0 <= r && r < m);
     long long res = 0;
-    if (r <= n)
+    if (r <= n) {
         res = (n - r) / m + 1;
-    if (r == 0)
+    }
+    if (r == 0) {
         --res;
-    if (n >= 1 && r == 1 % m)
+    }
+    if (n >= 1 && r == 1 % m) {
         --res;
+    }
     return res;
 }
 
 inline void add_mod(long long &x, long long a, long long m) {
     assert(0 <= x && x < m);
     assert(0 <= a && a < m);
-    if (a == 0)
+    if (a == 0) {
         return;
+    }
     if (x >= m - a) {
         x -= m - a;
     } else {
@@ -66,8 +71,9 @@ prime_counting_modulo_table(long long N, long long m) {
     for (i64 i = N; i > 0;) {
         ns.push_back(i);
         const i64 q = N / i;
-        if (q == N)
+        if (q == N) {
             break;
+        }
         i = N / (q + 1);
     }
     const i64 sq = prime_counting_modulo_internal::integer_sqrt(N);
@@ -83,8 +89,9 @@ prime_counting_modulo_table(long long N, long long m) {
         const i64 x_mod = x % m;
         const i64 x_idx = nsz - x;
         const i64 prev_idx = nsz - x + 1;
-        if (h[x_mod][x_idx] == h[x_mod][prev_idx])
+        if (h[x_mod][x_idx] == h[x_mod][prev_idx]) {
             continue;
+        }
         const i64 x2 = x * x;
         for (i64 i = 1; i < nsz && ns[i] >= x2; ++i) {
             const i64 n = ns[i];
@@ -104,11 +111,13 @@ inline std::vector<long long> prime_counting_modulo(long long N, long long m) {
     assert(N >= 0);
     assert(m > 0);
     std::vector<long long> res(m);
-    if (N == 0)
+    if (N == 0) {
         return res;
+    }
     const auto table = prime_counting_modulo_table(N, m).second;
-    for (long long r = 0; r < m; ++r)
+    for (long long r = 0; r < m; ++r) {
         res[r] = table[r][1];
+    }
     return res;
 }
 
@@ -118,8 +127,9 @@ prime_counting_modulo_mf_prefix_sum_table(long long N, long long m) {
     assert(N >= 0);
     assert(m > 0);
     std::vector<std::vector<T>> res(m);
-    if (N == 0)
+    if (N == 0) {
         return res;
+    }
     const auto table = prime_counting_modulo_table(N, m).second;
     for (long long r = 0; r < m; ++r) {
         res[r].resize(table[r].size());
