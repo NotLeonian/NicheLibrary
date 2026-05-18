@@ -87,17 +87,21 @@ template <class Point> using calc_t = typename calc_type<Point>::type;
 
 template <class T> int sign_value(const T &value) {
     if constexpr (is_integral<T>::value) {
-        if (value < 0)
+        if (value < 0) {
             return -1;
-        if (value > 0)
+        }
+        if (value > 0) {
             return 1;
+        }
         return 0;
     } else {
         constexpr long double eps = 1e-12L;
-        if (value < -eps)
+        if (value < -eps) {
             return -1;
-        if (value > eps)
+        }
+        if (value > eps) {
             return 1;
+        }
         return 0;
     }
 }
@@ -191,14 +195,16 @@ template <class Func> int last_non_negative(int length, Func &&func) {
 
 inline int positive_mod(int index, int mod) {
     int ret = index % mod;
-    if (ret < 0)
+    if (ret < 0) {
         ret += mod;
+    }
     return ret;
 }
 
 inline int distance_forward(int from, int to, int n) {
-    if (from <= to)
+    if (from <= to) {
         return to - from;
+    }
     return to + n - from;
 }
 

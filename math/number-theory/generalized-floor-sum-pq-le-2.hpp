@@ -34,8 +34,9 @@ template <class T> T floor_div(T x, T y) {
     if constexpr (is_signed<T>::value) {
         T q = x / y;
         T r = x % y;
-        if (r < 0)
+        if (r < 0) {
             --q;
+        }
         return q;
     } else {
         return x / y;
@@ -46,8 +47,9 @@ template <class T> T floor_mod(T x, T y) {
     assert(y > 0);
     if constexpr (is_signed<T>::value) {
         T r = x % y;
-        if (r < 0)
+        if (r < 0) {
             r += y;
+        }
         return r;
     } else {
         return x % y;
@@ -56,45 +58,52 @@ template <class T> T floor_mod(T x, T y) {
 
 // Σ_{i=0}^{n-1} i = n(n-1)/2
 template <class T> T sum_0_to_n_minus_1(T n) {
-    if (n == 0)
+    if (n == 0) {
         return 0;
-    if ((n & 1) == 0)
+    }
+    if ((n & 1) == 0) {
         return (n / 2) * (n - 1);
+    }
     return n * ((n - 1) / 2);
 }
 
 // Σ_{i=0}^{n-1} i^2 = (n-1)n(2n-1)/6
 template <class T> T sum_0_to_n_minus_1_sq(T n) {
-    if (n == 0)
+    if (n == 0) {
         return 0;
+    }
     T a = n - 1, b = n, c = 2 * n - 1;
-    if ((a % 2) == 0)
+    if ((a % 2) == 0) {
         a /= 2;
-    else if ((b % 2) == 0)
+    } else if ((b % 2) == 0) {
         b /= 2;
-    else
+    } else {
         c /= 2;
+    }
 
-    if ((a % 3) == 0)
+    if ((a % 3) == 0) {
         a /= 3;
-    else if ((b % 3) == 0)
+    } else if ((b % 3) == 0) {
         b /= 3;
-    else
+    } else {
         c /= 3;
+    }
 
     return a * b * c;
 }
 
 template <class T> T sum_range(T l, T r) {
     // Σ_{i=l}^{r} i
-    if (l > r)
+    if (l > r) {
         return 0;
+    }
     T cnt = r - l + 1;
     T s = l + r;
-    if ((s & 1) == 0)
+    if ((s & 1) == 0) {
         s /= 2;
-    else
+    } else {
         cnt /= 2;
+    }
     return s * cnt;
 }
 
@@ -105,11 +114,13 @@ template <class Int> struct Result {
 };
 
 template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
-    if constexpr (is_signed<Int>::value)
+    if constexpr (is_signed<Int>::value) {
         assert(n >= 0);
+    }
     assert(m > 0);
-    if (n == 0)
+    if (n == 0) {
         return {0, 0, 0};
+    }
 
     const Int qa = floor_div(a, m);
     a = floor_mod(a, m);
@@ -164,8 +175,9 @@ GeneralizedFloorSumPQLe2Result<T> generalized_floor_sum_pq_le_2(T n, T m, T a,
                                                                 T b) {
     static_assert(generalized_floor_sum_pq_le_2_internal::is_integral<T>::value,
                   "T must be integer.");
-    if constexpr (generalized_floor_sum_pq_le_2_internal::is_signed<T>::value)
+    if constexpr (generalized_floor_sum_pq_le_2_internal::is_signed<T>::value) {
         assert(n >= 0);
+    }
     assert(m > 0);
 
 #ifdef __SIZEOF_INT128__

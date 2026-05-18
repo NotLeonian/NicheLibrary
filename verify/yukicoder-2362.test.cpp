@@ -12,8 +12,9 @@ long long floor_div_ll(long long x, long long m) {
     assert(m > 0);
     long long q = x / m;
     long long r = x % m;
-    if (r < 0)
+    if (r < 0) {
         --q;
+    }
     return q;
 }
 

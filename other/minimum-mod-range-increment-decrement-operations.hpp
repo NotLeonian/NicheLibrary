@@ -69,8 +69,9 @@ T minimum_mod_range_increment_decrement_operations(std::vector<T> a,
 
     const std::size_t keep_count = n + 1 - negative_count;
     T answer = 0;
-    for (std::size_t i = 0; i < keep_count; ++i)
+    for (std::size_t i = 0; i < keep_count; ++i) {
         answer += differences[i];
+    }
     return answer;
 }
 

@@ -33,8 +33,9 @@ template <class T> T floor_div(T x, T y) {
     if constexpr (is_signed<T>::value) {
         T q = x / y;
         T r = x % y;
-        if (r < 0)
+        if (r < 0) {
             --q;
+        }
         return q;
     } else {
         return x / y;
@@ -45,8 +46,9 @@ template <class T> T floor_mod(T x, T y) {
     assert(y > 0);
     if constexpr (is_signed<T>::value) {
         T r = x % y;
-        if (r < 0)
+        if (r < 0) {
             r += y;
+        }
         return r;
     } else {
         return x % y;
@@ -55,10 +57,12 @@ template <class T> T floor_mod(T x, T y) {
 
 // Σ_{i=0}^{n-1} i = n(n-1)/2
 template <class T> T sum_0_to_n_minus_1(T n) {
-    if (n == 0)
+    if (n == 0) {
         return 0;
-    if ((n & 1) == 0)
+    }
+    if ((n & 1) == 0) {
         return (n / 2) * (n - 1);
+    }
     return n * ((n - 1) / 2);
 }
 
@@ -67,11 +71,13 @@ template <class T> T sum_0_to_n_minus_1(T n) {
 template <class T> T floor_sum(T n, T m, T a, T b) {
     static_assert(floor_sum_internal::is_integral<T>::value,
                   "T must be integer.");
-    if constexpr (floor_sum_internal::is_signed<T>::value)
+    if constexpr (floor_sum_internal::is_signed<T>::value) {
         assert(n >= 0);
+    }
     assert(m > 0);
-    if (n == 0)
+    if (n == 0) {
         return 0;
+    }
 
     T ans = 0;
 
@@ -99,8 +105,9 @@ template <class T> T floor_sum(T n, T m, T a, T b) {
         }
 
         const T y_max = a * n + b;
-        if (y_max < m)
+        if (y_max < m) {
             break;
+        }
 
         n = y_max / m;
         b = y_max % m;

@@ -11,8 +11,9 @@ static __int128 floor_div_i128(__int128 x, __int128 m) {
     assert(m > 0);
     __int128 q = x / m;
     __int128 r = x % m;
-    if (r < 0)
+    if (r < 0) {
         --q;
+    }
     return q;
 }
 

@@ -12,22 +12,25 @@ struct ModInt998244353 {
 
     ModInt998244353(long long value = 0) {
         value %= mod;
-        if (value < 0)
+        if (value < 0) {
             value += mod;
+        }
         this->value = static_cast<int>(value);
     }
 
     ModInt998244353 &operator+=(const ModInt998244353 &other) {
         value += other.value;
-        if (value >= mod)
+        if (value >= mod) {
             value -= mod;
+        }
         return *this;
     }
 
     ModInt998244353 &operator-=(const ModInt998244353 &other) {
         value -= other.value;
-        if (value < 0)
+        if (value < 0) {
             value += mod;
+        }
         return *this;
     }
 
@@ -39,8 +42,9 @@ struct ModInt998244353 {
     static long long pow_mod(long long x, long long n) {
         long long result = 1;
         while (n > 0) {
-            if (n & 1)
+            if (n & 1) {
                 result = result * x % mod;
+            }
             x = x * x % mod;
             n >>= 1;
         }
