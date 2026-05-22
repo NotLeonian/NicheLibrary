@@ -109,7 +109,7 @@ jobs:
           fetch-depth: 0
       - name: Restore previous verify result
         id: restore-cached-results
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
+        if: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify)) }}
         uses: actions/cache/restore@v5
         with:
           path: merged-result.json
