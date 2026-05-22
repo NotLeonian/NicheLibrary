@@ -7,6 +7,15 @@ on:
     branches:
       - "main"
   workflow_dispatch:
+    inputs:
+      full_verify:
+        description: "Ignore cached verify result and re-run all verification"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "37 3 1 * *"
+      timezone: "Asia/Tokyo"
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -100,6 +109,7 @@ jobs:
           fetch-depth: 0
       - name: Restore previous verify result
         id: restore-cached-results
+        if: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify)) }}
         uses: actions/cache/restore@v5
         with:
           path: merged-result.json
@@ -112,6 +122,10 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
+      - name: Drop local verifier caches for full verification
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
+        run: |
+          rm -rf .competitive-verifier/cache .verify-helper/cache
       - name: Verify
         uses: competitive-verifier/actions/verify@v2
         with:
@@ -119,7 +133,7 @@ jobs:
           split-size: ${{ env.SPLIT_SIZE }}
           split-index: ${{ matrix.index }}
           timeout: 1800
-          prev-result: ${{ steps.restore-cached-results.outputs.cache-matched-key != '' && 'merged-result.json' || '' }}
+          prev-result: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify)) && steps.restore-cached-results.outputs.cache-matched-key != '' && 'merged-result.json' || '' }}
         env:
           YUKICODER_TOKEN: ${{ secrets.YUKICODER_TOKEN }}
       - name: Upload result artifact
