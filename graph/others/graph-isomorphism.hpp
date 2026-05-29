@@ -10,8 +10,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <string>
-#include <unordered_set>
+#include <cstdint>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -72,9 +72,21 @@ struct GraphIsomorphism {
         }
     };
 
+    struct StateKey {
+        std::uint64_t hash_value;
+        std::vector<int> colors;
+
+        friend bool operator<(const StateKey &lhs, const StateKey &rhs) {
+            if (lhs.hash_value != rhs.hash_value) {
+                return lhs.hash_value < rhs.hash_value;
+            }
+            return lhs.colors < rhs.colors;
+        }
+    };
+
     int n;
     std::array<Graph, 2> graph;
-    std::unordered_set<std::string> dead_states;
+    std::set<StateKey> dead_states;
 
     GraphIsomorphism(int n_, const std::vector<std::pair<int, int>> &edges_1,
                      const std::vector<std::pair<int, int>> &edges_2)
@@ -185,7 +197,7 @@ struct GraphIsomorphism {
             return false;
         }
 
-        const std::string key = encode(color);
+        StateKey key = make_state_key(color);
         if (dead_states.find(key) != dead_states.end()) {
             return false;
         }
@@ -233,7 +245,7 @@ struct GraphIsomorphism {
                 }
             }
         }
-        dead_states.insert(key);
+        dead_states.insert(std::move(key));
         return false;
     }
 
@@ -282,19 +294,33 @@ struct GraphIsomorphism {
         return mapped_edges == graph[1].edges;
     }
 
-    std::string encode(const std::array<std::vector<int>, 2> &color) const {
-        std::string res;
-        res.reserve(8 * n);
+    static std::uint64_t mix(std::uint64_t x) {
+        x += 0x9e3779b97f4a7c15ULL;
+        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+        x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+        return x ^ (x >> 31);
+    }
+
+    StateKey
+    make_state_key(const std::array<std::vector<int>, 2> &color) const {
+        StateKey key;
+        key.colors.reserve(2 * n);
+
+        std::uint64_t hash_value = 0x6a09e667f3bcc909ULL;
         for (int t = 0; t < 2; ++t) {
             for (int v = 0; v < n; ++v) {
-                unsigned int x = static_cast<unsigned int>(color[t][v] + 1);
-                for (int i = 0; i < 4; ++i) {
-                    res.push_back(static_cast<char>(x & 255U));
-                    x >>= 8;
-                }
+                const int c = color[t][v];
+                key.colors.push_back(c);
+                const std::uint64_t x =
+                    static_cast<std::uint64_t>(c + 1) +
+                    static_cast<std::uint64_t>(key.colors.size()) *
+                        0x9e3779b97f4a7c15ULL;
+                hash_value ^= mix(x);
+                hash_value = (hash_value << 7) | (hash_value >> 57);
             }
         }
-        return res;
+        key.hash_value = hash_value;
+        return key;
     }
 };
 

@@ -31,9 +31,14 @@ documentation_of: graph/others/graph-isomorphism.hpp
 - $D$ を重複除去後の隣接リストの全長の合計とする。$D\leq 2U$ である。
 - $L$ を色分割中に作られる signature の最大長とする。$L\leq 2N+2$ である。
 - $S$ を DFS で訪問した状態数、$R$ を全状態を通した色分割更新回数の合計とする。$R\leq S(N+1)$ である。
-- `std::unordered_set` の操作は期待計算量で評価する。
-- 構築は $O(M_1\log(M_1+2)+M_2\log(M_2+2)+N\log(N+2)+N+M_1+M_2)$ 時間である。
-- 色分割更新 $1$ 回は $O(D\log(N+2)+NL\log(N+2)+D+N)$ 時間である。
-- 色がすべて単独になった状態での辺集合比較は $O(U\log(U+2)+U+N)$ 時間である。
-- 全体は $O(M_1\log(M_1+2)+M_2\log(M_2+2)+N\log(N+2)+N+M_1+M_2+R(D\log(N+2)+NL\log(N+2)+D+N)+S(U\log(U+2)+U+N))$ 時間である。
+- 探索メモは平衡二分探索木で持つ。状態キーの比較は最悪 $O(N)$ 時間である。
+- $C_{\mathrm{build}}=M_1\log(M_1+2)+M_2\log(M_2+2)+N\log(N+2)+N+M_1+M_2$ とする。
+- $C_{\mathrm{ref}}=D\log(N+2)+NL\log(N+2)+NL+D+N$ とする。
+- $C_{\mathrm{memo}}=N\log(S+2)+N$ とする。
+- $C_{\mathrm{check}}=U\log(U+2)+U+N$ とする。
+- 構築は $O(C_{\mathrm{build}})$ 時間である。
+- 色分割更新 $1$ 回は $O(C_{\mathrm{ref}})$ 時間である。
+- 探索メモの検索または挿入は $O(C_{\mathrm{memo}})$ 時間である。
+- 色がすべて単独になった状態での辺集合比較は $O(C_{\mathrm{check}})$ 時間である。
+- 全体は $O(C_{\mathrm{build}}+RC_{\mathrm{ref}}+S(C_{\mathrm{memo}}+C_{\mathrm{check}}))$ 時間である。
 - 最悪の場合、$S$ は指数的に大きくなる。
