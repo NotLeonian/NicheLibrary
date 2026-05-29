@@ -24,6 +24,7 @@
 - 文章中のアポストロフィーは `’` とする（`'` などでない）。
   - ただし、`Luzhiled's Library` や `Nyaan's Library` のような固有名詞は例外とする。
   - また、LICENSE 内の記述も例外とする。
+- indexing は `0-based indexing`, `1-based indexing` のように `k-based indexing` の形で記述する（`k-indexed` などでない）。
 - ヘッダファイルや verify ソースコードの `for`, `while`, `do`, `if`, `else if`, `else` 文の本体が、処理が 1 文のみであるかどうかにかかわらず `{ }` で囲まれている。
   - `if constexpr` および `else if constexpr` も対象とする。
   - ただし、`else if` は `} else if (...) {` の形でよい。
