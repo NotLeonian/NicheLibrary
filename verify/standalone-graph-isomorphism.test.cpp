@@ -1,4 +1,4 @@
-// competitive-verifier: PROBLEM STANDALONE
+// competitive-verifier: STANDALONE
 
 #include <algorithm>
 #include <cassert>
