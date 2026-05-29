@@ -76,9 +76,9 @@ struct GraphIsomorphism {
     std::array<Graph, 2> graph;
     std::unordered_set<std::string> dead_states;
 
-    GraphIsomorphism(int n_, const std::vector<std::pair<int, int>> &edges1,
-                     const std::vector<std::pair<int, int>> &edges2)
-        : n(n_), graph{Graph(n_, edges1), Graph(n_, edges2)} {
+    GraphIsomorphism(int n_, const std::vector<std::pair<int, int>> &edges_1,
+                     const std::vector<std::pair<int, int>> &edges_2)
+        : n(n_), graph{Graph(n_, edges_1), Graph(n_, edges_2)} {
         assert(n >= 0);
     }
 
@@ -298,9 +298,9 @@ struct GraphIsomorphism {
     }
 };
 
-bool is_graph_isomorphic(int n, const std::vector<std::pair<int, int>> &edges1,
-                         const std::vector<std::pair<int, int>> &edges2) {
-    return GraphIsomorphism(n, edges1, edges2).run();
+bool is_graph_isomorphic(int n, const std::vector<std::pair<int, int>> &edges_1,
+                         const std::vector<std::pair<int, int>> &edges_2) {
+    return GraphIsomorphism(n, edges_1, edges_2).run();
 }
 
 #endif

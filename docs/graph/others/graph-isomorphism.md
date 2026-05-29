@@ -12,12 +12,12 @@ documentation_of: graph/others/graph-isomorphism.hpp
 
 ## 使い方
 
-- `is_graph_isomorphic(n, edges1, edges2)`
+- `is_graph_isomorphic(n, edges_1, edges_2)`
   - 頂点数 $\mathrm{n}$ の $2$ つの無向グラフが同型なら `true` を返す。
-  - `edges1`, `edges2` は各グラフの辺集合である。各辺は 0-based indexing の頂点対で、端点の順序は問わない。
+  - `edges_1`, `edges_2` は各グラフの辺集合である。各辺は 0-based indexing の頂点対で、端点の順序は問わない。
   - 自己ループと多重辺を区別して判定する。多重辺は同じ頂点対を複数回入れる。
-  - `edges1`, `edges2` の頂点番号は $0$ 以上 $\mathrm{n}$ 未満である必要がある。
-- `GraphIsomorphism(n, edges1, edges2)`
+  - `edges_1`, `edges_2` の頂点番号は $0$ 以上 $\mathrm{n}$ 未満である必要がある。
+- `GraphIsomorphism(n, edges_1, edges_2)`
   - 同じ判定を行うオブジェクトを作る。
   - 構築後に `run()` を呼び出す。
 - `GraphIsomorphism::run()`
