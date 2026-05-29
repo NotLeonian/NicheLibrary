@@ -55,7 +55,9 @@
 - ルート直下に全てのヘッダファイルを入れるディレクトリを置いていない。
 - ドキュメントは `docs/` 内に存在し、対応するヘッダファイルのルート直下から見た階層と同じ階層に置く。
 - verify ソースコードは `verify/` 内に存在する。
-  - それぞれの verify ソースコードのファイル名の先頭は `yosupo`, `yukicoder`, `aoj`, `standalone` のどれかであり、その後ろに問題の ID やタイトルなどが続いている。
+  - それぞれの verify ソースコードのファイル名の先頭は `yosupo`, `yukicoder`, `aoj`, `standalone` のどれかである。
+    - 先頭が `standalone` 以外であれば、その後ろに問題の ID などが続いている。
+    - 先頭が `standalone` であれば、その後ろに verify 対象が続いている（フルパスではなく、basename から拡張子を除いたものでよい）。
   - verify ソースコードの拡張子は `.test.cpp` である。
 
 ### ドキュメント
@@ -84,6 +86,8 @@
     - いずれかのジャッジの問題を使用する場合は `// competitive-verifier: PROBLEM ...` としており、`...` の部分に問題の URL を記述している。
     - `STANDALONE` の場合は `// competitive-verifier: STANDALONE` としている。
 - verify 問題が小数誤差許容問題である場合、verify ソースコードの 2 行目に `// competitive-verifier: ERROR ...` がある（`...` には許容誤差を小数で指定する）。
-- オンラインジャッジ上の問題を使いつつ自己検証も行う verify ソースコードについて、自己検証を行う関数の関数名が `self_test` であり、呼び出す際は `#ifndef ONLINE_JUDGE`, `#endif` で囲んでいる。
-  - `self_test` 関数の定義は `#ifndef ONLINE_JUDGE`, `#endif` で囲まれていなくてもよい。
+- オンラインジャッジ上の問題を使う verify ソースコードと、STANDALONE で行う自己検証を 1 つのファイルにまとめていない。
+  - オンラインジャッジ上の問題を使う verify ソースコードは、その問題を解くために必要な処理だけで構成されている。
+  - ライブラリ API の網羅テスト、愚直解との比較、小さい入力の全探索テストなどは `// competitive-verifier: STANDALONE` の verify ソースコードに分離している。
+  - ライブラリの用途や計算量に対して不自然な問題を、オンラインジャッジ上の verify 問題として無理に選んでいない。
 - AOJ の URL は `https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=...` の形式である（`http://...` などでない）。
