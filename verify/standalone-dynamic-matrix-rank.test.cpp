@@ -31,6 +31,14 @@ struct F2 {
         return *this;
     }
 
+    [[maybe_unused]] friend F2 operator+(F2 lhs, const F2 &rhs) {
+        return lhs += rhs;
+    }
+
+    [[maybe_unused]] friend F2 operator-(F2 lhs, const F2 &rhs) {
+        return lhs -= rhs;
+    }
+
     friend F2 operator*(F2 lhs, const F2 &rhs) { return lhs *= rhs; }
 
     friend F2 operator/(F2 lhs, const F2 &rhs) { return lhs /= rhs; }
