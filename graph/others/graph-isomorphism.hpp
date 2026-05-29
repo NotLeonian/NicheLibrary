@@ -298,8 +298,9 @@ struct GraphIsomorphism {
     }
 };
 
-bool is_graph_isomorphic(int n, const std::vector<std::pair<int, int>> &edges_1,
-                         const std::vector<std::pair<int, int>> &edges_2) {
+inline bool
+is_graph_isomorphic(int n, const std::vector<std::pair<int, int>> &edges_1,
+                    const std::vector<std::pair<int, int>> &edges_2) {
     return GraphIsomorphism(n, edges_1, edges_2).run();
 }
 
