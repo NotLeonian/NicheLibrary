@@ -28,9 +28,9 @@ documentation_of: graph/others/graph-isomorphism.hpp
 
 - $N$ を頂点数、$M_i=\lvert \mathrm{edges}_i\rvert$ とする。
 - $U$ を $2$ つのグラフに現れる、重複を除いた無向辺の個数の合計とする。自己ループも $1$ 個として数える。
-- $D$ を重複除去後の隣接リストの全長の合計とする。$D\leq 2U$ である。
-- $L$ を色分割中に作られる signature の最大長とする。$L\leq 2N+2$ である。
-- $S$ を DFS で訪問した状態数、$R$ を全状態を通した色分割更新回数の合計とする。$R\leq S(N+1)$ である。
+- $D$ を重複除去後の隣接リストの全長の合計とする。$D\le 2U$ である。
+- $L$ を色分割中に作られる signature の最大長とする。$L\le 2N+2$ である。
+- $S$ を DFS で訪問した状態数、$R$ を全状態を通した色分割更新回数の合計とする。$R\le S(N+1)$ である。
 - 探索メモは平衡二分探索木で持つ。状態キーの比較は最悪 $O(N)$ 時間である。
 - $C_{\mathrm{build}}=M_1\log(M_1+2)+M_2\log(M_2+2)+N\log(N+2)+N+M_1+M_2$ とする。
 - $C_{\mathrm{ref}}=D\log(N+2)+NL\log(N+2)+NL+D+N$ とする。
