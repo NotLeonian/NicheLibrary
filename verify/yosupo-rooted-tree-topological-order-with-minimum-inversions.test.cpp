@@ -1,78 +1,60 @@
-#ifndef GRAPH_TREE_01_ON_TREE_HPP
-#define GRAPH_TREE_01_ON_TREE_HPP
+// competitive-verifier: PROBLEM https://judge.yosupo.jp/problem/rooted_tree_topological_order_with_minimum_inversions
 
-// 根付き木上で、親が子より左に出る順序の 01 列の転倒数最小値を求める。
-// 頂点 v には c0[v] 個の 0 の後に c1[v] 個の 1 を置いた列が書かれている。
-// 辺は無向辺の両端で与え、root を根として親子関係を定める。
-// c0[v], c1[v] は非負である。計算量は O(n log n) である。
-
-#include <cassert>
+#include <iostream>
 #include <queue>
 #include <utility>
 #include <vector>
 
-template <class T>
-T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
-                   const std::vector<T> &c0, const std::vector<T> &c1,
-                   int root = 0) {
-    assert(n >= 1);
-    assert(static_cast<int>(edges.size()) == n - 1);
-    assert(static_cast<int>(c0.size()) == n);
-    assert(static_cast<int>(c1.size()) == n);
-    assert(0 <= root && root < n);
+#include "../graph/tree/01-on-tree.hpp"
 
+std::vector<int>
+build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
+                       const std::vector<long long> &c0,
+                       const std::vector<long long> &c1, int root) {
     std::vector<std::vector<int>> graph(n);
-    for (int v = 0; v < n; ++v) {
-        assert(!(c0[v] < T{}));
-        assert(!(c1[v] < T{}));
-    }
     for (const auto &[from, to] : edges) {
-        assert(0 <= from && from < n);
-        assert(0 <= to && to < n);
-        assert(from != to);
         graph[from].push_back(to);
         graph[to].push_back(from);
     }
 
     std::vector<int> parent(n, -2);
     parent[root] = -1;
-    int visited = 0;
     std::vector<int> stack{root};
     while (!stack.empty()) {
         const int v = stack.back();
         stack.pop_back();
-        ++visited;
         for (int to : graph[v]) {
             if (to == parent[v]) {
                 continue;
             }
-            assert(parent[to] == -2);
+            if (parent[to] != -2) {
+                continue;
+            }
             parent[to] = v;
             stack.push_back(to);
         }
     }
-    assert(visited == n);
 
     struct QueueNode {
         int vertex;
         int version;
-        T zero;
-        T one;
+        long long zero;
+        long long one;
     };
 
     struct QueueCompare {
         bool operator()(const QueueNode &a, const QueueNode &b) const {
-            if (a.one == T{} && b.one == T{}) {
+            if (a.one == 0 && b.one == 0) {
                 return a.vertex < b.vertex;
             }
-            if (a.one == T{}) {
+            if (a.one == 0) {
                 return false;
             }
-            if (b.one == T{}) {
+            if (b.one == 0) {
                 return true;
             }
-            const T lhs = a.zero * b.one;
-            const T rhs = b.zero * a.one;
+            const long long lhs = a.zero * b.one;
+            const long long rhs = b.zero * a.one;
             if (lhs < rhs) {
                 return true;
             }
@@ -83,10 +65,13 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
         }
     };
 
-    std::vector<int> leader(n), up = parent, version(n, 0);
-    std::vector<T> zero = c0, one = c1;
+    std::vector<int> leader(n), up = parent, version(n, 0), head(n), tail(n),
+                                next(n, -1);
+    std::vector<long long> zero = c0, one = c1;
     for (int v = 0; v < n; ++v) {
         leader[v] = v;
+        head[v] = v;
+        tail[v] = v;
     }
 
     auto find = [&](int v) {
@@ -108,11 +93,9 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
         push(v);
     }
 
-    T answer{};
     for (int merge_count = 0; merge_count < n - 1; ++merge_count) {
         QueueNode current{};
         while (true) {
-            assert(!que.empty());
             current = que.top();
             que.pop();
             const int v = find(current.vertex);
@@ -123,9 +106,8 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
 
         const int v = current.vertex;
         const int p = find(up[v]);
-        assert(p != v);
-
-        answer += one[p] * zero[v];
+        next[tail[p]] = head[v];
+        tail[p] = tail[v];
         zero[p] += zero[v];
         one[p] += one[v];
         leader[v] = p;
@@ -133,7 +115,53 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
         push(p);
     }
 
-    return answer;
+    std::vector<int> order;
+    order.reserve(n);
+    for (int v = head[root]; v != -1; v = next[v]) {
+        order.push_back(v);
+    }
+    return order;
 }
 
-#endif
+int main() {
+    int n;
+    std::cin >> n;
+
+    const int root = n;
+    std::vector<std::pair<int, int>> edges;
+    edges.reserve(n);
+    for (int i = 1; i < n; ++i) {
+        int p;
+        std::cin >> p;
+        edges.push_back({p, i});
+    }
+    edges.push_back({root, 0});
+
+    std::vector<long long> c0(n + 1, 0), c1(n + 1, 0);
+    for (int i = 0; i < n; ++i) {
+        std::cin >> c0[i];
+    }
+    for (int i = 0; i < n; ++i) {
+        std::cin >> c1[i];
+    }
+
+    const long long answer =
+        solve_01_on_tree<long long>(n + 1, edges, c0, c1, root);
+    const std::vector<int> order =
+        build_01_on_tree_order(n + 1, edges, c0, c1, root);
+
+    std::cout << answer << '\n';
+    bool first = true;
+    for (int v : order) {
+        if (v == root) {
+            continue;
+        }
+        if (!first) {
+            std::cout << ' ';
+        }
+        first = false;
+        std::cout << v;
+    }
+    std::cout << '\n';
+    return 0;
+}

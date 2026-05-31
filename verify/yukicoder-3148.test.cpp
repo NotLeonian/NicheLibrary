@@ -12,12 +12,15 @@ int main() {
     std::string s;
     std::cin >> n >> s;
 
-    std::vector<long long> c(n + 1, 0);
+    const int root = n;
+    std::vector<long long> c0(n + 1, 0), c1(n + 1, 0);
+    long long sum = 0;
     for (int i = 0; i < n; ++i) {
-        std::cin >> c[i];
+        std::cin >> c0[i];
+        c1[i] = 1;
+        sum += c0[i];
     }
 
-    const int root = n;
     std::vector<std::pair<int, int>> edges;
     edges.reserve(n);
     std::vector<int> stack;
@@ -34,6 +37,8 @@ int main() {
         }
     }
 
-    std::cout << solve_01_on_tree<long long>(n + 1, edges, c, root) << '\n';
+    const long long answer =
+        solve_01_on_tree<long long>(n + 1, edges, c0, c1, root) + sum;
+    std::cout << answer << '\n';
     return 0;
 }
