@@ -12,17 +12,55 @@
 #include <utility>
 #include <vector>
 
-template <class T = void, class Count>
-std::conditional_t<std::is_void_v<T>, Count, T>
+namespace zero_one_on_tree_impl {
+template <class InputCount, class Preferred>
+using count_type_t = std::conditional_t<
+    !std::is_class_v<Preferred> && !std::is_floating_point_v<Preferred> &&
+        (sizeof(InputCount) < sizeof(Preferred)),
+    Preferred,
+    std::conditional_t<(sizeof(InputCount) < sizeof(long long)),
+                       std::conditional_t<std::is_signed_v<InputCount>,
+                                          long long, unsigned long long>,
+                       InputCount>>;
+
+template <class Count>
+int compare_fraction(Count a_num, Count a_den, Count b_num, Count b_den) {
+    bool reversed = false;
+    while (true) {
+        const Count a_quot = a_num / a_den;
+        const Count b_quot = b_num / b_den;
+        if (a_quot != b_quot) {
+            const int result = a_quot < b_quot ? -1 : 1;
+            return reversed ? -result : result;
+        }
+
+        a_num %= a_den;
+        b_num %= b_den;
+        if (a_num == Count{} || b_num == Count{}) {
+            int result = 0;
+            if (a_num != b_num) {
+                result = a_num == Count{} ? -1 : 1;
+            }
+            return reversed ? -result : result;
+        }
+
+        std::swap(a_num, a_den);
+        std::swap(b_num, b_den);
+        reversed = !reversed;
+    }
+}
+} // namespace zero_one_on_tree_impl
+
+template <class T = void, class InputCount>
+std::conditional_t<std::is_void_v<T>,
+                   zero_one_on_tree_impl::count_type_t<InputCount, InputCount>,
+                   T>
 solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
-                 const std::vector<Count> &c0, const std::vector<Count> &c1,
-                 int root = 0) {
+                 const std::vector<InputCount> &c0,
+                 const std::vector<InputCount> &c1, int root = 0) {
+    using Preferred = std::conditional_t<std::is_void_v<T>, InputCount, T>;
+    using Count = zero_one_on_tree_impl::count_type_t<InputCount, Preferred>;
     using Answer = std::conditional_t<std::is_void_v<T>, Count, T>;
-    using CompareType =
-        std::conditional_t<(sizeof(Count) < sizeof(long long)),
-                           std::conditional_t<std::is_signed_v<Count>,
-                                              long long, unsigned long long>,
-                           Count>;
 
     assert(n >= 1);
     assert(static_cast<int>(edges.size()) == n - 1);
@@ -31,9 +69,12 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
     assert(0 <= root && root < n);
 
     std::vector<std::vector<int>> graph(n);
+    std::vector<Count> zero(n), one(n);
     for (int v = 0; v < n; ++v) {
-        assert(!(c0[v] < Count{}));
-        assert(!(c1[v] < Count{}));
+        assert(!(c0[v] < InputCount{}));
+        assert(!(c1[v] < InputCount{}));
+        zero[v] = static_cast<Count>(c0[v]);
+        one[v] = static_cast<Count>(c1[v]);
     }
     for (const auto &[from, to] : edges) {
         assert(0 <= from && from < n);
@@ -80,14 +121,12 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
             if (b.one == Count{}) {
                 return true;
             }
-            const CompareType lhs = static_cast<CompareType>(a.zero) *
-                                    static_cast<CompareType>(b.one);
-            const CompareType rhs = static_cast<CompareType>(b.zero) *
-                                    static_cast<CompareType>(a.one);
-            if (lhs < rhs) {
+            const int result = zero_one_on_tree_impl::compare_fraction(
+                a.zero, a.one, b.zero, b.one);
+            if (result < 0) {
                 return true;
             }
-            if (rhs < lhs) {
+            if (result > 0) {
                 return false;
             }
             return a.vertex < b.vertex;
@@ -95,7 +134,6 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
     };
 
     std::vector<int> leader(n), up = parent, version(n, 0);
-    std::vector<Count> zero = c0, one = c1;
     for (int v = 0; v < n; ++v) {
         leader[v] = v;
     }
