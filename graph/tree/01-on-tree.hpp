@@ -4,17 +4,26 @@
 // 根付き木上で、親が子より左に出る順序の 01 列の転倒数最小値を求める。
 // 頂点 v には c0[v] 個の 0 の後に c1[v] 個の 1 を置いた列が書かれている。
 // 辺は無向辺の両端で与え、root を根として親子関係を定める。
-// c0[v], c1[v] は非負である。計算量は O(n log n) である。
+// c0[v], c1[v] は非負の個数である。計算量は O(n log n) である。
 
 #include <cassert>
 #include <queue>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
-template <class T>
-T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
-                   const std::vector<T> &c0, const std::vector<T> &c1,
-                   int root = 0) {
+template <class T = void, class Count>
+std::conditional_t<std::is_void_v<T>, Count, T>
+solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
+                 const std::vector<Count> &c0, const std::vector<Count> &c1,
+                 int root = 0) {
+    using Answer = std::conditional_t<std::is_void_v<T>, Count, T>;
+    using CompareType =
+        std::conditional_t<(sizeof(Count) < sizeof(long long)),
+                           std::conditional_t<std::is_signed_v<Count>,
+                                              long long, unsigned long long>,
+                           Count>;
+
     assert(n >= 1);
     assert(static_cast<int>(edges.size()) == n - 1);
     assert(static_cast<int>(c0.size()) == n);
@@ -23,8 +32,8 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
 
     std::vector<std::vector<int>> graph(n);
     for (int v = 0; v < n; ++v) {
-        assert(!(c0[v] < T{}));
-        assert(!(c1[v] < T{}));
+        assert(!(c0[v] < Count{}));
+        assert(!(c1[v] < Count{}));
     }
     for (const auto &[from, to] : edges) {
         assert(0 <= from && from < n);
@@ -56,23 +65,25 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
     struct QueueNode {
         int vertex;
         int version;
-        T zero;
-        T one;
+        Count zero;
+        Count one;
     };
 
     struct QueueCompare {
         bool operator()(const QueueNode &a, const QueueNode &b) const {
-            if (a.one == T{} && b.one == T{}) {
+            if (a.one == Count{} && b.one == Count{}) {
                 return a.vertex < b.vertex;
             }
-            if (a.one == T{}) {
+            if (a.one == Count{}) {
                 return false;
             }
-            if (b.one == T{}) {
+            if (b.one == Count{}) {
                 return true;
             }
-            const T lhs = a.zero * b.one;
-            const T rhs = b.zero * a.one;
+            const CompareType lhs = static_cast<CompareType>(a.zero) *
+                                    static_cast<CompareType>(b.one);
+            const CompareType rhs = static_cast<CompareType>(b.zero) *
+                                    static_cast<CompareType>(a.one);
             if (lhs < rhs) {
                 return true;
             }
@@ -84,7 +95,7 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
     };
 
     std::vector<int> leader(n), up = parent, version(n, 0);
-    std::vector<T> zero = c0, one = c1;
+    std::vector<Count> zero = c0, one = c1;
     for (int v = 0; v < n; ++v) {
         leader[v] = v;
     }
@@ -108,7 +119,7 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
         push(v);
     }
 
-    T answer{};
+    Answer answer{};
     for (int merge_count = 0; merge_count < n - 1; ++merge_count) {
         QueueNode current{};
         while (true) {
@@ -125,7 +136,7 @@ T solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
         const int p = find(up[v]);
         assert(p != v);
 
-        answer += one[p] * zero[v];
+        answer += static_cast<Answer>(one[p]) * static_cast<Answer>(zero[v]);
         zero[p] += zero[v];
         one[p] += one[v];
         leader[v] = p;
