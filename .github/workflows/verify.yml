@@ -64,7 +64,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
-          package: git+https://github.com/NotLeonian/competitive-verifier.git@2452941c7015cb072cc96fd4e13f34a980df6fde
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@fdadade91b5af1fc2b8b9b8697e1d7f55b14190b
       # Initialize your own environment for resolving.
       - name: oj-resolve
         uses: competitive-verifier/actions/oj-resolve@v2
@@ -123,7 +123,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
-          package: git+https://github.com/NotLeonian/competitive-verifier.git@2452941c7015cb072cc96fd4e13f34a980df6fde
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@fdadade91b5af1fc2b8b9b8697e1d7f55b14190b
       - name: Drop local verifier caches for full verification
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
         run: |
@@ -176,7 +176,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
-          package: git+https://github.com/NotLeonian/competitive-verifier.git@2452941c7015cb072cc96fd4e13f34a980df6fde
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@fdadade91b5af1fc2b8b9b8697e1d7f55b14190b
       - name: Merge verify result for cache
         id: merge-result
         uses: competitive-verifier/actions/merge-result@v2
