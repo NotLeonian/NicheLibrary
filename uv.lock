@@ -109,8 +109,8 @@ wheels = [
 
 [[package]]
 name = "competitive-verifier"
-version = "4.2.1"
-source = { git = "https://github.com/NotLeonian/competitive-verifier?rev=fdadade91b5af1fc2b8b9b8697e1d7f55b14190b#fdadade91b5af1fc2b8b9b8697e1d7f55b14190b" }
+version = "4.2.2"
+source = { git = "https://github.com/NotLeonian/competitive-verifier?rev=10319536e2f13e0e5ef1edec218afcdfe968afcc#10319536e2f13e0e5ef1edec218afcdfe968afcc" }
 dependencies = [
     { name = "appdirs" },
     { name = "charset-normalizer" },
@@ -167,7 +167,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "competitive-verifier", git = "https://github.com/NotLeonian/competitive-verifier?rev=fdadade91b5af1fc2b8b9b8697e1d7f55b14190b" },
+    { name = "competitive-verifier", git = "https://github.com/NotLeonian/competitive-verifier?rev=10319536e2f13e0e5ef1edec218afcdfe968afcc" },
     { name = "ruff", specifier = ">=0.15.12" },
 ]
 

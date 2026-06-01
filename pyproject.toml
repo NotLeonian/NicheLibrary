@@ -13,4 +13,4 @@ dev = [
 ]
 
 [tool.uv.sources]
-competitive-verifier = { git = "https://github.com/NotLeonian/competitive-verifier", rev = "fdadade91b5af1fc2b8b9b8697e1d7f55b14190b" }
+competitive-verifier = { git = "https://github.com/NotLeonian/competitive-verifier", rev = "10319536e2f13e0e5ef1edec218afcdfe968afcc" }
