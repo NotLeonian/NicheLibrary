@@ -73,6 +73,7 @@ jobs:
           # Specify patterns
           # include: your-own-include/
           # exclude: your-own-exclude/
+          exclude: .github/scripts
           # If you have config.toml
           config: .competitive-verifier/config.toml
       - name: parse-doxygen
