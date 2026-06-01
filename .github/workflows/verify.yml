@@ -64,6 +64,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@2452941c7015cb072cc96fd4e13f34a980df6fde
       # Initialize your own environment for resolving.
       - name: oj-resolve
         uses: competitive-verifier/actions/oj-resolve@v2
@@ -122,6 +123,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@2452941c7015cb072cc96fd4e13f34a980df6fde
       - name: Drop local verifier caches for full verification
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
         run: |
@@ -174,6 +176,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@2452941c7015cb072cc96fd4e13f34a980df6fde
       - name: Merge verify result for cache
         id: merge-result
         uses: competitive-verifier/actions/merge-result@v2
@@ -193,6 +196,49 @@ jobs:
         with:
           source: _jekyll
           destination: _site
+      - name: Assert generated site does not contain known dangerous domains
+        run: |
+          set -euo pipefail
+
+          if grep -RInE "polyfill\.io|bootcdn\.net|bootcss\.com|staticfile\.(net|org)|unionadjs\.com|googie-anaiytics" _site; then
+            echo "::error::Generated site contains known dangerous domains"
+            exit 1
+          fi
+      - name: Assert generated HTML does not load external JavaScript or CSS
+        run: |
+          set -euo pipefail
+
+          bad=0
+
+          echo "::group::external script src in HTML"
+          if find _site -type f -name '*.html' -print0 \
+            | xargs -0 grep -InE "<script[^>]+src=['\"]https?://"; then
+            bad=1
+          fi
+          echo "::endgroup::"
+
+          echo "::group::external stylesheet href in HTML"
+          if find _site -type f -name '*.html' -print0 \
+            | xargs -0 grep -InE "<link[^>]+rel=['\"]stylesheet['\"][^>]+href=['\"]https?://"; then
+            bad=1
+          fi
+          echo "::endgroup::"
+
+          if [ "$bad" -ne 0 ]; then
+            echo "::error::Generated HTML loads external JavaScript or CSS"
+            exit 1
+          fi
+      - name: Assert CDN domains appear only in vendored MathJax bundles
+        run: |
+          set -euo pipefail
+
+          if find _site -type f \
+            ! -path '*/assets/vendor/mathjax/es5/*' \
+            -print0 \
+            | xargs -0 grep -InE "cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com"; then
+            echo "::error::Unexpected CDN domain outside vendored MathJax bundles"
+            exit 1
+          fi
       - name: Upload artifact
         id: upload-pages
         uses: actions/upload-pages-artifact@v3
