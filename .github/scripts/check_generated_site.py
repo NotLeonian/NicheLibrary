@@ -56,7 +56,7 @@ def normalized_script_type(value: str | None) -> str:
     if value is None:
         return ""
 
-    # Strip MIME parameters such as `; charset=utf-8`.
+    # `; charset=utf-8` などの MIME パラメータを削除
     return value.split(";", 1)[0].strip().lower()
 
 
