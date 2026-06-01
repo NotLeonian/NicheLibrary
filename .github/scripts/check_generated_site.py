@@ -31,12 +31,51 @@ def is_external_url(url: str) -> bool:
     return value.startswith(("http://", "https://", "//"))
 
 
+JAVASCRIPT_MIME_TYPES: frozenset[str] = frozenset(
+    {
+        "",
+        "text/javascript",
+        "application/javascript",
+        "application/ecmascript",
+        "text/ecmascript",
+        "text/jscript",
+        "text/livescript",
+        "text/x-javascript",
+        "application/x-javascript",
+    },
+)
+
+ALLOWED_DATA_SCRIPT_TYPES: frozenset[str] = frozenset(
+    {
+        "application/ld+json",
+    },
+)
+
+
+def normalized_script_type(value: str | None) -> str:
+    if value is None:
+        return ""
+
+    # Strip MIME parameters such as `; charset=utf-8`.
+    return value.split(";", 1)[0].strip().lower()
+
+
+def is_executable_inline_script_type(value: str | None) -> bool:
+    script_type = normalized_script_type(value)
+
+    if script_type in ALLOWED_DATA_SCRIPT_TYPES:
+        return False
+
+    return script_type in JAVASCRIPT_MIME_TYPES or script_type == "module"
+
+
 class GeneratedHTMLParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.inline_script_count = 0
         self.external_script_srcs: list[str] = []
         self.external_stylesheet_hrefs: list[str] = []
+        self.inline_script_types: list[str] = []
 
     def handle_starttag(
         self,
@@ -62,9 +101,14 @@ class GeneratedHTMLParser(HTMLParser):
 
         if tag_name == "script":
             src = attrs_by_name.get("src")
+            script_type = attrs_by_name.get("type")
 
             if src is None:
-                self.inline_script_count += 1
+                if is_executable_inline_script_type(script_type):
+                    self.inline_script_count += 1
+                    self.inline_script_types.append(
+                        normalized_script_type(script_type) or "<classic>"
+                    )
             elif is_external_url(src):
                 self.external_script_srcs.append(src)
 
@@ -124,7 +168,10 @@ def scan_html_external_assets(site_root: Path) -> list[str]:
         parser.feed(path.read_text(encoding="utf-8", errors="ignore"))
 
         if parser.inline_script_count > 0:
-            issues.append(f"{relative_path}: contains inline <script>")
+            issues.extend(
+                f"{relative_path}: contains inline <script> type={script_type}"
+                for script_type in parser.inline_script_types
+            )
 
         issues.extend(
             f"{relative_path}: loads external script {src}"
