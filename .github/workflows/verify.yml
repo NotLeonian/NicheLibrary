@@ -64,6 +64,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@10319536e2f13e0e5ef1edec218afcdfe968afcc
       # Initialize your own environment for resolving.
       - name: oj-resolve
         uses: competitive-verifier/actions/oj-resolve@v2
@@ -122,6 +123,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@10319536e2f13e0e5ef1edec218afcdfe968afcc
       - name: Drop local verifier caches for full verification
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
         run: |
@@ -174,6 +176,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
+          package: git+https://github.com/NotLeonian/competitive-verifier.git@10319536e2f13e0e5ef1edec218afcdfe968afcc
       - name: Merge verify result for cache
         id: merge-result
         uses: competitive-verifier/actions/merge-result@v2
@@ -193,6 +196,8 @@ jobs:
         with:
           source: _jekyll
           destination: _site
+      - name: Check generated site security invariants
+        run: python3 .github/scripts/check_generated_site.py _site
       - name: Upload artifact
         id: upload-pages
         uses: actions/upload-pages-artifact@v3
