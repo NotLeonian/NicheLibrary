@@ -99,5 +99,5 @@
 ---
 
 ### 逆にレビューしないでよいこと
-- [.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットに必要がファイルが存在するかどうかの確認。
+- [.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットに必要なファイルが存在するかどうかの確認。
   - 権限が足りないなどで正しく確認できない可能性が高い。
