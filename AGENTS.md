@@ -93,7 +93,7 @@
 - AOJ の URL は `https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=...` の形式である（`http://...` などでない）。
 
 ### 依存関係
-- [pyproject.toml](pyproject.toml) で固定されている NotLeonian/competitive-verifier のコミットと、[.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットが一致おり、SHA またはタグのどちらかによって固定されている（ブランチなどでない）。
+- [pyproject.toml](pyproject.toml) で固定されている NotLeonian/competitive-verifier のコミットと、[.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットが一致しており、SHA またはタグのどちらかによって固定されている（ブランチなどでない）。
 - [pyproject.toml](pyproject.toml) と [.github/workflows/verify.yml](.github/workflows/verify.yml) の NotLeonian/competitive-verifier のコミットの固定の方法（SHA またはタグ）が同じである。
 
 ---
