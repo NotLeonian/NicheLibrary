@@ -91,3 +91,13 @@
   - ライブラリ API の網羅テスト、愚直解との比較、小さい入力の全探索テストなどは `// competitive-verifier: STANDALONE` の verify ソースコードに分離している。
   - ライブラリの用途や計算量に対して不自然な問題を、オンラインジャッジ上の verify 問題として無理に選んでいない。
 - AOJ の URL は `https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=...` の形式である（`http://...` などでない）。
+
+### 依存関係
+- [pyproject.toml](pyproject.toml) で固定されている NotLeonian/competitive-verifier のコミットと、[.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットが一致おり、SHA またはタグのどちらかによって固定されている（ブランチなどでない）。
+- [pyproject.toml](pyproject.toml) と [.github/workflows/verify.yml](.github/workflows/verify.yml) の NotLeonian/competitive-verifier のコミットの固定の方法（SHA またはタグ）が同じである。
+
+---
+
+### 逆にレビューしないでよいこと
+- [.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットに必要がファイルが存在するかどうかの確認。
+  - 権限が足りないなどで正しく確認できない可能性が高い。
