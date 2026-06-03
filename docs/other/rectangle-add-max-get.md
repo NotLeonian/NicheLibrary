@@ -112,4 +112,4 @@ documentation_of: other/rectangle-add-max-get.hpp
 - `RectangleAddMaxGet` の長方形範囲の各 `calc_...`: $O(H+W+N\log H)$
 - `RectangleAddMaxGet` の可変 y 範囲の各 `calc_...`: $O(Y+(W+N)\log Y)$
 - ただし、$N$ は追加済み長方形数、$W=r-l,\;H=u-d,\;Y=\max_x \mathrm{upper\_y}(x)-\min_x \mathrm{lower\_y}(x)$ である。
-- `RectangleAddMaxGet` では、$W$, $H$, $Y$ は `int` に収まる必要がある。
+- `RectangleAddMaxGet` では、$W,\,H,\,Y$ は `int` に収まる必要がある。

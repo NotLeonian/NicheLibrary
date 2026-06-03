@@ -15,7 +15,7 @@ documentation_of: math/number-theory/generalized-floor-sum-pq-le-2.hpp
 
 - `generalized_floor_sum_pq_le_2<T>(n, m, a, b)`
   - `GeneralizedFloorSumPQLe2Result<T>` を返す。
-  - 前提: $n\ge 0$, $m>0$。
+  - 前提: $n\ge 0,\;m>0$。
   - 備考: 返り値が `T` の範囲を超える場合、オーバーフローした値が返る。
 
 - `GeneralizedFloorSumPQLe2Result<T>::ans_01`
