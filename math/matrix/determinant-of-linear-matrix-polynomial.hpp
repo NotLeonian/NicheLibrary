@@ -104,7 +104,7 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
         assert(static_cast<int>(M1[i].size()) == n);
     }
 
-    int multiply_by_x = 0; // 「特定の列に x を掛ける」操作の回数
+    int multiply_by_x = 0; // 特定の列に x を掛ける操作の回数
     T det_inv = T(1);      // 1 / (det A det B)
 
     for (int p = 0; p < n; ++p) {
