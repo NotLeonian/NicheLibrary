@@ -17,7 +17,6 @@
 #include <vector>
 
 namespace rectangle_add_max_get_internal {
-
 template <class T> using CoordinateLength = std::make_unsigned_t<T>;
 
 template <class T, class C> struct Rectangle {
@@ -149,7 +148,6 @@ template <class T, class C> struct SegmentTree {
                      prod(v << 1 | 1, m, r, ql, qr));
     }
 };
-
 } // namespace rectangle_add_max_get_internal
 
 template <class T, class C> struct CompressedRectangleAddMaxGet {

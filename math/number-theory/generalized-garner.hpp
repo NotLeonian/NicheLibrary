@@ -14,7 +14,6 @@
 #include <vector>
 
 namespace generalized_garner_internal {
-
 template <typename T> struct is_integral : std::is_integral<T> {};
 
 #ifdef __SIZEOF_INT128__
@@ -140,7 +139,6 @@ template <typename T> std::pair<T, T> solve_linear_congruence(T a, T b, T m) {
     const T rem = mul_mod(b / g, inv_mod(a / g, mod), mod);
     return {rem, mod};
 }
-
 } // namespace generalized_garner_internal
 
 template <typename R1 = long long, typename R2 = R1, typename T1, typename T2,

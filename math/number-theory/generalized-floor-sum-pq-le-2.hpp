@@ -16,7 +16,6 @@ template <class T> struct GeneralizedFloorSumPQLe2Result {
 };
 
 namespace generalized_floor_sum_pq_le_2_internal {
-
 template <class T> struct is_integral : std::is_integral<T> {};
 #ifdef __SIZEOF_INT128__
 template <> struct is_integral<__int128_t> : std::true_type {};
@@ -167,7 +166,6 @@ template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
                  qb * qb * n + 2 * qb * base.ans_01 + base.ans_02;
     return ans;
 }
-
 } // namespace generalized_floor_sum_pq_le_2_internal
 
 template <class T>

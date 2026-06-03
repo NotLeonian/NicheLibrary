@@ -19,7 +19,6 @@
 #include <vector>
 
 namespace line_convex_polygon_intersection_internal {
-
 template <class T> struct is_integral : std::is_integral<T> {};
 template <class T> struct is_signed : std::is_signed<T> {};
 #ifdef __SIZEOF_INT128__
@@ -260,7 +259,6 @@ std::pair<int, int> find_extreme_vertices(int n, Func &&height) {
     }
     return {minimum_index, maximum_index};
 }
-
 } // namespace line_convex_polygon_intersection_internal
 
 template <class T> struct LinePolygonIntersectionPoint {
@@ -292,7 +290,6 @@ template <class T> struct LinePolygonIntersectionPoint {
 };
 
 namespace line_convex_polygon_intersection_internal {
-
 template <class Point, bool = is_integral<coordinate_t<Point>>::value>
 struct result_value_type {
     using type = Point;
@@ -303,7 +300,6 @@ template <class Point> struct result_value_type<Point, true> {
 
 template <class Point>
 using result_value_t = typename result_value_type<Point>::type;
-
 } // namespace line_convex_polygon_intersection_internal
 
 template <class Point>
@@ -315,7 +311,6 @@ using LinePolygonIntersectionResult =
     std::vector<LinePolygonIntersectionValue<Point>>;
 
 namespace line_convex_polygon_intersection_internal {
-
 template <class Point>
 LinePolygonIntersectionPoint<calc_t<Point>>
 make_integral_point(const Point &point) {
@@ -395,7 +390,6 @@ result_value_t<Point> make_edge_result(const Point &line_a, const Point &line_b,
                                                segment_b);
     }
 }
-
 } // namespace line_convex_polygon_intersection_internal
 
 template <class Point>
