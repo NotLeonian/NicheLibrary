@@ -60,11 +60,15 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
+      - name: Resolve competitive-verifier package
+        id: competitive-verifier-package
+        shell: bash
+        run: python3 .github/scripts/resolve_competitive_verifier.py >> "$GITHUB_OUTPUT"
       - name: Set up competitive-verifier
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
-          package: git+https://github.com/NotLeonian/competitive-verifier.git@a6bf59f623b82bd7c00033587603b1d3159fd983
+          package: ${{ steps.competitive-verifier-package.outputs.package }}
       # Initialize your own environment for resolving.
       - name: oj-resolve
         uses: competitive-verifier/actions/oj-resolve@v2
@@ -109,6 +113,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - name: Resolve competitive-verifier package
+        id: competitive-verifier-package
+        shell: bash
+        run: python3 .github/scripts/resolve_competitive_verifier.py >> "$GITHUB_OUTPUT"
       - name: Restore previous verify result
         id: restore-cached-results
         if: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify)) }}
@@ -124,7 +132,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
-          package: git+https://github.com/NotLeonian/competitive-verifier.git@a6bf59f623b82bd7c00033587603b1d3159fd983
+          package: ${{ steps.competitive-verifier-package.outputs.package }}
       - name: Drop local verifier caches for full verification
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
         run: |
@@ -155,6 +163,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 2147483647
+      - name: Resolve competitive-verifier package
+        id: competitive-verifier-package
+        shell: bash
+        run: python3 .github/scripts/resolve_competitive_verifier.py >> "$GITHUB_OUTPUT"
       - name: Download verify_files.json and all artifacts
         id: all-artifacts
         uses: competitive-verifier/actions/download-verify-artifact@v2
@@ -177,7 +189,7 @@ jobs:
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
-          package: git+https://github.com/NotLeonian/competitive-verifier.git@a6bf59f623b82bd7c00033587603b1d3159fd983
+          package: ${{ steps.competitive-verifier-package.outputs.package }}
       - name: Merge verify result for cache
         id: merge-result
         uses: competitive-verifier/actions/merge-result@v2

@@ -93,11 +93,11 @@
 - AOJ の URL は `https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=...` の形式である（`http://...` などでない）。
 
 ### 依存関係
-- [pyproject.toml](pyproject.toml) で固定されている NotLeonian/competitive-verifier のコミットと、[.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットが一致しており、SHA またはタグのどちらかによって固定されている（ブランチなどでない）。
-- [pyproject.toml](pyproject.toml) と [.github/workflows/verify.yml](.github/workflows/verify.yml) の NotLeonian/competitive-verifier のコミットの固定の方法（SHA またはタグ）が同じである。
+- NotLeonian/competitive-verifier は [pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` は、`rev` による 40 文字の commit SHA または `tag` によるタグのどちらかによって固定されている（`branch` などの更新されうる参照ではない）。
+- [.github/workflows/verify.yml](.github/workflows/verify.yml) に NotLeonian/competitive-verifier の commit SHA やタグを直接書いていない。
 
 ---
 
 ### 逆にレビューしないでよいこと
-- [.github/workflows/verify.yml](.github/workflows/verify.yml) で固定されている NotLeonian/competitive-verifier のコミットに必要なファイルが存在するかどうかの確認。
+- [pyproject.toml](pyproject.toml) で固定されている NotLeonian/competitive-verifier 内に、このリポジトリで必要なファイルが存在するかどうかの確認。
   - 権限が足りないなどで正しく確認できない可能性が高い。
