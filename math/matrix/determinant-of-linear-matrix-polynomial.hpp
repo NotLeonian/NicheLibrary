@@ -4,7 +4,7 @@
 // 一次行列多項式 det(M0 + x M1) を係数列として求める。
 // 体上でのみ動作する（除算が必要）。M0, M1 は N×N。
 // 多項式は a[0] + a[1]x + ... + a[N]x^N の昇順で返す。
-// M1 を掃き出して I にし、det(xI + A) を特性多項式に帰着する。
+// M1 を掃き出して I にし、det(xI + A) を特性多項式に帰着させる。
 // M1 が特異でも列に x を掛ける操作を挟むことで次数 1 を保つ。
 // 計算量 O(N^3)。
 
@@ -104,7 +104,7 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
         assert(static_cast<int>(M1[i].size()) == n);
     }
 
-    int multiply_by_x = 0; // 「特定の列に x を掛ける」操作の回数
+    int multiply_by_x = 0; // 特定の列に x を掛ける操作の回数
     T det_inv = T(1);      // 1 / (det A det B)
 
     for (int p = 0; p < n; ++p) {

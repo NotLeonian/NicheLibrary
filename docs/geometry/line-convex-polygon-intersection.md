@@ -19,11 +19,11 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 - `line_polygon_intersection(polygon, line_a, line_b)`
   - 凸多角形 `polygon` と直線 `line_a` - `line_b` の共通部分を返す。
   - 返り値の型は `LinePolygonIntersectionResult<Point>` である。
-  - 前提: $\lvert \mathrm{polygon}\rvert \ge 3$, $\mathrm{line\_a}\ne \mathrm{line\_b}$。
+  - 前提: $\lvert \mathrm{polygon}\rvert \ge 3,\;\mathrm{line\_a}\ne \mathrm{line\_b}$。
   - 前提: `polygon` は面積正の狭義凸多角形で、反時計回りで、3 頂点連続で一直線にならない。
     - 注意: `convex_hull` の結果を渡す場合、凸包が 1 点または 2 点になる退化ケースは本関数の前提外である。
     - 注意: 退化凸包は、呼び出し側で点または線分として処理する。
-  - 備考: 返り値のサイズは $0$, $1$, $2$ のいずれかである。
+  - 備考: 返り値のサイズは $0, 1, 2$ のいずれかである。
   - 備考: 返り値のサイズが $2$ のとき、共通部分は 2 点または線分である。線分の場合はその両端点を返す。
   - 備考: 返る順序は保証しない。
 
