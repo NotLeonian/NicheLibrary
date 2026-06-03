@@ -12,7 +12,6 @@
 #include <vector>
 
 namespace prime_counting_modulo_internal {
-
 inline long long integer_sqrt(long long n) {
     assert(n >= 0);
     long long ok = 0, ng = 1;
@@ -59,7 +58,6 @@ inline void add_mod(long long &x, long long a, long long m) {
         x += a;
     }
 }
-
 } // namespace prime_counting_modulo_internal
 
 inline std::pair<std::vector<long long>, std::vector<std::vector<long long>>>

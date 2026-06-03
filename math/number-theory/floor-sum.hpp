@@ -13,7 +13,6 @@
 #include <utility>
 
 namespace floor_sum_internal {
-
 template <class T> struct is_integral : std::is_integral<T> {};
 
 #ifdef __SIZEOF_INT128__
@@ -65,7 +64,6 @@ template <class T> T sum_0_to_n_minus_1(T n) {
     }
     return n * ((n - 1) / 2);
 }
-
 } // namespace floor_sum_internal
 
 template <class T> T floor_sum(T n, T m, T a, T b) {
