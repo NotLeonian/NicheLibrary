@@ -1,4 +1,5 @@
 // competitive-verifier: PROBLEM https://yukicoder.me/problems/no/2117
+
 #include <iostream>
 #include <vector>
 

@@ -1,4 +1,5 @@
 // competitive-verifier: STANDALONE
+
 #include <cassert>
 #include <vector>
 
