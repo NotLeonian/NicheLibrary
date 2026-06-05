@@ -77,6 +77,7 @@
   - ライブラリ API の網羅テスト、愚直解との比較、小さい入力の全探索テストなどは `// competitive-verifier: STANDALONE` の verify ソースコードに分離している。
   - ライブラリの用途や計算量に対して不自然な問題を、オンラインジャッジ上の verify 問題として無理に選んでいない。
 - AOJ の URL は `https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=...` の形式である（`http://...` などでない）。
+- このライブラリの他のファイルの include よりも先に、標準ライブラリを include している。
 - 先頭の competitive-verifier 向けのコメント、標準ライブラリについての include 文、このライブラリの他のファイルについての include 文のそれぞれの間には、空行が 1 行ずつ入っている。
 
 ### ドキュメント
