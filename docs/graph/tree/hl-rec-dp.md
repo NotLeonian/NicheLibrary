@@ -30,6 +30,110 @@ documentation_of: graph/tree/hl-rec-dp.hpp
   - `after_vertex(v, pack)` は、`add_vertex` 後の値を必要に応じて記録するために呼ばれる。
   - `pack` の型は `std::array<State, K>` である。
 
+<details>
+<summary>使用例（問題のネタバレを含む）</summary>
+<div markdown="1">
+例として、AtCoder Beginner Contest 311 Ex - Many Illumination Plans を解くソースコードを示す。
+
+competitive-verifier によるドキュメントの自動生成はドキュメント中のリンクを自動検出してまとめることから、ネタバレを防ぐために問題の URL は記載していない。
+適宜、各自で調べること。
+
+```C++
+#include <bits/stdc++.h>
+
+#include "graph/tree/hl-rec-dp.hpp"
+
+using namespace std;
+using ll = long long;
+
+#define rep(i, r) for (int i = 0; i < (int)(r); ++i)
+
+template <class T1, class T2> bool chmax(T1 &l, const T2 &r) {
+    if (r > l) {
+        l = r;
+        return true;
+    }
+    return false;
+}
+
+namespace abc311 {
+struct Spec {
+    static constexpr int K = 2;
+    using State = vector<ll>;
+    using Pack = array<State, K>;
+
+    static constexpr ll NEG = -2'000'000'000'000'000'001;
+
+    vector<ll> ans;
+
+    int x = 0;
+    const vector<ll> &b;
+    const vector<int> &w, c;
+
+    Spec(int n, int x, const vector<ll> &b, const vector<int> &w,
+         const vector<int> &c)
+        : x(x), b(b), w(w), c(c) {
+        ans.assign(n, NEG);
+    }
+
+    Pack make_pack(int, const State &in) { return Pack{in, in}; }
+
+    Pack take_heavy(int, int, Pack &&child_dp) { return move(child_dp); }
+
+    State take_light(int, int, int lane, Pack &&child_dp) {
+        return move(child_dp[lane]);
+    }
+
+    void before_vertex(int v, const Pack &dp) {
+        int c_v = c[v];
+        int w_v = w[v];
+        ll best = NEG;
+        rep(i, x - w_v + 1) { chmax(best, dp[c_v ^ 1][i] + b[v]); }
+        chmax(ans[v], best);
+    }
+
+    void add_vertex(int v, Pack &dp) {
+        int c_v = c[v];
+        int w_v = w[v];
+        rep(i, x - w_v + 1) { chmax(dp[c_v][i + w_v], dp[c_v ^ 1][i] + b[v]); }
+    }
+
+    void after_vertex(int, const Pack &) {}
+};
+} // namespace abc311
+
+int main() {
+    int n, x;
+    cin >> n >> x;
+
+    vector<pair<int, int>> edges(n - 1);
+    rep(i, n - 1) {
+        int p_i;
+        cin >> p_i;
+        p_i -= 1;
+        edges[i] = {i + 1, p_i};
+    }
+
+    vector<int> w(n), c(n);
+    vector<ll> b(n);
+    rep(i, n) { cin >> b[i] >> w[i] >> c[i]; }
+
+    using abc311::Spec;
+
+    Spec::State initial_state(x + 1, Spec::NEG);
+    initial_state[0] = 0;
+    Spec spec(n, x, b, w, c);
+
+    hl_rec_dp(n, edges, 0, initial_state, spec);
+
+    rep(i, n) { cout << spec.ans[i] << "\n"; }
+
+    return 0;
+}
+```
+</div>
+</details>
+
 ## 計算量
 
 - 木の根付き化と重い子の選択：$O(n)$。
@@ -37,3 +141,6 @@ documentation_of: graph/tree/hl-rec-dp.hpp
 - $K$ を `Spec::K` の値とする。部分木 1 回分の値計算の呼び出し回数は $O(n^{\log_2(K+1)})$。
 - 全頂点の `before_vertex` / `after_vertex` を回収する実行では、$K\ge 2$ なら同じく $O(n^{\log_2(K+1)})$ 回、$K=1$ なら $O(n\log n)$ 回である。
 - 各呼び出しでの `Spec` 側の処理時間が掛かる。典型的に $K=2$、各処理が $O(X)$ なら $O(n^{\log_2 3}X)$。
+
+## 参考文献
+1. Soh Kumabe, Takanori Maehara, and Ryoma Sin'ya. Linear Pseudo-Polynomial Factor Algorithm for Automaton Constrained Tree Knapsack Problem. In WALCOM: Algorithms and Computation, Lecture Notes in Computer Science, Vol. 11355, pp. 248–260. Springer, 2019. doi:10.1007/978-3-030-10564-8_20.（[arXiv のリンク](https://arxiv.org/abs/1807.04942)）
