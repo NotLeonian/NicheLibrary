@@ -8,7 +8,8 @@
 // 計算量は Spec の処理時間と呼び出し回数に依存する。
 
 // 参考文献:
-// 1. Soh Kumabe, Takanori Maehara, and Ryoma Sin'ya. Linear Pseudo-Polynomial Factor Algorithm for Automaton Constrained Tree Knapsack Problem. In WALCOM: Algorithms and Computation, Lecture Notes in Computer Science, Vol. 11355, pp. 248–260. Springer, 2019. doi:10.1007/978-3-030-10564-8_20. (arXiv: <https://arxiv.org/abs/1807.04942>)
+// 1. Soh Kumabe, Takanori Maehara, and Ryoma Sin'ya. Linear Pseudo-Polynomial Factor Algorithm for Automaton Constrained Tree Knapsack Problem. In WALCOM: Algorithms and Computation, Lecture Notes in Computer Science, Vol. 11355, pp. 248–260. Springer, 2019. doi:10.1007/978-3-030-10564-8_20.
+//    arXiv: https://arxiv.org/abs/1807.04942
 
 #include <array>
 #include <cassert>
