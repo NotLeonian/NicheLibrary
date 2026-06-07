@@ -33,10 +33,7 @@ documentation_of: graph/tree/hl-rec-dp.hpp
 <details>
 <summary>使用例（問題のネタバレを含む）</summary>
 <div markdown="1">
-例として、AtCoder Beginner Contest 311 Ex - Many Illumination Plans を解くソースコードを示す。
-
-competitive-verifier によるドキュメントの自動生成はドキュメント中のリンクを自動検出してまとめることから、ネタバレを防ぐために問題の URL は記載していない。
-適宜、各自で調べること。
+例として、[AtCoder Beginner Contest 311 Ex - Many Illumination Plans](https://atcoder.jp/contests/abc311/tasks/abc311_h) を解くソースコードを示す。
 
 ```C++
 #include <bits/stdc++.h>
