@@ -4,6 +4,8 @@
 
 C++ library for competitive programming
 
+競技プログラミング用の C++ ライブラリです。
+
 ## 方針
 このライブラリは、名前通りニッチなもののみを実装しています。
 
