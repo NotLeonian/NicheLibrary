@@ -1,8 +1,10 @@
 # NicheLibrary
+[![Actions Status](https://github.com/NotLeonian/NicheLibrary/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/NotLeonian/NicheLibrary/actions/workflows/verify.yml?query=branch%3Amain)
+[![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=NicheLibrary+&color=brightgreen&logo=github)](https://notleonian.github.io/NicheLibrary/)
+
 C++ library for competitive programming
 
-競技プログラミング用の C++ ライブラリです。  
-ドキュメント（自動生成）: https://notleonian.github.io/NicheLibrary/
+競技プログラミング用の C++ ライブラリです。
 
 ## 方針
 このライブラリは、名前通りニッチなもののみを実装しています。
