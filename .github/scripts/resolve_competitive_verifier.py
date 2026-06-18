@@ -8,7 +8,6 @@ import tomllib
 from pathlib import Path
 from typing import Any, cast
 
-
 EXPECTED_GIT_URL = "https://github.com/NotLeonian/competitive-verifier"
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 
