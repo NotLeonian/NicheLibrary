@@ -1,6 +1,6 @@
 [project]
 name = "nichelibrary"
-version = "1.1.4"
+version = "1.1.5"
 description = "C++ library for competitive programming"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -11,6 +11,9 @@ dev = [
     "competitive-verifier",
     "ruff>=0.15.12",
 ]
+
+[tool.ruff.lint]
+extend-select = ["I"]
 
 [tool.uv.sources]
 competitive-verifier = { git = "https://github.com/NotLeonian/competitive-verifier", rev = "dc3c9b37435c25afcf8279baef9d80d58da519da" }

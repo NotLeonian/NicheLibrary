@@ -5,7 +5,6 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
-
 BLOCKED_DOMAINS: tuple[bytes, ...] = (
     b"polyfill.io",
     b"bootcdn.net",
