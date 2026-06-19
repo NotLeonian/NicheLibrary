@@ -1,21 +1,21 @@
-#ifndef MATH_NUMBER_THEORY_GENERALIZED_FLOOR_SUM_PQ_LE_2_HPP
-#define MATH_NUMBER_THEORY_GENERALIZED_FLOOR_SUM_PQ_LE_2_HPP
+#ifndef MATH_NUMBER_THEORY_GENERALIZED_FLOOR_SUM_DEGREE_LE_2_HPP
+#define MATH_NUMBER_THEORY_GENERALIZED_FLOOR_SUM_DEGREE_LE_2_HPP
 
-// 一般化 floor sum (p+q<=2) のうち (0,1),(1,1),(0,2) をまとめて求める。
-// ans_01 = Σ floor((a i + b)/m), ans_11 = Σ i*floor((a i + b)/m), ans_02 = Σ floor((a i + b)/m)^2。
-// n>=0, m>0 を仮定する。a,b は負でもよい。
+// 一般化 floor sum（次数 2 以下）のうち、(0,1),(1,1),(0,2) をまとめて求める。
+// ans_01 = Σ floor((a i + b)/m)、ans_11 = Σ i*floor((a i + b)/m)、ans_02 = Σ floor((a i + b)/m)^2。
+// n >= 0、m > 0 を仮定する。a, b は負でもよい。
 // 計算量 O(log m)。
 
 #include <cassert>
 #include <type_traits>
 
-template <class T> struct GeneralizedFloorSumPQLe2Result {
+template <class T> struct GeneralizedFloorSumDegreeLe2Result {
     T ans_01;
     T ans_11;
     T ans_02;
 };
 
-namespace generalized_floor_sum_pq_le_2_internal {
+namespace generalized_floor_sum_degree_le_2_internal {
 template <class T> struct is_integral : std::is_integral<T> {};
 #ifdef __SIZEOF_INT128__
 template <> struct is_integral<__int128_t> : std::true_type {};
@@ -166,28 +166,30 @@ template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
                  qb * qb * n + 2 * qb * base.ans_01 + base.ans_02;
     return ans;
 }
-} // namespace generalized_floor_sum_pq_le_2_internal
+} // namespace generalized_floor_sum_degree_le_2_internal
 
 template <class T>
-GeneralizedFloorSumPQLe2Result<T> generalized_floor_sum_pq_le_2(T n, T m, T a,
-                                                                T b) {
-    static_assert(generalized_floor_sum_pq_le_2_internal::is_integral<T>::value,
-                  "T must be integer.");
-    if constexpr (generalized_floor_sum_pq_le_2_internal::is_signed<T>::value) {
+GeneralizedFloorSumDegreeLe2Result<T>
+generalized_floor_sum_degree_le_2(T n, T m, T a, T b) {
+    static_assert(
+        generalized_floor_sum_degree_le_2_internal::is_integral<T>::value,
+        "T must be integer.");
+    if constexpr (generalized_floor_sum_degree_le_2_internal::is_signed<
+                      T>::value) {
         assert(n >= 0);
     }
     assert(m > 0);
 
 #ifdef __SIZEOF_INT128__
     using I = __int128_t;
-    const auto res = generalized_floor_sum_pq_le_2_internal::solve<I>(
+    const auto res = generalized_floor_sum_degree_le_2_internal::solve<I>(
         static_cast<I>(n), static_cast<I>(m), static_cast<I>(a),
         static_cast<I>(b));
     return {static_cast<T>(res.ans_01), static_cast<T>(res.ans_11),
             static_cast<T>(res.ans_02)};
 #else
     const auto res =
-        generalized_floor_sum_pq_le_2_internal::solve<T>(n, m, a, b);
+        generalized_floor_sum_degree_le_2_internal::solve<T>(n, m, a, b);
     return {res.ans_01, res.ans_11, res.ans_02};
 #endif
 }
