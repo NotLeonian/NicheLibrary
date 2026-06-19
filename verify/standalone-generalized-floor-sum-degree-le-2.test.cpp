@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "../math/number-theory/generalized-floor-sum-pq-le-2.hpp"
+#include "../math/number-theory/generalized-floor-sum-degree-le-2.hpp"
 
 namespace {
 long long floor_div_ll(long long x, long long m) {
@@ -21,7 +21,8 @@ void self_test() {
             for (long long a = -10; a <= 10; ++a) {
                 for (long long b = -10; b <= 10; ++b) {
                     const auto res =
-                        generalized_floor_sum_pq_le_2<long long>(n, m, a, b);
+                        generalized_floor_sum_degree_le_2<long long>(n, m, a,
+                                                                     b);
 
                     long long s01 = 0, s11 = 0, s02 = 0;
                     for (long long i = 0; i < n; ++i) {

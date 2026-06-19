@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "../math/number-theory/generalized-floor-sum-pq-le-2.hpp"
+#include "../math/number-theory/generalized-floor-sum-degree-le-2.hpp"
 
 int main() {
     std::ios::sync_with_stdio(false);
@@ -16,9 +16,9 @@ int main() {
         std::cin >> N >> M >> X >> Y;
 
         const auto r0 =
-            generalized_floor_sum_pq_le_2<std::uint64_t>(N, M, X, 0);
+            generalized_floor_sum_degree_le_2<std::uint64_t>(N, M, X, 0);
         const auto r1 =
-            generalized_floor_sum_pq_le_2<std::uint64_t>(N, M, X, Y);
+            generalized_floor_sum_degree_le_2<std::uint64_t>(N, M, X, Y);
 
         std::uint64_t ans = 0;
         ans -= r0.ans_01 * N - r0.ans_11;
