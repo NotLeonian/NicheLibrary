@@ -14,21 +14,21 @@
 #include <vector>
 
 namespace generalized_garner_internal {
-template <typename T> struct is_integral : std::is_integral<T> {};
+template <class T> struct is_integral : std::is_integral<T> {};
 
 #ifdef __SIZEOF_INT128__
 template <> struct is_integral<__int128_t> : std::true_type {};
 template <> struct is_integral<__uint128_t> : std::true_type {};
 #endif
 
-template <typename T> struct is_signed : std::is_signed<T> {};
+template <class T> struct is_signed : std::is_signed<T> {};
 
 #ifdef __SIZEOF_INT128__
 template <> struct is_signed<__int128_t> : std::true_type {};
 template <> struct is_signed<__uint128_t> : std::false_type {};
 #endif
 
-template <typename T> T safe_mod(T x, T m) {
+template <class T> T safe_mod(T x, T m) {
     assert(m > 0);
     x %= m;
     if constexpr (is_signed<T>::value) {
@@ -39,7 +39,7 @@ template <typename T> T safe_mod(T x, T m) {
     return x;
 }
 
-template <typename T> T gcd(T a, T b) {
+template <class T> T gcd(T a, T b) {
     assert(a >= 0);
     assert(b >= 0);
     while (b != 0) {
@@ -50,7 +50,7 @@ template <typename T> T gcd(T a, T b) {
     return a;
 }
 
-template <typename T> T add_mod(T a, T b, T m) {
+template <class T> T add_mod(T a, T b, T m) {
     assert(0 <= a && a < m);
     assert(0 <= b && b < m);
     if (a >= m - b) {
@@ -59,7 +59,7 @@ template <typename T> T add_mod(T a, T b, T m) {
     return a + b;
 }
 
-template <typename T> T mul_mod(T a, T b, T m) {
+template <class T> T mul_mod(T a, T b, T m) {
     assert(m > 0);
     a = safe_mod(a, m);
     b = safe_mod(b, m);
@@ -86,7 +86,7 @@ template <typename T> T mul_mod(T a, T b, T m) {
 #endif
 }
 
-template <typename T> T inv_mod(T a, T m) {
+template <class T> T inv_mod(T a, T m) {
     assert(m > 1);
     a = safe_mod(a, m);
     assert(gcd(a, m) == 1);
@@ -106,7 +106,7 @@ template <typename T> T inv_mod(T a, T m) {
     return x;
 }
 
-template <typename T> std::pair<T, T> merge_congruence(T r0, T m0, T r1, T m1) {
+template <class T> std::pair<T, T> merge_congruence(T r0, T m0, T r1, T m1) {
     assert(0 <= r0 && r0 < m0);
     assert(0 <= r1 && r1 < m1);
     const T g = gcd(m0, m1);
@@ -124,7 +124,7 @@ template <typename T> std::pair<T, T> merge_congruence(T r0, T m0, T r1, T m1) {
     return {r0, m0};
 }
 
-template <typename T> std::pair<T, T> solve_linear_congruence(T a, T b, T m) {
+template <class T> std::pair<T, T> solve_linear_congruence(T a, T b, T m) {
     assert(m > 0);
     a = safe_mod(a, m);
     b = safe_mod(b, m);
@@ -141,8 +141,7 @@ template <typename T> std::pair<T, T> solve_linear_congruence(T a, T b, T m) {
 }
 } // namespace generalized_garner_internal
 
-template <typename R1 = long long, typename R2 = R1, typename T1, typename T2,
-          typename M>
+template <class R1 = long long, class R2 = R1, class T1, class T2, class M>
 std::pair<R1, R2> generalized_garner(const std::vector<T1> &a,
                                      const std::vector<T2> &b,
                                      const std::vector<M> &m) {
