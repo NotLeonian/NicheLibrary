@@ -5,7 +5,7 @@ documentation_of: math/number-theory/floor-sum.hpp
 
 ## 概要
 
-- $\displaystyle \sum_{i=0}^{n-1}\left\lfloor\frac{a i+b}{m}\right\rfloor$ を求める。
+- 引数 $n,m,a,b$ に対し、$\displaystyle \sum_{i=0}^{n-1}\left\lfloor\frac{a i+b}{m}\right\rfloor$ を求める。
 - $a,b$ は負でもよい（$m>0$）。
 - $a,b$ を $0\le a,b<m$ に帰着してから、ユークリッドの互除法と同型の遷移で計算する。
 
