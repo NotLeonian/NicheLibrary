@@ -1,5 +1,5 @@
 ---
-title: 一般化 floor sum（次数 $2$ 以下）
+title: 一般化 floor sum（次数 2 以下）
 documentation_of: math/number-theory/generalized-floor-sum-degree-le-2.hpp
 ---
 
