@@ -15,11 +15,11 @@ documentation_of: graph/tree/hl-rec-dp.hpp
 - `hl_rec_dp(n, edges, root, initial_state, spec)`
   - 頂点数が `n` で、無向辺列が `edges` である木を `root` で根付き木にして実行する。
   - 頂点番号は 0-based indexing とする。
-  - `edges` はサイズ $n-1$ の木の辺列である。
+  - `edges` はサイズ $n-1$ の木の辺の列である。
   - `initial_state` は各重パスの根側から渡す初期状態である。
   - `spec` の `before_vertex`, `add_vertex`, `after_vertex` などを呼び出し、`spec` の中の答えの配列を更新する。
   - 返り値は `root` を通常の頂点として加えた後の `std::array<Spec::State, Spec::K>` である。
-  - 前提：$n\ge 1$、$0\le \mathrm{root}<n$、`edges` は木である。
+  - 前提：`root` を $r$ として $n\ge 1,\,0\le r<n$ が成り立ち、`edges` は木の辺の列である。
 - `Spec`
   - `using State = ...;` と `static constexpr int K = ...;` を持つ。
   - `make_pack(v, in)` は、子をまだ処理していない頂点 `v` の DP の組を返す。

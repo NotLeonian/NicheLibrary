@@ -5,6 +5,8 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 
 ## 概要
 
+凸多角形の頂点数を $N$ とおく。
+
 - 反時計回りの面積正の狭義凸多角形と直線の共通部分を $O(\log N)$ で求める。
 - 共通部分は空集合、1 点、線分のいずれかである。
 - 返り値のサイズは $0, 1, 2$ のいずれかである。
@@ -17,9 +19,9 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 ## 使い方
 
 - `line_polygon_intersection(polygon, line_a, line_b)`
-  - 凸多角形 `polygon` と直線 `line_a` - `line_b` の共通部分を返す。
+  - 凸多角形 `polygon` と、`line_a` と `line_b` を通る直線の共通部分を返す。
   - 返り値の型は `LinePolygonIntersectionResult<Point>` である。
-  - 前提: $\lvert \mathrm{polygon}\rvert \ge 3,\;\mathrm{line\_a}\ne \mathrm{line\_b}$。
+  - 前提: `polygon` を $P$、`line_a` を $a$、`line_b` を $b$ として、$\lvert P\rvert \ge 3,\;a\ne b$。
   - 前提: `polygon` は面積正の狭義凸多角形で、反時計回りで、3 頂点連続で一直線にならない。
     - 注意: `convex_hull` の結果を渡す場合、凸包が 1 点または 2 点になる退化ケースは本関数の前提外である。
     - 注意: 退化凸包は、呼び出し側で点または線分として処理する。
@@ -43,12 +45,12 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 
 - `LinePolygonIntersectionPoint<T>::to_point<Point>()`
   - 交点を `Point` に変換して返す。
-  - 前提: 変換先の座標型が整数なら $\mathrm{denominator}=1$。
+  - 前提: `denominator` を $q$ として、変換先の座標型が整数ならば $q=1$ である。
   - 備考: 浮動小数点の点型へは `long double` を経由して変換する。
 
 - `LinePolygonIntersectionPoint<T>::x_numerator`, `y_numerator`, `denominator`
   - 交点の有理表現である。
-  - $\mathrm{denominator}>0$ になるように正規化している。
+  - `denominator` を $q$ として、$q>0$ になるように正規化している。
   - 備考: 非常に大きい整数座標では `x_numerator`, `y_numerator` の生成時にオーバーフローする可能性がある。
 
 ## 計算量

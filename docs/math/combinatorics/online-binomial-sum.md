@@ -5,15 +5,16 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 
 ## 概要
 
-- $\displaystyle \sum_{i=l}^{u-1}r^i\binom{m}{i}$ をオンラインで求める。
+- 整数 $n,m$ と重み $r$ に対する二項係数の prefix sum を $\displaystyle F(n,m)=\sum_{i=0}^{n-1}r^i\binom{m}{i}$ とおく。
+- 半開区間の左端、右端をそれぞれ $l,u$ とする。$\displaystyle \sum_{i=l}^{u-1}r^i\binom{m}{i}$ をオンラインで求める。
 - $\binom{m}{i}=0\;(i>m)$ として扱う。
-- $m$ をバケットに分け、境界 $m_0$ に対する $F(k,m_0)$ を前計算する。
-- $m=m_0+d$ では $\displaystyle F(n,m)=\sum_{j=0}^{d}r^j\binom{d}{j}F(n-j,m_0)$ を使う。
+- 前計算を行う長さを $k$ とする。$m$ をバケットに分け、境界を $m_0$ とおいて $F(k,m_0)$ を前計算する。
+- $d=m-m_0$ とおく。$m=m_0+d$ では $\displaystyle F(n,m)=\sum_{j=0}^{d}r^j\binom{d}{j}F(n-j,m_0)$ を使う。
 - $r=0$ や $r=-1$ でも $r+1$ による除算は行わない。
 
 ## 使い方
 
-- $M=\mathrm{max\_m}$ とする。
+- `max_m` を $M$ とおく。
 - `OnlineBinomialSum<T>(int max_m, T r = T(1))`
   - $0\le m\le M$ のクエリに対する前計算を行う。
   - `r` は重みで、省略時は $1$ である。
@@ -30,8 +31,8 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 
 ## 計算量
 
+`max_m` を $M$ とおく。
+
 - コンストラクタ：時間・空間 $O(M\sqrt M)$
 - `binom_prefix_sum(n, m)`：時間 $O(\sqrt M)$
 - `binom_sum(l, u, m)`：時間 $O(\sqrt M)$
-
-ただし、$M=\mathrm{max\_m}$ である。
