@@ -5,12 +5,16 @@ documentation_of: math/multiplicative-function/prime-counting-modulo.hpp
 
 ## 概要
 
+上限を $N$、法を $m$ とおく。
+
 - $N$ 以下の素数を、$m$ で割った余りごとに数える。
 - Lucy DP のテーブルを余りごとに持つ。
 - `prime_counting_modulo_mf_prefix_sum_table<T>` は、各余りについて Black Algorithm 用の `Fprime` を返す。
 - $m$ が合成数でも特別扱いしない。
 
 ## 使い方
+
+添字 $k$ は余りを表すとする。
 
 - `prime_counting_modulo_table(N, m)`
   - `pair<vector<long long>, vector<vector<long long>>>` を返す。
