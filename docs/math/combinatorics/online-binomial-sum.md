@@ -13,7 +13,7 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 
 ## 使い方
 
-- $M=\mathrm{max\_m}$ とする。
+- `max_m` を $M$ とおく。
 - `OnlineBinomialSum<T>(int max_m, T r = T(1))`
   - $0\le m\le M$ のクエリに対する前計算を行う。
   - `r` は重みで、省略時は $1$ である。
@@ -30,8 +30,8 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 
 ## 計算量
 
+`max_m` を $M$ とおく。
+
 - コンストラクタ：時間・空間 $O(M\sqrt M)$
 - `binom_prefix_sum(n, m)`：時間 $O(\sqrt M)$
 - `binom_sum(l, u, m)`：時間 $O(\sqrt M)$
-
-ただし、$M=\mathrm{max\_m}$ である。
