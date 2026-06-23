@@ -16,6 +16,7 @@ documentation_of: structure/others/dynamic-median.hpp
   - 空で構築する。
   - 前提：`T` はコピー可能で、`std::multiset<T>` で扱える比較を持つ。
 - `DynamicMedianMode`
+  - 要素数を $N$ とおく。
   - `Lower` は昇順で $0$ 始まりの $(N - 1) / 2$ 番目の値を指定する。
   - `Upper` は昇順で $0$ 始まりの $N / 2$ 番目の値を指定する。
   - `Average` は `Lower` と `Upper` の算術平均を指定する。
@@ -41,7 +42,8 @@ documentation_of: structure/others/dynamic-median.hpp
 
 ## 計算量
 
-- 要素数を $N$ とする。
+要素数を $N$ とする。
+
 - `add`, `erase`: $O(\log N)$
 - `median`: $O(1)$
 - 空間：$O(N)$
