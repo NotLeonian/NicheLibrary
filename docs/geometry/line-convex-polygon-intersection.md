@@ -45,7 +45,7 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 
 - `LinePolygonIntersectionPoint<T>::to_point<Point>()`
   - 交点を `Point` に変換して返す。
-  - 前提: 変換先の座標型が整数ならば $q=1$ である。
+  - 前提: `denominator` を $q$ として、変換先の座標型が整数ならば $q=1$ である。
   - 備考: 浮動小数点の点型へは `long double` を経由して変換する。
 
 - `LinePolygonIntersectionPoint<T>::x_numerator`, `y_numerator`, `denominator`
