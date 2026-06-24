@@ -3,33 +3,19 @@
 
 // 一次式の床関数の和 Σ_{i=0}^{n-1} floor((a i + b) / m) を求める。
 // n は非負、m は正を仮定する。
-// a, b は負でもよい（数学的な床除算で扱う）。
-// T は整数型（__int128 を含む）。
-// n, m が sqrt(max(T)) 程度なら a*n+b などの中間計算が安全になりやすい。
+// T は std::numeric_limits<T>::is_integer が true である型。
+// T が符号付きの場合、a, b は負でもよい（数学的な床除算で扱う）。
+// 中間計算と戻り値が T の範囲に収まることを仮定する。
 // 計算量 O(log m)。
 
 #include <cassert>
-#include <type_traits>
+#include <limits>
 #include <utility>
 
 namespace floor_sum_internal {
-template <class T> struct is_integral : std::is_integral<T> {};
-
-#ifdef __SIZEOF_INT128__
-template <> struct is_integral<__int128_t> : std::true_type {};
-template <> struct is_integral<__uint128_t> : std::true_type {};
-#endif
-
-template <class T> struct is_signed : std::is_signed<T> {};
-
-#ifdef __SIZEOF_INT128__
-template <> struct is_signed<__int128_t> : std::true_type {};
-template <> struct is_signed<__uint128_t> : std::false_type {};
-#endif
-
 template <class T> T floor_div(T x, T y) {
     assert(y > 0);
-    if constexpr (is_signed<T>::value) {
+    if constexpr (std::numeric_limits<T>::is_signed) {
         T q = x / y;
         T r = x % y;
         if (r < 0) {
@@ -43,7 +29,7 @@ template <class T> T floor_div(T x, T y) {
 
 template <class T> T floor_mod(T x, T y) {
     assert(y > 0);
-    if constexpr (is_signed<T>::value) {
+    if constexpr (std::numeric_limits<T>::is_signed) {
         T r = x % y;
         if (r < 0) {
             r += y;
@@ -67,9 +53,8 @@ template <class T> T sum_0_to_n_minus_1(T n) {
 } // namespace floor_sum_internal
 
 template <class T> T floor_sum(T n, T m, T a, T b) {
-    static_assert(floor_sum_internal::is_integral<T>::value,
-                  "T must be integer.");
-    if constexpr (floor_sum_internal::is_signed<T>::value) {
+    static_assert(std::numeric_limits<T>::is_integer, "T must be integer.");
+    if constexpr (std::numeric_limits<T>::is_signed) {
         assert(n >= 0);
     }
     assert(m > 0);
