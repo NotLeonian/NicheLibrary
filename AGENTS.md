@@ -90,6 +90,7 @@
   - ライブラリの用途や計算量に対して不自然な問題を、オンラインジャッジ上の verify 問題として無理に選んでいない。
 - AOJ の URL は `https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=...` の形式である（`http://...` などでない）。
 - 先頭の competitive-verifier 向けのコメント、標準ライブラリについての include 文、このライブラリの他のファイルについての include 文、実装の先頭のそれぞれの間には、空行が 1 行ずつ入っている。
+- 標準出力では `std::endl` を使用せず、`'\n'` を出力して改行している。
 - `main` 関数の引数は明示的に `void` と記述せず、空になっている。
 - `main` 関数の最初の 2 行は順に `std::ios::sync_with_stdio(false);` と `std::cin.tie(nullptr);` であり、その次に空行が 1 行入っている。
 - `main` 関数の最後の行は `return 0;` であり、その前に空行が 1 行入っている。
