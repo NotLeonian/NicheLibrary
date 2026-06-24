@@ -4,21 +4,13 @@
 // Σ_{i=l}^{u-1} r^i binom(m,i) をオンラインで求める。
 // 0 <= l <= u と 0 <= m <= max_m を仮定する。
 // m のバケット境界の累積和と、バケット内の二項係数を前計算する。
-// T は四則演算を持つ型で、整数型でない場合は T(1) から T(max_m) で除算できる。
+// T は四則演算を持つ型で、std::numeric_limits<T>::is_integer が
+// false の場合は T(1) から T(max_m) で除算できる。
 // 計算量は前計算 O(max_m √max_m)、クエリ O(√max_m)。
 
 #include <cassert>
-#include <type_traits>
+#include <limits>
 #include <vector>
-
-namespace online_binomial_sum_internal {
-template <class T> struct is_integral : std::is_integral<T> {};
-
-#ifdef __SIZEOF_INT128__
-template <> struct is_integral<__int128_t> : std::true_type {};
-template <> struct is_integral<__uint128_t> : std::true_type {};
-#endif
-} // namespace online_binomial_sum_internal
 
 template <class T> struct OnlineBinomialSum {
     int max_m;
@@ -71,7 +63,7 @@ template <class T> struct OnlineBinomialSum {
         prefix_sum_table.assign(prefix_sum_offset[bucket_count], T());
 
         std::vector<T> integer_inverse;
-        if constexpr (!online_binomial_sum_internal::is_integral<T>::value) {
+        if constexpr (!std::numeric_limits<T>::is_integer) {
             integer_inverse.assign(max_m + 1, T());
             for (int i = 1; i <= max_m; ++i) {
                 integer_inverse[i] = T(1) / T(i);
@@ -91,8 +83,7 @@ template <class T> struct OnlineBinomialSum {
                 if (i < base) {
                     term *= r;
                     term *= T(base - i);
-                    if constexpr (online_binomial_sum_internal::is_integral<
-                                      T>::value) {
+                    if constexpr (!std::numeric_limits<T>::is_integer) {
                         term /= T(i + 1);
                     } else {
                         term *= integer_inverse[i + 1];
