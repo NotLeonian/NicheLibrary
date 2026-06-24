@@ -14,6 +14,7 @@
 // 計算量 O(log N)。
 
 #include <cassert>
+#include <cmath>
 #include <complex>
 #include <limits>
 #include <type_traits>
