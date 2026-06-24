@@ -109,5 +109,6 @@ int main() {
             (modint998244353(0) - pow_minus_inv2[n + 1]);
         std::cout << ans.val() << '\n';
     }
+
     return 0;
 }

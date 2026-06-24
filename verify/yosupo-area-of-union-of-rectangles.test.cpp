@@ -31,6 +31,7 @@ int main() {
     }
     if (n == 0) {
         std::cout << 0 << '\n';
+
         return 0;
     }
     const auto [max_value, outside_area] =
@@ -41,5 +42,6 @@ int main() {
         answer -= outside_area;
     }
     std::cout << answer << '\n';
+
     return 0;
 }

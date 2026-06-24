@@ -227,5 +227,6 @@ void self_test() {
 
 int main() {
     self_test();
+
     return 0;
 }

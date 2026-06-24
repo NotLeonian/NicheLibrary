@@ -124,6 +124,9 @@ build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
 }
 
 int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
     int n;
     std::cin >> n;
 
@@ -163,5 +166,6 @@ int main() {
         std::cout << v;
     }
     std::cout << '\n';
+
     return 0;
 }

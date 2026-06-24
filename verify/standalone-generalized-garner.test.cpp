@@ -145,5 +145,6 @@ int main() {
 #ifdef __SIZEOF_INT128__
     self_test_int128();
 #endif
+
     return 0;
 }

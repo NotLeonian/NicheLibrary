@@ -109,4 +109,6 @@ int main() {
 
     DynamicMatrixRank<ModInt998244353> solver(matrix);
     std::cout << solver.rank() << '\n';
+
+    return 0;
 }

@@ -81,5 +81,6 @@ int main() {
         std::cin >> n >> m >> a >> b;
         std::cout << floor_sum<long long>(n, m, a, b) << '\n';
     }
+
     return 0;
 }
