@@ -136,8 +136,8 @@ int main() {
 - 木の根付き化と重い子の選択: $O(n)$。
 - 軽い辺だけで再帰が深くなるため、再帰段数: $O(\log n)$。
 - $K$ を `Spec::K` の値とする。部分木 1 回分の値計算の呼び出し回数は $O(n^{\log_2(K+1)})$。
-- 全頂点の `before_vertex` / `after_vertex` を回収する実行では、$K\ge 2$ なら同じく $O(n^{\log_2(K+1)})$ 回、$K=1$ なら $O(n\log n)$ 回である。
-- 各呼び出しでの `Spec` 側の処理時間が掛かる。典型的に $K=2$、各処理が $O(X)$ なら $O(n^{\log_2 3}X)$。
+- 全頂点の `before_vertex` / `after_vertex` を回収する実行については、同様に $K\ge 2$ ならば $O(n^{\log_2(K+1)})$ 回、$K=1$ ならば $O(n\log n)$ 回である。
+- 各呼び出しで、`Spec` 側の処理時間が掛かる。典型的な場合として $K=2$、各処理が $O(X)$ ならば $O(n^{\log_2 3}X)$ である。
 
 ## 参考文献
 1. Soh Kumabe, Takanori Maehara, and Ryoma Sin'ya. Linear Pseudo-Polynomial Factor Algorithm for Automaton Constrained Tree Knapsack Problem. In WALCOM: Algorithms and Computation, Lecture Notes in Computer Science, Vol. 11355, pp. 248–260. Springer, 2019. doi:10.1007/978-3-030-10564-8_20.（[arXiv のリンク](https://arxiv.org/abs/1807.04942)）
