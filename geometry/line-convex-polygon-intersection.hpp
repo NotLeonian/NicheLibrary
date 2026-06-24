@@ -318,18 +318,20 @@ template <class Real> Real number_as_real(NicheLibrary::Int128 value) {
 }
 } // namespace line_convex_polygon_intersection_internal
 
-template <class T> struct LinePolygonIntersectionPoint {
-    T x_numerator;
-    T y_numerator;
-    T denominator;
+template <class T> struct LineConvexHullIntersectionPoint {
+    T x_numerator{};
+    T y_numerator{};
+    T denominator = T(1);
 
     template <class Real> Real x_as() const {
+        assert(denominator > 0);
         namespace lpi_internal = line_convex_polygon_intersection_internal;
         return lpi_internal::number_as_real<Real>(x_numerator) /
                lpi_internal::number_as_real<Real>(denominator);
     }
 
     template <class Real> Real y_as() const {
+        assert(denominator > 0);
         namespace lpi_internal = line_convex_polygon_intersection_internal;
         return lpi_internal::number_as_real<Real>(y_numerator) /
                lpi_internal::number_as_real<Real>(denominator);
@@ -338,16 +340,24 @@ template <class T> struct LinePolygonIntersectionPoint {
     template <class Point> Point to_point() const {
         namespace lpi_internal = line_convex_polygon_intersection_internal;
         using Coord = lpi_internal::coordinate_t<Point>;
+
         if constexpr (lpi_internal::is_integer_v<Coord>) {
-            assert(denominator == 1);
-            return Point(static_cast<Coord>(x_numerator),
-                         static_cast<Coord>(y_numerator));
+            assert(denominator == T(1));
+            return Point{static_cast<Coord>(x_numerator),
+                         static_cast<Coord>(y_numerator)};
         } else {
-            return Point(static_cast<Coord>(x_as<long double>()),
-                         static_cast<Coord>(y_as<long double>()));
+            return Point{static_cast<Coord>(x_as<long double>()),
+                         static_cast<Coord>(y_as<long double>())};
         }
     }
+
+    friend constexpr bool
+    operator==(const LineConvexHullIntersectionPoint &,
+               const LineConvexHullIntersectionPoint &) = default;
 };
+
+template <class T>
+using LinePolygonIntersectionPoint = LineConvexHullIntersectionPoint<T>;
 
 namespace line_convex_polygon_intersection_internal {
 template <class Point, class Calc, bool = is_integer_v<coordinate_t<Point>>>
@@ -356,7 +366,7 @@ struct result_value_type {
 };
 
 template <class Point, class Calc> struct result_value_type<Point, Calc, true> {
-    using type = LinePolygonIntersectionPoint<Calc>;
+    using type = LineConvexHullIntersectionPoint<Calc>;
 };
 
 template <class Point, class Calc>
@@ -383,13 +393,13 @@ using LinePolygonIntersectionResult =
 
 namespace line_convex_polygon_intersection_internal {
 template <class Point, class Calc>
-LinePolygonIntersectionPoint<Calc> make_integral_point(const Point &point) {
+LineConvexHullIntersectionPoint<Calc> make_integral_point(const Point &point) {
     return {to_calc_x<Point, Calc>(point), to_calc_y<Point, Calc>(point),
             Calc(1)};
 }
 
 template <class Point, class Calc>
-LinePolygonIntersectionPoint<Calc>
+LineConvexHullIntersectionPoint<Calc>
 line_edge_intersection_integral(const Point &line_a, const Point &line_b,
                                 const Point &segment_a,
                                 const Point &segment_b) {
@@ -544,15 +554,11 @@ line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
     };
 
     auto height = [&](int index) -> Calc {
-        return cross_diff<Point, Calc>(vertex(index), line_a, line_b, line_a);
-    };
-
-    auto chain_index = [&](int start, int step, int offset) {
-        return positive_mod(start + step * offset, n);
+        return line_height<Point, Calc>(vertex(index), line_a, line_b);
     };
 
     const auto [minimum_index, maximum_index] =
-        find_extreme_vertices<Point>(n, height);
+        find_extreme_vertices(n, height);
     const Calc minimum_value = height(minimum_index);
     const Calc maximum_value = height(maximum_index);
 
