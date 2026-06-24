@@ -557,6 +557,14 @@ line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
         return line_height<Point, Calc>(vertex(index), line_a, line_b);
     };
 
+    auto chain_index = [&](int start, int step, int offset) -> int {
+        assert(0 <= start && start < n);
+        assert(step == 1 || step == -1);
+        assert(0 <= offset && offset <= n);
+        return line_convex_polygon_intersection_internal::positive_mod(
+            start + step * offset, n);
+    };
+
     const auto [minimum_index, maximum_index] =
         find_extreme_vertices(n, height);
     const Calc minimum_value = height(minimum_index);
