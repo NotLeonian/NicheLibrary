@@ -5,33 +5,41 @@
 // 各式を x ≡ r_i (mod m_i) に直してから一般の中国剰余定理で合成する。
 // M_i > 0、a, b, m のサイズ一致、返り値が R1, R2 に収まることを仮定する。
 // 係数や法は互いに素でなくてよい。解なしなら (0, 0) を返す。
-// 標準 64 ビット整数型では計算量 O(N log max M_i)。
-// __int128 では剰余乗算をダブリングで行う。
+// 標準の 64 bit 以下の整数型では剰余乗算に 128 bit 整数型を用いる。
+// それ以外の整数型では加算と 2 倍による剰余乗算を用いる。
+// 計算量 O(N log max M_i)。ただし、通常乗算を使えない型では O(N log^2 max M_i)。
 
 #include <cassert>
+#include <limits>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "../../internal/int128.hpp"
+
 namespace generalized_garner_internal {
-template <class T> struct is_integral : std::is_integral<T> {};
+template <class T>
+constexpr bool is_integer_v =
+    std::numeric_limits<std::remove_cv_t<T>>::is_integer;
 
-#ifdef __SIZEOF_INT128__
-template <> struct is_integral<__int128_t> : std::true_type {};
-template <> struct is_integral<__uint128_t> : std::true_type {};
-#endif
+template <class T>
+constexpr bool is_signed_v =
+    std::numeric_limits<std::remove_cv_t<T>>::is_signed;
 
-template <class T> struct is_signed : std::is_signed<T> {};
+template <class T>
+constexpr bool is_standard_integer_v =
+    std::is_integral_v<std::remove_cv_t<T>> &&
+    !std::is_same_v<std::remove_cv_t<T>, bool>;
 
-#ifdef __SIZEOF_INT128__
-template <> struct is_signed<__int128_t> : std::true_type {};
-template <> struct is_signed<__uint128_t> : std::false_type {};
-#endif
+template <class T>
+constexpr bool use_uint128_mul_v =
+    is_standard_integer_v<T> &&
+    std::numeric_limits<std::remove_cv_t<T>>::digits <= 64;
 
 template <class T> T safe_mod(T x, T m) {
     assert(m > 0);
     x %= m;
-    if constexpr (is_signed<T>::value) {
+    if constexpr (is_signed_v<T>) {
         if (x < 0) {
             x += m;
         }
@@ -63,27 +71,22 @@ template <class T> T mul_mod(T a, T b, T m) {
     assert(m > 0);
     a = safe_mod(a, m);
     b = safe_mod(b, m);
-#ifdef __SIZEOF_INT128__
-    if constexpr (sizeof(T) <= 8) {
-        return static_cast<T>(
-            (static_cast<__uint128_t>(a) * static_cast<__uint128_t>(b)) %
-            static_cast<__uint128_t>(m));
+    if constexpr (use_uint128_mul_v<T>) {
+        using U = NicheLibrary::UInt128;
+        return static_cast<T>((U(a) * U(b)) % U(m));
     } else {
-#endif
         T res = 0;
         while (b != 0) {
-            if ((b & 1) != 0) {
+            if (b % 2 != 0) {
                 res = add_mod(res, a, m);
             }
-            b >>= 1;
+            b /= 2;
             if (b != 0) {
                 a = add_mod(a, a, m);
             }
         }
         return res;
-#ifdef __SIZEOF_INT128__
     }
-#endif
 }
 
 template <class T> T inv_mod(T a, T m) {
@@ -145,16 +148,19 @@ template <class R1 = long long, class R2 = R1, class T1, class T2, class M>
 std::pair<R1, R2> generalized_garner(const std::vector<T1> &a,
                                      const std::vector<T2> &b,
                                      const std::vector<M> &m) {
-    static_assert(generalized_garner_internal::is_integral<R1>::value);
-    static_assert(generalized_garner_internal::is_integral<R2>::value);
-    static_assert(generalized_garner_internal::is_signed<R1>::value);
-    static_assert(generalized_garner_internal::is_signed<R2>::value);
-    static_assert(generalized_garner_internal::is_integral<T1>::value);
-    static_assert(generalized_garner_internal::is_integral<T2>::value);
-    static_assert(generalized_garner_internal::is_integral<M>::value);
+    namespace gg_internal = generalized_garner_internal;
+    static_assert(gg_internal::is_integer_v<R1>, "R1 must be integer.");
+    static_assert(gg_internal::is_integer_v<R2>, "R2 must be integer.");
+    static_assert(gg_internal::is_signed_v<R1>, "R1 must be signed.");
+    static_assert(gg_internal::is_signed_v<R2>, "R2 must be signed.");
+    static_assert(gg_internal::is_integer_v<T1>, "T1 must be integer.");
+    static_assert(gg_internal::is_integer_v<T2>, "T2 must be integer.");
+    static_assert(gg_internal::is_integer_v<M>, "M must be integer.");
+
     using R = std::common_type_t<R1, R2>;
-    static_assert(generalized_garner_internal::is_integral<R>::value);
-    static_assert(generalized_garner_internal::is_signed<R>::value);
+    static_assert(gg_internal::is_integer_v<R>, "R must be integer.");
+    static_assert(gg_internal::is_signed_v<R>, "R must be signed.");
+
     assert(a.size() == b.size());
     assert(a.size() == m.size());
     R r0 = 0;
@@ -163,14 +169,12 @@ std::pair<R1, R2> generalized_garner(const std::vector<T1> &a,
     for (int i = 0; i < n; ++i) {
         const R mi = static_cast<R>(m[i]);
         assert(mi > 0);
-        const auto [r1, m1] =
-            generalized_garner_internal::solve_linear_congruence(
-                static_cast<R>(a[i]), static_cast<R>(b[i]), mi);
+        const auto [r1, m1] = gg_internal::solve_linear_congruence(
+            static_cast<R>(a[i]), static_cast<R>(b[i]), mi);
         if (m1 == 0) {
             return {0, 0};
         }
-        const auto [nr, nm] =
-            generalized_garner_internal::merge_congruence(r0, m0, r1, m1);
+        const auto [nr, nm] = gg_internal::merge_congruence(r0, m0, r1, m1);
         if (nm == 0) {
             return {0, 0};
         }

@@ -22,12 +22,14 @@ documentation_of: math/number-theory/generalized-garner.hpp
   - 解が存在しないなら $(0,0)$ を返す。
   - 前提: $\lvert a\rvert=\lvert b\rvert=\lvert m\rvert,\;M_i>0$。
   - 前提: $A_i,\,B_i,\,M_i$ は内部の共通型へ変換できる。
+  - 前提: 内部の共通型は合成中の法、剰余、中間値を表せる。
   - 前提: 返り値は `R1`, `R2` に収まる。
+  - 備考: 標準の 64 bit 以下の整数型では、内部の剰余乗算に `NicheLibrary::UInt128` を用いる。
   - 備考: 空の列、または制約を与えない式だけなら $(0,1)$ を返す。
 
 ## 計算量
 
 - $N=\lvert a\rvert,\;V=\max_i M_i$ とする。
-- 標準 64 ビット整数型では時間 $O(N\log V)$。
-- `__int128` では時間 $O(N\log^2 V)$。
+- 標準の 64 bit 以下の整数型では時間 $O(N\log V)$。
+- それ以外の整数型で通常乗算を使えない場合は時間 $O(N\log^2 V)$。
 - 空間 $O(1)$。
