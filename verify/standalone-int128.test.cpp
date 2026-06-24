@@ -18,6 +18,13 @@ int main() {
     static_assert(std::numeric_limits<Int128>::is_signed);
     static_assert(std::numeric_limits<Int128>::digits == 127);
 
+    static_assert(static_cast<long double>(
+                      NicheLibrary::UInt128::from_words(1, 0)) == 0x1p64L);
+    static_assert(static_cast<long double>(NicheLibrary::Int128::from_words(
+                      ~std::uint64_t{}, 0)) == -0x1p64L);
+    static_assert(static_cast<long double>(NicheLibrary::Int128::from_words(
+                      std::uint64_t{1} << 63, 0)) == -0x1p127L);
+
     const UInt128 two_64 = UInt128::from_words(1, 0);
     assert(two_64 / UInt128(3) == UInt128(6148914691236517205ULL));
     assert(two_64 % UInt128(3) == UInt128(1));

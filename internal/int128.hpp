@@ -46,6 +46,11 @@ class UInt128 {
 
     explicit constexpr operator bool() const { return high_ != 0 || low_ != 0; }
 
+    explicit constexpr operator long double() const {
+        return static_cast<long double>(high_) * 0x1p64L +
+               static_cast<long double>(low_);
+    }
+
     friend constexpr bool operator==(UInt128 lhs, UInt128 rhs) {
         return lhs.high_ == rhs.high_ && lhs.low_ == rhs.low_;
     }
@@ -220,6 +225,12 @@ class Int128 {
     explicit constexpr operator bool() const { return value_ != UInt128{}; }
 
     constexpr bool is_negative() const { return (value_.high() >> 63) != 0; }
+
+    explicit constexpr operator long double() const {
+        const long double magnitude =
+            static_cast<long double>(abs_unsigned(*this));
+        return is_negative() ? -magnitude : magnitude;
+    }
 
     friend constexpr bool operator==(Int128 lhs, Int128 rhs) {
         return lhs.value_ == rhs.value_;
