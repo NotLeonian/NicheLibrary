@@ -187,9 +187,6 @@ generalized_floor_sum_degree_le_2(T n, T m, T a, T b) {
 
     static_assert(gfs_internal::is_integer_v<T>, "T must be integer.");
     static_assert(gfs_internal::is_integer_v<Int>, "Internal must be integer.");
-    static_assert(!gfs_internal::is_signed_v<T> ||
-                      gfs_internal::is_signed_v<Internal>,
-                  "Internal must be signed when T is signed.");
     static_assert(!std::is_same_v<std::remove_cv_t<T>, bool>,
                   "T must not be bool.");
     static_assert(!std::is_same_v<std::remove_cv_t<Int>, bool>,
