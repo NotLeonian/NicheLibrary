@@ -18,21 +18,21 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - `OnlineBinomialSum<T>(int max_m, T r = T(1))`
   - $0\le m\le M$ のクエリに対する前計算を行う。
   - `r` は重みで、省略時は $1$ である。
-  - 前提：`T` は四則演算を持つ。`std::numeric_limits<T>::is_integer` が `false` の場合、$T(1),T(2),\ldots,T(M)$ で除算できる。
-  - 備考：整数型では中間値が `T` の範囲を超えない必要がある。
+  - 前提: `T` は四則演算を持つ。`std::numeric_limits<T>::is_integer` が `false` の場合、$T(1),T(2),\ldots,T(M)$ で除算できる。
+  - 備考: 整数型では中間値が `T` の範囲を超えない必要がある。
 - `T binom_prefix_sum(int n, int m) const`
   - $\displaystyle \sum_{i=0}^{n-1}r^i\binom{m}{i}$ を返す。
-  - 前提：$n\ge 0,\;0\le m\le M$。
-  - 備考：$n>m+1$ のときも assert 違反にせず、全体の和を返す。
+  - 前提: $n\ge 0,\;0\le m\le M$。
+  - 備考: $n>m+1$ のときも assert 違反にせず、全体の和を返す。
 - `T binom_sum(int l, int u, int m) const`
   - $\displaystyle \sum_{i=l}^{u-1}r^i\binom{m}{i}$ を返す。
-  - 前提：$0\le l\le u,\;0\le m\le M$。
-  - 備考：$u>m+1$ や $l>m$ のときも assert 違反にしない。
+  - 前提: $0\le l\le u,\;0\le m\le M$。
+  - 備考: $u>m+1$ や $l>m$ のときも assert 違反にしない。
 
 ## 計算量
 
 `max_m` を $M$ とおく。
 
-- コンストラクタ：時間・空間 $O(M\sqrt M)$
-- `binom_prefix_sum(n, m)`：時間 $O(\sqrt M)$
-- `binom_sum(l, u, m)`：時間 $O(\sqrt M)$
+- コンストラクタ: 時間・空間 $O(M\sqrt M)$
+- `binom_prefix_sum(n, m)`: 時間 $O(\sqrt M)$
+- `binom_sum(l, u, m)`: 時間 $O(\sqrt M)$
