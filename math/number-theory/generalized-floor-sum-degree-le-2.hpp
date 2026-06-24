@@ -7,7 +7,10 @@
 // 計算量 O(log m)。
 
 #include <cassert>
+#include <limits>
 #include <type_traits>
+
+#include "../../internal/int128.hpp"
 
 template <class T> struct GeneralizedFloorSumDegreeLe2Result {
     T ans_01;
@@ -16,25 +19,31 @@ template <class T> struct GeneralizedFloorSumDegreeLe2Result {
 };
 
 namespace generalized_floor_sum_degree_le_2_internal {
-template <class T> struct is_integral : std::is_integral<T> {};
-#ifdef __SIZEOF_INT128__
-template <> struct is_integral<__int128_t> : std::true_type {};
-template <> struct is_integral<__uint128_t> : std::true_type {};
-#endif
+template <class T>
+constexpr bool is_integer_v =
+    std::numeric_limits<std::remove_cv_t<T>>::is_integer;
 
-template <class T> struct is_signed : std::is_signed<T> {};
-#ifdef __SIZEOF_INT128__
-template <> struct is_signed<__int128_t> : std::true_type {};
-template <> struct is_signed<__uint128_t> : std::false_type {};
-#endif
+template <class T>
+constexpr bool is_signed_v =
+    std::numeric_limits<std::remove_cv_t<T>>::is_signed;
+
+template <class T>
+constexpr bool use_int128_by_default_v =
+    std::is_integral_v<std::remove_cv_t<T>> &&
+    !std::is_same_v<std::remove_cv_t<T>, bool> &&
+    std::numeric_limits<std::remove_cv_t<T>>::digits <= 64;
+
+template <class T>
+using default_internal_t =
+    std::conditional_t<use_int128_by_default_v<T>, NicheLibrary::Int128, T>;
 
 template <class T> T floor_div(T x, T y) {
     assert(y > 0);
-    if constexpr (is_signed<T>::value) {
+    if constexpr (is_signed_v<T>) {
         T q = x / y;
         T r = x % y;
         if (r < 0) {
-            --q;
+            q -= 1;
         }
         return q;
     } else {
@@ -44,7 +53,7 @@ template <class T> T floor_div(T x, T y) {
 
 template <class T> T floor_mod(T x, T y) {
     assert(y > 0);
-    if constexpr (is_signed<T>::value) {
+    if constexpr (is_signed_v<T>) {
         T r = x % y;
         if (r < 0) {
             r += y;
@@ -60,7 +69,7 @@ template <class T> T sum_0_to_n_minus_1(T n) {
     if (n == 0) {
         return 0;
     }
-    if ((n & 1) == 0) {
+    if (n % 2 == 0) {
         return (n / 2) * (n - 1);
     }
     return n * ((n - 1) / 2);
@@ -98,7 +107,7 @@ template <class T> T sum_range(T l, T r) {
     }
     T cnt = r - l + 1;
     T s = l + r;
-    if ((s & 1) == 0) {
+    if (s % 2 == 0) {
         s /= 2;
     } else {
         cnt /= 2;
@@ -113,7 +122,7 @@ template <class Int> struct Result {
 };
 
 template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
-    if constexpr (is_signed<Int>::value) {
+    if constexpr (is_signed_v<Int>) {
         assert(n >= 0);
     }
     assert(m > 0);
@@ -126,7 +135,7 @@ template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
     const Int qb = floor_div(b, m);
     b = floor_mod(b, m);
 
-    if constexpr (is_signed<Int>::value) {
+    if constexpr (is_signed_v<Int>) {
         assert(a >= 0);
         assert(b >= 0);
     }
@@ -168,30 +177,38 @@ template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
 }
 } // namespace generalized_floor_sum_degree_le_2_internal
 
-template <class T>
+template <class T, class Internal = void>
 GeneralizedFloorSumDegreeLe2Result<T>
 generalized_floor_sum_degree_le_2(T n, T m, T a, T b) {
-    static_assert(
-        generalized_floor_sum_degree_le_2_internal::is_integral<T>::value,
-        "T must be integer.");
-    if constexpr (generalized_floor_sum_degree_le_2_internal::is_signed<
-                      T>::value) {
+    namespace gfs_internal = generalized_floor_sum_degree_le_2_internal;
+    using Int =
+        std::conditional_t<std::is_void_v<Internal>,
+                           gfs_internal::default_internal_t<T>, Internal>;
+
+    static_assert(gfs_internal::is_integer_v<T>, "T must be integer.");
+    static_assert(gfs_internal::is_integer_v<Int>, "Internal must be integer.");
+    static_assert(!std::is_same_v<std::remove_cv_t<T>, bool>,
+                  "T must not be bool.");
+    static_assert(!std::is_same_v<std::remove_cv_t<Int>, bool>,
+                  "Internal must not be bool.");
+    static_assert(!gfs_internal::is_signed_v<T> ||
+                      gfs_internal::is_signed_v<Int>,
+                  "Internal must be signed when T is signed.");
+    static_assert(std::numeric_limits<std::remove_cv_t<T>>::digits <=
+                      std::numeric_limits<std::remove_cv_t<Int>>::digits,
+                  "Internal must be able to represent values of T.");
+
+    if constexpr (gfs_internal::is_signed_v<T>) {
         assert(n >= 0);
     }
     assert(m > 0);
 
-#ifdef __SIZEOF_INT128__
-    using I = __int128_t;
-    const auto res = generalized_floor_sum_degree_le_2_internal::solve<I>(
-        static_cast<I>(n), static_cast<I>(m), static_cast<I>(a),
-        static_cast<I>(b));
+    const auto res =
+        gfs_internal::solve<Int>(static_cast<Int>(n), static_cast<Int>(m),
+                                 static_cast<Int>(a), static_cast<Int>(b));
+
     return {static_cast<T>(res.ans_01), static_cast<T>(res.ans_11),
             static_cast<T>(res.ans_02)};
-#else
-    const auto res =
-        generalized_floor_sum_degree_le_2_internal::solve<T>(n, m, a, b);
-    return {res.ans_01, res.ans_11, res.ans_02};
-#endif
 }
 
 #endif
