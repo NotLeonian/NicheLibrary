@@ -19,7 +19,7 @@ template <class T> T floor_div(T x, T y) {
         T q = x / y;
         T r = x % y;
         if (r < 0) {
-            --q;
+            q -= 1;
         }
         return q;
     } else {
@@ -45,7 +45,7 @@ template <class T> T sum_0_to_n_minus_1(T n) {
     if (n == 0) {
         return 0;
     }
-    if ((n & 1) == 0) {
+    if (n % 2 == 0) {
         return (n / 2) * (n - 1);
     }
     return n * ((n - 1) / 2);

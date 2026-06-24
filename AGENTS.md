@@ -43,6 +43,10 @@
   - verify ソースコードの拡張子は `.test.cpp` である。
 
 ### C++ ソースコード（共通）
+- テンプレート引数によってプリミティブな整数型以外の型が与えられる可能性がある型（ただし、イテレータが与えられることが想定される型を除く）の値では、インクリメントを `+= 1`、デクリメントを `-= 1` で行っている（インクリメント演算子 `++`、デクリメント演算子 `--` を用いていない）。
+- テンプレート引数によって主にイテレータが与えられることが想定される型については、前置インクリメント演算子および後置インクリメント演算子を使用し、イテレータでない型が与えられないようにメタ関数や `static_assert` などを使用している。
+- テンプレート引数によってプリミティブな整数型以外の型が与えられる可能性がある型の値では、ビット演算で行う必要がない演算にビット演算を用いていない。
+  - たとえば、「偶奇判定に `& 1` ではなく `% 2` を用いているか」「2 倍の計算に `<< 1`, `<<= 1` ではなく `* 2`, `*= 2` を用いているか」「2 で割った商の計算に `>> 1`, `>>= 1` ではなく `/ 2`, `/= 2` を用いているか」などをチェックすること。
 - clang-format 20 を用いて、[.clang-format](.clang-format) で指定したオプションによりフォーマットされている。
 - 1 行目が空行でない。
 - ブロックの末尾の `}` のみからなる行の 1 つ前の行が空行でない。
@@ -120,11 +124,11 @@
 - ドキュメント中の C++ ソースコードの例は「```C++」から「```」までによって囲む（特に先頭を「```」や「```c++」「```cpp」などにしない）。
 
 ### 依存関係
-- NotLeonian/competitive-verifier は [pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` は、`rev` による 40 文字の commit SHA または `tag` によるタグのどちらかによって固定されている（`branch` などの更新されうる参照ではない）。
-- [.github/workflows/verify.yml](.github/workflows/verify.yml) に NotLeonian/competitive-verifier の commit SHA やタグを直接書いていない。
+- [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) は [pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` は、`rev` による 40 文字の commit SHA または `tag` によるタグのどちらかによって固定されている（`branch` などの更新されうる参照ではない）。
+- [.github/workflows/verify.yml](.github/workflows/verify.yml) に [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) の commit SHA やタグを直接書いていない。
 
 ---
 
 ### 逆にレビューしないでよいこと
-- [pyproject.toml](pyproject.toml) で固定されている NotLeonian/competitive-verifier 内に、このリポジトリで必要なファイルが存在するかどうかの確認。
+- [pyproject.toml](pyproject.toml) で固定されている [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) 内に、このリポジトリで必要なファイルが存在するかどうかの確認。
   - 権限が足りないなどで正しく確認できない可能性が高い。
