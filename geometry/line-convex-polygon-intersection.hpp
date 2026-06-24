@@ -1,13 +1,14 @@
 #ifndef GEOMETRY_LINE_CONVEX_POLYGON_INTERSECTION_HPP
 #define GEOMETRY_LINE_CONVEX_POLYGON_INTERSECTION_HPP
 
-// 反時計回りの面積正の狭義凸多角形と直線の共通部分を求める。
-// 共通部分が空集合なら 0 個、1 点なら 1 個、線分ならその端点 2 個を返す。
-// 前提: polygon は面積正の狭義凸多角形で、反時計回りで、
-//       3 頂点連続で一直線にならず、line_a != line_b。
-// 注意: convex_hull の結果が 1 点または 2 点になる退化ケースは前提外。
-//       呼び出し側で点または線分として処理すること。
-// 座標型が整数なら内部は整数演算で処理し、交点を有理表現で返す。
+// 凸包と直線の共通部分を求める。
+// 凸包が空、1 点、線分、面積正の狭義凸多角形のどれであっても扱える。
+// 共通部分が空集合ならば 0 個、1 点ならば 1 個、線分ならばその端点 2 個を返す。
+// 前提: line_a != line_b。
+// 前提: hull のサイズが 2 ならば 2 点は相異なる。
+// 前提: hull のサイズが 3 以上ならば hull は反時計回りであり、
+// 連続する 3 頂点が一直線に並んでおらず、面積が正の狭義凸多角形である。
+// 座標型が整数ならば整数演算で処理し、交点を有理表現で返す。
 // 標準の 64 bit 以下の整数座標では、既定で 128 bit 整数型を内部計算に用いる。
 // 計算途中に必要な値が内部計算の型に収まることを仮定する。
 // 計算量 O(log N)。
@@ -363,14 +364,22 @@ using result_value_t = typename result_value_type<Point, Calc>::type;
 } // namespace line_convex_polygon_intersection_internal
 
 template <class Point, class Calc = void>
-using LinePolygonIntersectionValue =
+using LineConvexHullIntersectionValue =
     line_convex_polygon_intersection_internal::result_value_t<
         Point, line_convex_polygon_intersection_internal::resolved_calc_t<
                    Point, Calc>>;
 
 template <class Point, class Calc = void>
+using LineConvexHullIntersectionResult =
+    std::vector<LineConvexHullIntersectionValue<Point, Calc>>;
+
+template <class Point, class Calc = void>
+using LinePolygonIntersectionValue =
+    LineConvexHullIntersectionValue<Point, Calc>;
+
+template <class Point, class Calc = void>
 using LinePolygonIntersectionResult =
-    std::vector<LinePolygonIntersectionValue<Point, Calc>>;
+    LineConvexHullIntersectionResult<Point, Calc>;
 
 namespace line_convex_polygon_intersection_internal {
 template <class Point, class Calc>
@@ -455,66 +464,115 @@ make_edge_result(const Point &line_a, const Point &line_b,
             line_a, line_b, segment_a, segment_b);
     }
 }
-} // namespace line_convex_polygon_intersection_internal
 
-template <class Point, class Calc = void>
-LinePolygonIntersectionResult<Point, Calc>
-line_polygon_intersection(const std::vector<Point> &polygon,
-                          const Point &line_a, const Point &line_b) {
-    namespace lpi_internal = line_convex_polygon_intersection_internal;
-    using Coord = lpi_internal::coordinate_t<Point>;
-    using Number = lpi_internal::resolved_calc_t<Point, Calc>;
+template <class Point, class Calc>
+bool equals_point(const Point &lhs, const Point &rhs) {
+    return equals_value(to_calc_x<Point, Calc>(lhs),
+                        to_calc_x<Point, Calc>(rhs)) &&
+           equals_value(to_calc_y<Point, Calc>(lhs),
+                        to_calc_y<Point, Calc>(rhs));
+}
 
-    static_assert(!lpi_internal::is_integer_v<Coord> || lpi_internal::is_signed_v<Coord>,
-                  "integer coordinate type must be signed");
-    static_assert(!lpi_internal::is_integer_v<Coord> || lpi_internal::is_integer_v<Number>,
-                  "integer coordinate type requires integer calculation type");
-    static_assert(!lpi_internal::is_integer_v<Number> || lpi_internal::is_signed_v<Number>,
-                  "integer calculation type must be signed");
+template <class Point, class Calc>
+Calc line_height(const Point &point, const Point &line_a, const Point &line_b) {
+    return cross_diff<Point, Calc>(point, line_a, line_b, line_a);
+}
 
+template <class Point, class Calc>
+std::vector<result_value_t<Point, Calc>>
+line_degenerate_convex_hull_intersection(const std::vector<Point> &hull,
+                                         const Point &line_a,
+                                         const Point &line_b) {
+    std::vector<result_value_t<Point, Calc>> result;
+
+    if (hull.empty()) {
+        return result;
+    }
+
+    if (hull.size() == 1) {
+        if (sign_value(line_height<Point, Calc>(hull[0], line_a, line_b)) ==
+            0) {
+            result.push_back(make_vertex_result<Point, Calc>(hull[0]));
+        }
+        return result;
+    }
+
+    assert(hull.size() == 2);
+    assert((!equals_point<Point, Calc>(hull[0], hull[1])));
+
+    const Calc first_height = line_height<Point, Calc>(hull[0], line_a, line_b);
+    const Calc second_height =
+        line_height<Point, Calc>(hull[1], line_a, line_b);
+    const int first_sign = sign_value(first_height);
+    const int second_sign = sign_value(second_height);
+
+    if (first_sign == 0 && second_sign == 0) {
+        result.push_back(make_vertex_result<Point, Calc>(hull[0]));
+        result.push_back(make_vertex_result<Point, Calc>(hull[1]));
+        return result;
+    }
+
+    if (first_sign == 0) {
+        result.push_back(make_vertex_result<Point, Calc>(hull[0]));
+        return result;
+    }
+
+    if (second_sign == 0) {
+        result.push_back(make_vertex_result<Point, Calc>(hull[1]));
+        return result;
+    }
+
+    if ((first_sign < 0 && second_sign > 0) ||
+        (first_sign > 0 && second_sign < 0)) {
+        result.push_back(
+            make_edge_result<Point, Calc>(line_a, line_b, hull[0], hull[1]));
+    }
+
+    return result;
+}
+
+template <class Point, class Calc>
+std::vector<result_value_t<Point, Calc>>
+line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
+                                        const Point &line_a,
+                                        const Point &line_b) {
     const int n = static_cast<int>(polygon.size());
     assert(n >= 3);
-    assert(!lpi_internal::equals_value(lpi_internal::to_calc_x<Point, Number>(line_a),
-                              lpi_internal::to_calc_x<Point, Number>(line_b)) ||
-           !lpi_internal::equals_value(lpi_internal::to_calc_y<Point, Number>(line_a),
-                              lpi_internal::to_calc_y<Point, Number>(line_b)));
 
     auto vertex = [&](int index) -> const Point & {
-        return polygon[lpi_internal::positive_mod(index, n)];
+        return polygon[positive_mod(index, n)];
     };
 
-    auto height = [&](int index) -> Number {
-        return lpi_internal::cross_diff<Point, Number>(vertex(index), line_a, line_b,
-                                              line_a);
+    auto height = [&](int index) -> Calc {
+        return cross_diff<Point, Calc>(vertex(index), line_a, line_b, line_a);
     };
 
     auto chain_index = [&](int start, int step, int offset) {
-        return lpi_internal::positive_mod(start + step * offset, n);
+        return positive_mod(start + step * offset, n);
     };
 
     const auto [minimum_index, maximum_index] =
-        lpi_internal::find_extreme_vertices<Point>(n, height);
-    const Number minimum_value = height(minimum_index);
-    const Number maximum_value = height(maximum_index);
+        find_extreme_vertices<Point>(n, height);
+    const Calc minimum_value = height(minimum_index);
+    const Calc maximum_value = height(maximum_index);
 
     LinePolygonIntersectionResult<Point, Calc> result;
 
-    if (lpi_internal::sign_value(minimum_value) > 0 ||
-        lpi_internal::sign_value(maximum_value) < 0) {
+    if (sign_value(minimum_value) > 0 || sign_value(maximum_value) < 0) {
         return result;
     }
 
     const int forward_length =
-        lpi_internal::distance_forward(minimum_index, maximum_index, n);
+        distance_forward(minimum_index, maximum_index, n);
     const int backward_length = n - forward_length;
 
-    if (lpi_internal::sign_value(minimum_value) == 0) {
+    if (sign_value(minimum_value) == 0) {
         const int forward_zero =
-            lpi_internal::last_non_positive(forward_length, [&](int offset) {
+            last_non_positive(forward_length, [&](int offset) {
                 return height(minimum_index + offset);
             });
         const int backward_zero =
-            lpi_internal::last_non_positive(backward_length, [&](int offset) {
+            last_non_positive(backward_length, [&](int offset) {
                 return height(minimum_index - offset);
             });
 
@@ -523,25 +581,25 @@ line_polygon_intersection(const std::vector<Point> &polygon,
             chain_index(minimum_index, -1, backward_zero);
 
         result.push_back(
-            lpi_internal::make_vertex_result<Point, Number>(vertex(forward_index)));
+            make_vertex_result<Point, Calc>(vertex(forward_index)));
         if (forward_index != backward_index) {
             result.push_back(
-                lpi_internal::make_vertex_result<Point, Number>(vertex(backward_index)));
+                make_vertex_result<Point, Calc>(vertex(backward_index)));
         }
         return result;
     }
 
-    if (lpi_internal::sign_value(maximum_value) == 0) {
+    if (sign_value(maximum_value) == 0) {
         const int forward_length_from_max =
-            lpi_internal::distance_forward(maximum_index, minimum_index, n);
+            distance_forward(maximum_index, minimum_index, n);
         const int backward_length_from_max = n - forward_length_from_max;
 
         const int forward_zero =
-            lpi_internal::last_non_negative(forward_length_from_max, [&](int offset) {
+            last_non_negative(forward_length_from_max, [&](int offset) {
                 return height(maximum_index + offset);
             });
         const int backward_zero =
-            lpi_internal::last_non_negative(backward_length_from_max, [&](int offset) {
+            last_non_negative(backward_length_from_max, [&](int offset) {
                 return height(maximum_index - offset);
             });
 
@@ -550,45 +608,82 @@ line_polygon_intersection(const std::vector<Point> &polygon,
             chain_index(maximum_index, -1, backward_zero);
 
         result.push_back(
-            lpi_internal::make_vertex_result<Point, Number>(vertex(forward_index)));
+            make_vertex_result<Point, Calc>(vertex(forward_index)));
         if (forward_index != backward_index) {
             result.push_back(
-                lpi_internal::make_vertex_result<Point, Number>(vertex(backward_index)));
+                make_vertex_result<Point, Calc>(vertex(backward_index)));
         }
         return result;
     }
 
-    const int first_cross =
-        lpi_internal::first_non_negative(forward_length, [&](int offset) {
-            return height(minimum_index + offset);
-        });
+    const int first_cross = first_non_negative(forward_length, [&](int offset) {
+        return height(minimum_index + offset);
+    });
     const int first_cross_index = chain_index(minimum_index, +1, first_cross);
 
-    if (lpi_internal::sign_value(height(first_cross_index)) == 0) {
+    if (sign_value(height(first_cross_index)) == 0) {
         result.push_back(
-            lpi_internal::make_vertex_result<Point, Number>(vertex(first_cross_index)));
+            make_vertex_result<Point, Calc>(vertex(first_cross_index)));
     } else {
         const int prev_index = chain_index(minimum_index, +1, first_cross - 1);
-        result.push_back(lpi_internal::make_edge_result<Point, Number>(
+        result.push_back(make_edge_result<Point, Calc>(
             line_a, line_b, vertex(prev_index), vertex(first_cross_index)));
     }
 
     const int second_cross =
-        lpi_internal::first_non_negative(backward_length, [&](int offset) {
+        first_non_negative(backward_length, [&](int offset) {
             return height(minimum_index - offset);
         });
     const int second_cross_index = chain_index(minimum_index, -1, second_cross);
 
-    if (lpi_internal::sign_value(height(second_cross_index)) == 0) {
+    if (sign_value(height(second_cross_index)) == 0) {
         result.push_back(
-            lpi_internal::make_vertex_result<Point, Number>(vertex(second_cross_index)));
+            make_vertex_result<Point, Calc>(vertex(second_cross_index)));
     } else {
         const int prev_index = chain_index(minimum_index, -1, second_cross - 1);
-        result.push_back(lpi_internal::make_edge_result<Point, Number>(
+        result.push_back(make_edge_result<Point, Calc>(
             line_a, line_b, vertex(prev_index), vertex(second_cross_index)));
     }
 
     return result;
+}
+} // namespace line_convex_polygon_intersection_internal
+
+template <class Point, class Calc = void>
+LineConvexHullIntersectionResult<Point, Calc>
+line_convex_hull_intersection(const std::vector<Point> &hull,
+                              const Point &line_a, const Point &line_b) {
+    namespace lpi_internal = line_convex_polygon_intersection_internal;
+    using Coord = lpi_internal::coordinate_t<Point>;
+    using Number = lpi_internal::resolved_calc_t<Point, Calc>;
+
+    static_assert(!lpi_internal::is_integer_v<Coord> ||
+                      lpi_internal::is_signed_v<Coord>,
+                  "integer coordinate type must be signed");
+    static_assert(!lpi_internal::is_integer_v<Coord> ||
+                      lpi_internal::is_integer_v<Number>,
+                  "integer coordinate type requires integer calculation type");
+    static_assert(!lpi_internal::is_integer_v<Number> ||
+                      lpi_internal::is_signed_v<Number>,
+                  "integer calculation type must be signed");
+
+    assert((!lpi_internal::equals_point<Point, Number>(line_a, line_b)));
+
+    if (hull.size() <= 2) {
+        return lpi_internal::line_degenerate_convex_hull_intersection<Point,
+                                                                      Number>(
+            hull, line_a, line_b);
+    }
+
+    return lpi_internal::line_strict_convex_polygon_intersection<Point, Number>(
+        hull, line_a, line_b);
+}
+
+template <class Point, class Calc = void>
+LinePolygonIntersectionResult<Point, Calc>
+line_polygon_intersection(const std::vector<Point> &polygon,
+                          const Point &line_a, const Point &line_b) {
+    return line_convex_hull_intersection<Point, Calc>(polygon, line_a, line_b);
 }
 
 #endif
