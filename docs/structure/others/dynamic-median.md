@@ -25,7 +25,7 @@ documentation_of: structure/others/dynamic-median.hpp
   - 値 $x$ を $1$ 個追加する。
 - `bool erase(T x)`
   - 値 $x$ を $1$ 個削除する。
-  - 返り値: 削除できたなら `true`、存在しなければ `false`。
+  - 返り値: 削除に成功した場合は `true`、値 $x$ が存在しなかった場合は `false` が返る。
   - 備考: 同じ値が複数ある場合はいずれか $1$ 個だけを削除する。
 - `template <class Result = T> Result median(DynamicMedianMode mode = DynamicMedianMode::Lower) const`
   - `mode` で指定した中央値を返す。
