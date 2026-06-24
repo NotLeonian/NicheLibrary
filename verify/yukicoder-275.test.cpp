@@ -22,5 +22,6 @@ int main() {
     const long double answer =
         median.median<long double>(DynamicMedianMode::Average);
     std::cout << std::fixed << std::setprecision(1) << answer << '\n';
+
     return 0;
 }

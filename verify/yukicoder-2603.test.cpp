@@ -23,5 +23,6 @@ int main() {
 
     std::cout << minimum_mod_range_increment_decrement_operations(a, b, m)
               << '\n';
+
     return 0;
 }

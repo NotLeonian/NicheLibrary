@@ -8,6 +8,7 @@
 int main() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
+
     long long b0, c0, b1, c1;
     std::cin >> b0 >> c0;
     std::cin >> b1 >> c1;
@@ -20,5 +21,6 @@ int main() {
     } else {
         std::cout << r << '\n';
     }
+
     return 0;
 }

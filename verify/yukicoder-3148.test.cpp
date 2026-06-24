@@ -8,6 +8,9 @@
 #include "../graph/tree/01-on-tree.hpp"
 
 int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
     int n;
     std::string s;
     std::cin >> n >> s;
@@ -40,5 +43,6 @@ int main() {
     const long long answer =
         solve_01_on_tree<long long>(n + 1, edges, c0, c1, root) + sum;
     std::cout << answer << '\n';
+
     return 0;
 }

@@ -218,6 +218,9 @@ void verify_intersection(const std::vector<Point> &polygon, const Point &line_a,
 }
 
 int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+
     int n;
     std::cin >> n;
     std::vector<Point> polygon(n);
@@ -235,4 +238,6 @@ int main() {
         verify_intersection(polygon, line_a, line_b);
         std::cout << polygon_area(convex_cut(polygon, line_a, line_b)) << '\n';
     }
+
+    return 0;
 }

@@ -119,5 +119,6 @@ int main() {
     for (const auto &a : ans) {
         std::cout << a.val() << '\n';
     }
+
     return 0;
 }

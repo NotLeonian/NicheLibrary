@@ -11,5 +11,6 @@ int main() {
     long long N;
     std::cin >> N;
     std::cout << prime_counting_modulo(N, 1)[0] << '\n';
+
     return 0;
 }
