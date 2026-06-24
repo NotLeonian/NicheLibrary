@@ -61,12 +61,12 @@ $k$ は現在の行列 $A$ の階数とする。
 
 - `build`：$O(rc\min(r, c) + k^2(r + c))$
 - `rank`：$O(1)$
-- `get_row`：$O(kc)$
-- `get_column`：$O(kr)$
-- `materialize_matrix`：$O(krc)$
-- `rank_after_rank_one_update`：$O(k(r + c))$
-- `rank_after_row_replacement`：$O(k(r + c))$
-- `rank_after_column_replacement`：$O(k(r + c))$
-- `apply_rank_one_update`：$O(k(r + c))$
-- `apply_row_replacement`：$O(k(r + c))$
-- `apply_column_replacement`：$O(k(r + c))$
+- `get_row`：$O((k + 1)c)$
+- `get_column`：$O((k + 1)r)$
+- `materialize_matrix`：$O((k + 1)rc)$
+- `rank_after_rank_one_update`：$O((k + 1)(r + c))$
+- `rank_after_row_replacement`：$O((k + 1)(r + c))$
+- `rank_after_column_replacement`：$O((k + 1)(r + c))$
+- `apply_rank_one_update`：$O((k + 1)(r + c))$
+- `apply_row_replacement`：$O((k + 1)(r + c))$
+- `apply_column_replacement`：$O((k + 1)(r + c))$

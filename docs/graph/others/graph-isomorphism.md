@@ -38,10 +38,10 @@ documentation_of: graph/others/graph-isomorphism.hpp
 - $L$ を色分割中に作られる signature の最大長とする。$L\le 2n+2$ である。
 - $S$ を DFS で訪問した状態数、$R$ を全状態を通した色分割更新回数の合計とする。$R\le S(n+1)$ である。
 - 探索メモは平衡二分探索木で持つ。状態キーの比較は最悪 $O(n)$ 時間である。
-- $C_{\mathrm{build}}=M_1\log(M_1+2)+M_2\log(M_2+2)+n\log(n+2)+n+M_1+M_2$ とする。
-- $C_{\mathrm{ref}}=D\log(n+2)+nL\log(n+2)+nL+D+n$ とする。
-- $C_{\mathrm{memo}}=n\log(S+2)+n$ とする。
-- $C_{\mathrm{check}}=U\log(U+2)+U+n$ とする。
+- $C_{\mathrm{build}}=M_1\log M_1+M_2\log M_2+n\log n+n+M_1+M_2$ とする。
+- $C_{\mathrm{ref}}=D\log n+Ln\log n+Ln+D+n$ とする。
+- $C_{\mathrm{memo}}=n\log S+n$ とする。
+- $C_{\mathrm{check}}=U\log U+U+n$ とする。
 - 構築は $O(C_{\mathrm{build}})$ 時間である。
 - 色分割更新 $1$ 回は $O(C_{\mathrm{ref}})$ 時間である。
 - 探索メモの検索または挿入は $O(C_{\mathrm{memo}})$ 時間である。
