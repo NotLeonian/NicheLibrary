@@ -122,11 +122,11 @@
 - ドキュメント中の C++ ソースコードの例は「```C++」から「```」までによって囲む（特に先頭を「```」や「```c++」「```cpp」などにしない）。
 
 ### 依存関係
-- NotLeonian/competitive-verifier は [pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` は、`rev` による 40 文字の commit SHA または `tag` によるタグのどちらかによって固定されている（`branch` などの更新されうる参照ではない）。
-- [.github/workflows/verify.yml](.github/workflows/verify.yml) に NotLeonian/competitive-verifier の commit SHA やタグを直接書いていない。
+- [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) は [pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` は、`rev` による 40 文字の commit SHA または `tag` によるタグのどちらかによって固定されている（`branch` などの更新されうる参照ではない）。
+- [.github/workflows/verify.yml](.github/workflows/verify.yml) に [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) の commit SHA やタグを直接書いていない。
 
 ---
 
 ### 逆にレビューしないでよいこと
-- [pyproject.toml](pyproject.toml) で固定されている NotLeonian/competitive-verifier 内に、このリポジトリで必要なファイルが存在するかどうかの確認。
+- [pyproject.toml](pyproject.toml) で固定されている [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) 内に、このリポジトリで必要なファイルが存在するかどうかの確認。
   - 権限が足りないなどで正しく確認できない可能性が高い。
