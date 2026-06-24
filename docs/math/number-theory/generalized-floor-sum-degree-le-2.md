@@ -13,10 +13,15 @@ documentation_of: math/number-theory/generalized-floor-sum-degree-le-2.hpp
 
 ## 使い方
 
-- `generalized_floor_sum_degree_le_2<T>(n, m, a, b)`
+- `generalized_floor_sum_degree_le_2<T, Internal>(n, m, a, b)`
   - `GeneralizedFloorSumDegreeLe2Result<T>` を返す。
+  - `Internal` を省略した場合は `T` と同じ型になる。
+  - 前提: `T` と `Internal` は `std::numeric_limits<...>::is_integer` が `true` である。
+  - 前提: `T` が符号付きなら、`Internal` も符号付きである。
   - 前提: $n\ge 0,\;m>0$。
-  - 備考: 返り値が `T` の範囲を超える場合、オーバーフローした値が返る。
+  - 前提: $n,m,a,b$ は `Internal` に変換でき、内部計算が `Internal` の範囲に収まる。
+  - 前提: 返り値は `T` の範囲に収まる。
+  - 備考: `T` が符号付きなら $a,b$ は負でもよい。
 
 - `GeneralizedFloorSumDegreeLe2Result<T>::ans_01`
   - $\displaystyle \sum_{i=0}^{n-1}\left\lfloor\frac{ai+b}{m}\right\rfloor$ を返す。

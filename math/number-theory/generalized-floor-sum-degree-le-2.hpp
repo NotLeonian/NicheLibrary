@@ -7,7 +7,7 @@
 // 計算量 O(log m)。
 
 #include <cassert>
-#include <type_traits>
+#include <limits>
 
 template <class T> struct GeneralizedFloorSumDegreeLe2Result {
     T ans_01;
@@ -16,21 +16,15 @@ template <class T> struct GeneralizedFloorSumDegreeLe2Result {
 };
 
 namespace generalized_floor_sum_degree_le_2_internal {
-template <class T> struct is_integral : std::is_integral<T> {};
-#ifdef __SIZEOF_INT128__
-template <> struct is_integral<__int128_t> : std::true_type {};
-template <> struct is_integral<__uint128_t> : std::true_type {};
-#endif
+template <class T>
+constexpr bool is_integer_v = std::numeric_limits<T>::is_integer;
 
-template <class T> struct is_signed : std::is_signed<T> {};
-#ifdef __SIZEOF_INT128__
-template <> struct is_signed<__int128_t> : std::true_type {};
-template <> struct is_signed<__uint128_t> : std::false_type {};
-#endif
+template <class T>
+constexpr bool is_signed_v = std::numeric_limits<T>::is_signed;
 
 template <class T> T floor_div(T x, T y) {
     assert(y > 0);
-    if constexpr (is_signed<T>::value) {
+    if constexpr (is_signed_v<T>) {
         T q = x / y;
         T r = x % y;
         if (r < 0) {
@@ -44,7 +38,7 @@ template <class T> T floor_div(T x, T y) {
 
 template <class T> T floor_mod(T x, T y) {
     assert(y > 0);
-    if constexpr (is_signed<T>::value) {
+    if constexpr (is_signed_v<T>) {
         T r = x % y;
         if (r < 0) {
             r += y;
@@ -113,7 +107,7 @@ template <class Int> struct Result {
 };
 
 template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
-    if constexpr (is_signed<Int>::value) {
+    if constexpr (is_signed_v<Int>) {
         assert(n >= 0);
     }
     assert(m > 0);
@@ -126,7 +120,7 @@ template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
     const Int qb = floor_div(b, m);
     b = floor_mod(b, m);
 
-    if constexpr (is_signed<Int>::value) {
+    if constexpr (is_signed_v<Int>) {
         assert(a >= 0);
         assert(b >= 0);
     }
@@ -168,30 +162,29 @@ template <class Int> Result<Int> solve(Int n, Int m, Int a, Int b) {
 }
 } // namespace generalized_floor_sum_degree_le_2_internal
 
-template <class T>
+template <class T, class Internal = T>
 GeneralizedFloorSumDegreeLe2Result<T>
 generalized_floor_sum_degree_le_2(T n, T m, T a, T b) {
-    static_assert(
-        generalized_floor_sum_degree_le_2_internal::is_integral<T>::value,
-        "T must be integer.");
-    if constexpr (generalized_floor_sum_degree_le_2_internal::is_signed<
-                      T>::value) {
+    namespace gfs_internal = generalized_floor_sum_degree_le_2_internal;
+
+    static_assert(gfs_internal::is_integer_v<T>, "T must be integer.");
+    static_assert(gfs_internal::is_integer_v<Internal>,
+                  "Internal must be integer.");
+    static_assert(!gfs_internal::is_signed_v<T> ||
+                      gfs_internal::is_signed_v<Internal>,
+                  "Internal must be signed when T is signed.");
+
+    if constexpr (gfs_internal::is_signed_v<T>) {
         assert(n >= 0);
     }
     assert(m > 0);
 
-#ifdef __SIZEOF_INT128__
-    using I = __int128_t;
-    const auto res = generalized_floor_sum_degree_le_2_internal::solve<I>(
-        static_cast<I>(n), static_cast<I>(m), static_cast<I>(a),
-        static_cast<I>(b));
+    const auto res = gfs_internal::solve<Internal>(
+        static_cast<Internal>(n), static_cast<Internal>(m),
+        static_cast<Internal>(a), static_cast<Internal>(b));
+
     return {static_cast<T>(res.ans_01), static_cast<T>(res.ans_11),
             static_cast<T>(res.ans_02)};
-#else
-    const auto res =
-        generalized_floor_sum_degree_le_2_internal::solve<T>(n, m, a, b);
-    return {res.ans_01, res.ans_11, res.ans_02};
-#endif
 }
 
 #endif
