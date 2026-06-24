@@ -17,19 +17,19 @@ documentation_of: math/matrix/determinant-of-linear-matrix-polynomial.hpp
 
 - `void hessenberg_reduction(std::vector<std::vector<T>>& matrix)`
   - $N\times N$ 行列 `matrix` を上ヘッセンベルグ行列に相似変換する。
-  - 前提：`T` は除算ができる（体である）。
+  - 前提: `T` は除算ができる（体である）。
 
 - `std::vector<T> characteristic_polynomial(std::vector<std::vector<T>> matrix)`
   - `matrix` を $A$、多項式の変数を $x$ として、$\det(xI-A)$ の係数列を返す（昇順、サイズ $N+1$、最高次係数は 1）。
-  - 前提：`matrix` は $N\times N$ 行列、`T` は体である。
+  - 前提: `matrix` は $N\times N$ 行列、`T` は体である。
 
 - `std::vector<T> determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0, std::vector<std::vector<T>> M1)`
   - `M0` を $M_0$、`M1` を $M_1$、多項式の変数を $x$ として、$\det(M_0+xM_1)$ の係数列を返す（昇順、サイズ $N+1$）。
-  - 前提：$M_0,\,M_1$ はともに $N\times N$ 行列、`T` は体。
-  - 備考：内部で列に $x$ を掛ける操作を行った回数だけ、最後に低次の係数を削って補正する。
+  - 前提: $M_0,\,M_1$ はともに $N\times N$ 行列、`T` は体。
+  - 備考: 内部で列に $x$ を掛ける操作を行った回数だけ、最後に低次の係数を削って補正する。
 
 ## 計算量
 
-- `hessenberg_reduction`：$O(N^3)$
-- `characteristic_polynomial`：$O(N^3)$
-- `determinant_of_linear_matrix_polynomial`：$O(N^3)$
+- `hessenberg_reduction`: $O(N^3)$
+- `characteristic_polynomial`: $O(N^3)$
+- `determinant_of_linear_matrix_polynomial`: $O(N^3)$

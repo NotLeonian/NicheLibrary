@@ -19,7 +19,7 @@ documentation_of: graph/tree/hl-rec-dp.hpp
   - `initial_state` は各重パスの根側から渡す初期状態である。
   - `spec` の `before_vertex`, `add_vertex`, `after_vertex` などを呼び出し、`spec` の中の答えの配列を更新する。
   - 返り値は `root` を通常の頂点として加えた後の `std::array<Spec::State, Spec::K>` である。
-  - 前提：`root` を $r$ として $n\ge 1,\,0\le r<n$ が成り立ち、`edges` は木の辺の列である。
+  - 前提: `root` を $r$ として $n\ge 1,\,0\le r<n$ が成り立ち、`edges` は木の辺の列である。
 - `Spec`
   - `using State = ...;` と `static constexpr int K = ...;` を持つ。
   - `make_pack(v, in)` は、子をまだ処理していない頂点 `v` の DP の組を返す。
@@ -133,8 +133,8 @@ int main() {
 
 ## 計算量
 
-- 木の根付き化と重い子の選択：$O(n)$。
-- 軽い辺だけで再帰が深くなるため、再帰段数：$O(\log n)$。
+- 木の根付き化と重い子の選択: $O(n)$。
+- 軽い辺だけで再帰が深くなるため、再帰段数: $O(\log n)$。
 - $K$ を `Spec::K` の値とする。部分木 1 回分の値計算の呼び出し回数は $O(n^{\log_2(K+1)})$。
 - 全頂点の `before_vertex` / `after_vertex` を回収する実行では、$K\ge 2$ なら同じく $O(n^{\log_2(K+1)})$ 回、$K=1$ なら $O(n\log n)$ 回である。
 - 各呼び出しでの `Spec` 側の処理時間が掛かる。典型的に $K=2$、各処理が $O(X)$ なら $O(n^{\log_2 3}X)$。
