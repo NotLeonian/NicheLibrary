@@ -83,7 +83,7 @@ template <class T> struct OnlineBinomialSum {
                 if (i < base) {
                     term *= r;
                     term *= T(base - i);
-                    if constexpr (!std::numeric_limits<T>::is_integer) {
+                    if constexpr (std::numeric_limits<T>::is_integer) {
                         term /= T(i + 1);
                     } else {
                         term *= integer_inverse[i + 1];
