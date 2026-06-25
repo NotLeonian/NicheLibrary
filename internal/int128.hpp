@@ -453,34 +453,6 @@ inline UInt128 read_uint128_decimal(const std::string &text,
     return value;
 }
 
-inline UInt128 div_mod_uint32(UInt128 value, std::uint32_t divisor,
-                              std::uint32_t &remainder) {
-    assert(divisor != 0);
-
-    constexpr std::uint64_t mask = (std::uint64_t{1} << 32) - 1;
-    const std::uint32_t words[4] = {
-        static_cast<std::uint32_t>(value.high() >> 32),
-        static_cast<std::uint32_t>(value.high() & mask),
-        static_cast<std::uint32_t>(value.low() >> 32),
-        static_cast<std::uint32_t>(value.low() & mask),
-    };
-
-    std::uint32_t quotient_words[4] = {};
-    std::uint64_t rem = 0;
-    for (int i = 0; i < 4; ++i) {
-        const std::uint64_t current = (rem << 32) | words[i];
-        quotient_words[i] = static_cast<std::uint32_t>(current / divisor);
-        rem = current % divisor;
-    }
-
-    remainder = static_cast<std::uint32_t>(rem);
-    return UInt128::from_words(
-        (static_cast<std::uint64_t>(quotient_words[0]) << 32) |
-            quotient_words[1],
-        (static_cast<std::uint64_t>(quotient_words[2]) << 32) |
-            quotient_words[3]);
-}
-
 inline void write_padded_9(std::ostream &output, std::uint32_t value) {
     char buffer[9];
     for (int i = 8; i >= 0; --i) {
@@ -500,7 +472,11 @@ inline void write_uint128_decimal(std::ostream &output, UInt128 value) {
     std::uint32_t parts[5] = {};
     int size = 0;
     while (value != UInt128(0)) {
-        value = div_mod_uint32(value, base, parts[size]);
+        UInt128 quotient;
+        UInt128 remainder;
+        UInt128::div_mod(value, UInt128(base), quotient, remainder);
+        parts[size] = static_cast<std::uint32_t>(remainder);
+        value = quotient;
         ++size;
     }
 
@@ -561,7 +537,8 @@ inline std::ostream &operator<<(std::ostream &output, Int128 value) {
         int128_internal::write_uint128_decimal(output,
                                                Int128::abs_unsigned(value));
     } else {
-        int128_internal::write_uint128_decimal(output, value.value_);
+        int128_internal::write_uint128_decimal(
+            output, UInt128::from_words(value.high(), value.low()));
     }
     return output;
 }

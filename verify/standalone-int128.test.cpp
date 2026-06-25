@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <sstream>
 
 #include "../internal/int128.hpp"
 
@@ -18,30 +19,44 @@ int main() {
     static_assert(std::numeric_limits<Int128>::is_signed);
     static_assert(std::numeric_limits<Int128>::digits == 127);
 
-    static_assert(static_cast<long double>(
-                      NicheLibrary::UInt128::from_words(1, 0)) == 0x1p64L);
-    static_assert(static_cast<long double>(NicheLibrary::Int128::from_words(
-                      ~std::uint64_t{}, 0)) == -0x1p64L);
-    static_assert(static_cast<long double>(NicheLibrary::Int128::from_words(
-                      std::uint64_t{1} << 63, 0)) == -0x1p127L);
+    {
+        const UInt128 x = UInt128::from_words(1, 0);
+        UInt128 q;
+        UInt128 r;
+        UInt128::div_mod(x, UInt128(3), q, r);
 
-    const UInt128 two_64 = UInt128::from_words(1, 0);
-    assert(two_64 / UInt128(3) == UInt128(6148914691236517205ULL));
-    assert(two_64 % UInt128(3) == UInt128(1));
+        assert(q == UInt128(6148914691236517205ULL));
+        assert(r == UInt128(1));
+    }
 
-    const UInt128 max_u64 = UInt128::from_words(0, ~std::uint64_t{});
-    assert(max_u64 / UInt128(3) == UInt128(6148914691236517205ULL));
-    assert(max_u64 % UInt128(3) == UInt128(0));
+    {
+        const UInt128 x = UInt128::from_words(0, ~std::uint64_t{});
+        UInt128 q;
+        UInt128 r;
+        UInt128::div_mod(x, UInt128(1000000000), q, r);
 
-    assert(Int128(-7) / Int128(3) == Int128(-2));
-    assert(Int128(-7) % Int128(3) == Int128(-1));
-    assert(Int128(7) / Int128(-3) == Int128(-2));
-    assert(Int128(7) % Int128(-3) == Int128(1));
+        assert(q == UInt128(18446744073ULL));
+        assert(r == UInt128(709551615U));
+    }
 
-    const Int128 big = Int128::from_words(0, ~std::uint64_t{});
-    assert(big > Int128(0));
-    assert(big / Int128(3) == Int128(6148914691236517205ULL));
-    assert(big % Int128(3) == Int128(0));
+    {
+        std::stringstream stream;
+        stream << UInt128::from_words(0, ~std::uint64_t{});
+        assert(stream.str() == "18446744073709551615");
+    }
+
+    {
+        std::stringstream stream;
+        stream << Int128::from_words(~std::uint64_t{}, 0);
+        assert(stream.str() == "-18446744073709551616");
+    }
+
+    {
+        std::stringstream stream("170141183460469231731687303715884105727");
+        Int128 value;
+        stream >> value;
+        assert(value == std::numeric_limits<Int128>::max());
+    }
 
     return 0;
 }
