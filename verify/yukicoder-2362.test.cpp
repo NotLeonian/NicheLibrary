@@ -15,8 +15,8 @@ int main() {
         std::uint64_t N, M, X, Y;
         std::cin >> N >> M >> X >> Y;
 
-        const auto r0 =
-            generalized_floor_sum_degree_le_2<std::uint64_t>(N, M, X, 0);
+        const auto r0 = generalized_floor_sum_degree_le_2<std::uint64_t>(
+            N, M, X, std::uint64_t(0));
         const auto r1 =
             generalized_floor_sum_degree_le_2<std::uint64_t>(N, M, X, Y);
 
