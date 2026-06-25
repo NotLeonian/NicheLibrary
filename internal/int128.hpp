@@ -127,6 +127,22 @@ class UInt128 {
             p00.high_ + lhs.low_ * rhs.high_ + lhs.high_ * rhs.low_, p00.low_);
     }
 
+    static constexpr void div_mod(UInt128 lhs, UInt128 rhs, UInt128 &quotient,
+                                  UInt128 &remainder) {
+        assert(rhs != UInt128{});
+
+        if (rhs.high_ == 0 &&
+            rhs.low_ <= std::numeric_limits<std::uint32_t>::max()) {
+            std::uint32_t rem = 0;
+            quotient =
+                div_mod_uint32(lhs, static_cast<std::uint32_t>(rhs.low_), rem);
+            remainder = UInt128(rem);
+            return;
+        }
+
+        div_mod_binary(lhs, rhs, quotient, remainder);
+    }
+
     friend constexpr UInt128 operator/(UInt128 lhs, UInt128 rhs) {
         UInt128 quotient;
         UInt128 remainder;
@@ -142,6 +158,54 @@ class UInt128 {
     }
 
   private:
+    static constexpr UInt128 div_mod_uint32(UInt128 value,
+                                            std::uint32_t divisor,
+                                            std::uint32_t &remainder) {
+        assert(divisor != 0);
+
+        constexpr std::uint64_t mask = (std::uint64_t{1} << 32) - 1;
+        const std::uint32_t words[4] = {
+            static_cast<std::uint32_t>(value.high() >> 32),
+            static_cast<std::uint32_t>(value.high() & mask),
+            static_cast<std::uint32_t>(value.low() >> 32),
+            static_cast<std::uint32_t>(value.low() & mask),
+        };
+
+        std::uint32_t quotient_words[4] = {};
+        std::uint64_t rem = 0;
+        for (int i = 0; i < 4; ++i) {
+            const std::uint64_t current = (rem << 32) | words[i];
+            quotient_words[i] = static_cast<std::uint32_t>(current / divisor);
+            rem = current % divisor;
+        }
+
+        remainder = static_cast<std::uint32_t>(rem);
+        return UInt128::from_words(
+            (static_cast<std::uint64_t>(quotient_words[0]) << 32) |
+                quotient_words[1],
+            (static_cast<std::uint64_t>(quotient_words[2]) << 32) |
+                quotient_words[3]);
+    }
+
+    static constexpr void div_mod_binary(UInt128 lhs, UInt128 rhs,
+                                         UInt128 &quotient,
+                                         UInt128 &remainder) {
+        assert(rhs != UInt128{});
+
+        quotient = UInt128{};
+        remainder = UInt128{};
+        for (int bit = 127; bit >= 0; --bit) {
+            shift_left_one(remainder);
+            if (get_bit(lhs, bit)) {
+                remainder.low_ |= 1;
+            }
+            if (remainder >= rhs) {
+                remainder -= rhs;
+                set_bit(quotient, bit);
+            }
+        }
+    }
+
     static constexpr bool get_bit(UInt128 value, int index) {
         if (index < 64) {
             return ((value.low_ >> index) & 1) != 0;
@@ -178,23 +242,6 @@ class UInt128 {
         const std::uint64_t middle = (p00 >> 32) + (p01 & mask) + (p10 & mask);
         return from_words(p11 + (p01 >> 32) + (p10 >> 32) + (middle >> 32),
                           (middle << 32) | (p00 & mask));
-    }
-
-    static constexpr void div_mod(UInt128 lhs, UInt128 rhs, UInt128 &quotient,
-                                  UInt128 &remainder) {
-        assert(rhs != UInt128{});
-        quotient = UInt128{};
-        remainder = UInt128{};
-        for (int bit = 127; bit >= 0; --bit) {
-            shift_left_one(remainder);
-            if (get_bit(lhs, bit)) {
-                remainder.low_ |= 1;
-            }
-            if (remainder >= rhs) {
-                remainder -= rhs;
-                set_bit(quotient, bit);
-            }
-        }
     }
 
     std::uint64_t high_ = 0;
@@ -309,22 +356,35 @@ class Int128 {
         return lhs;
     }
 
-    friend constexpr Int128 operator/(Int128 lhs, Int128 rhs) {
+    static constexpr void div_mod(Int128 lhs, Int128 rhs, Int128 &quotient,
+                                  Int128 &remainder) {
         assert(rhs != Int128{});
         assert(!(lhs == min_value() && rhs == Int128(-1)));
-        const bool negative = lhs.is_negative() != rhs.is_negative();
-        const UInt128 lhs_abs = abs_unsigned(lhs);
-        const UInt128 rhs_abs = abs_unsigned(rhs);
-        return from_unsigned(lhs_abs / rhs_abs, negative);
+
+        const bool quotient_negative = lhs.is_negative() != rhs.is_negative();
+        const bool remainder_negative = lhs.is_negative();
+
+        UInt128 quotient_abs;
+        UInt128 remainder_abs;
+        UInt128::div_mod(abs_unsigned(lhs), abs_unsigned(rhs), quotient_abs,
+                         remainder_abs);
+
+        quotient = from_unsigned(quotient_abs, quotient_negative);
+        remainder = from_unsigned(remainder_abs, remainder_negative);
+    }
+
+    friend constexpr Int128 operator/(Int128 lhs, Int128 rhs) {
+        Int128 quotient;
+        Int128 remainder;
+        div_mod(lhs, rhs, quotient, remainder);
+        return quotient;
     }
 
     friend constexpr Int128 operator%(Int128 lhs, Int128 rhs) {
-        assert(rhs != Int128{});
-        assert(!(lhs == min_value() && rhs == Int128(-1)));
-        const bool negative = lhs.is_negative();
-        const UInt128 lhs_abs = abs_unsigned(lhs);
-        const UInt128 rhs_abs = abs_unsigned(rhs);
-        return from_unsigned(lhs_abs % rhs_abs, negative);
+        Int128 quotient;
+        Int128 remainder;
+        div_mod(lhs, rhs, quotient, remainder);
+        return remainder;
     }
 
   private:
@@ -366,11 +426,30 @@ inline UInt128 read_uint128_decimal(const std::string &text,
     assert(first < text.size());
 
     UInt128 value = 0;
-    for (std::size_t i = first; i < text.size(); ++i) {
-        assert('0' <= text[i] && text[i] <= '9');
-        value *= UInt128(10);
-        value += UInt128(static_cast<unsigned>(text[i] - '0'));
+
+    std::size_t i = first;
+    const std::size_t first_len = (text.size() - first) % 9;
+    if (first_len != 0) {
+        std::uint32_t chunk = 0;
+        for (std::size_t j = 0; j < first_len; ++j) {
+            assert('0' <= text[i] && text[i] <= '9');
+            chunk = chunk * 10 + static_cast<std::uint32_t>(text[i] - '0');
+            ++i;
+        }
+        value = UInt128(chunk);
     }
+
+    while (i < text.size()) {
+        std::uint32_t chunk = 0;
+        for (int j = 0; j < 9; ++j) {
+            assert('0' <= text[i] && text[i] <= '9');
+            chunk = chunk * 10 + static_cast<std::uint32_t>(text[i] - '0');
+            ++i;
+        }
+        value *= UInt128(1000000000);
+        value += UInt128(chunk);
+    }
+
     return value;
 }
 
@@ -403,12 +482,12 @@ inline UInt128 div_mod_uint32(UInt128 value, std::uint32_t divisor,
 }
 
 inline void write_padded_9(std::ostream &output, std::uint32_t value) {
-    std::uint32_t place = 100000000;
-    for (int i = 0; i < 9; ++i) {
-        output << static_cast<char>('0' + value / place);
-        value %= place;
-        place /= 10;
+    char buffer[9];
+    for (int i = 8; i >= 0; --i) {
+        buffer[i] = static_cast<char>('0' + value % 10);
+        value /= 10;
     }
+    output.write(buffer, 9);
 }
 
 inline void write_uint128_decimal(std::ostream &output, UInt128 value) {
