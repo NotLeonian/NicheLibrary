@@ -131,16 +131,18 @@ class UInt128 {
                                   UInt128 &remainder) {
         assert(rhs != UInt128{});
 
+        UInt128 q, r;
         if (rhs.high_ == 0 &&
             rhs.low_ <= std::numeric_limits<std::uint32_t>::max()) {
             std::uint32_t rem = 0;
-            quotient =
-                div_mod_uint32(lhs, static_cast<std::uint32_t>(rhs.low_), rem);
-            remainder = UInt128(rem);
-            return;
+            q = div_mod_uint32(lhs, static_cast<std::uint32_t>(rhs.low_), rem);
+            r = UInt128(rem);
+        } else {
+            div_mod_binary(lhs, rhs, q, r);
         }
 
-        div_mod_binary(lhs, rhs, quotient, remainder);
+        quotient = q;
+        remainder = r;
     }
 
     friend constexpr UInt128 operator/(UInt128 lhs, UInt128 rhs) {
@@ -369,8 +371,11 @@ class Int128 {
         UInt128::div_mod(abs_unsigned(lhs), abs_unsigned(rhs), quotient_abs,
                          remainder_abs);
 
-        quotient = from_unsigned(quotient_abs, quotient_negative);
-        remainder = from_unsigned(remainder_abs, remainder_negative);
+        const Int128 q = from_unsigned(quotient_abs, quotient_negative);
+        const Int128 r = from_unsigned(remainder_abs, remainder_negative);
+
+        quotient = q;
+        remainder = r;
     }
 
     friend constexpr Int128 operator/(Int128 lhs, Int128 rhs) {
