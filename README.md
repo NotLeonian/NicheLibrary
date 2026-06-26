@@ -29,7 +29,7 @@ bash .github/scripts/local_verify.sh
 ```
 
 ローカル verify では、過去のローカル verify の結果を使用できます。
-デフォルトでは、結果は `${XDG_CACHE_HOME:-$HOME/.cache}/nichelibrary/local-verify/<repository-hash>/merged-result.json` に保存されます。
+デフォルトでは、結果は `${XDG_CACHE_HOME:-$HOME/.cache}/niche-library/local-verify/<repository-hash>/merged-result.json` に保存されます。
 
 GitHub Actions の verify は、GitHub Actions 専用の cache に保存された結果を使用します。
 ローカル verify の cache は GitHub Actions では参照しません。
