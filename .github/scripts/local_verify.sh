@@ -13,6 +13,18 @@ SAVE_RESULT="true"
 FULL_VERIFY="false"
 LOCAL_CACHE_DIR="${LOCAL_VERIFY_CACHE_DIR:-}"
 
+prepare_self_ignored_dir() {
+  local dir="$1"
+  mkdir -p "$dir"
+
+  if [[ ! -e "$dir/.gitignore" ]]; then
+    printf '*\n' > "$dir/.gitignore"
+  fi
+}
+
+prepare_self_ignored_dir ".competitive-verifier/bundled"
+prepare_self_ignored_dir ".competitive-verifier/cache"
+
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     --format)
