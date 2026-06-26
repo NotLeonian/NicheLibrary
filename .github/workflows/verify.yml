@@ -104,6 +104,7 @@ jobs:
           restore-keys: |
             competitive-verifier-ci-result-${{ runner.os }}-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-
       - name: Download verify_files.json
+        id: verify_files
         uses: competitive-verifier/actions/download-verify-artifact@v2
       - name: Set up competitive-verifier
         uses: competitive-verifier/actions/setup@v2
@@ -115,6 +116,7 @@ jobs:
         run: |
           args=(
             --output "$RUNNER_TEMP/result.json"
+            --verify-files "$VERIFY_FILES_JSON"
             --split-size "$SPLIT_SIZE"
             --split-index "${{ matrix.index }}"
             --timeout 1800
@@ -127,6 +129,7 @@ jobs:
           bash .github/scripts/run_verify_split.sh "${args[@]}"
         env:
           YUKICODER_TOKEN: ${{ secrets.YUKICODER_TOKEN }}
+          VERIFY_FILES_JSON: ${{ steps.verify_files.outputs['json-path'] }}
           FULL_VERIFY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
           CI_PREV_RESULT: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify)) && steps.restore-cached-results.outputs.cache-matched-key != '' && format('{0}/competitive-verifier-ci-result/merged-result.json', runner.temp) || '' }}
       - name: Upload result artifact
@@ -134,6 +137,7 @@ jobs:
         with:
           name: Result-${{ runner.os }}-${{ matrix.index }}
           path: ${{ runner.temp }}/result.json
+          if-no-files-found: error
           retention-days: 1
   check:
     runs-on: ubuntu-latest
@@ -143,25 +147,42 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
       - name: Resolve competitive-verifier package
         id: competitive-verifier-package
         shell: bash
         run: python3 .github/scripts/resolve_competitive_verifier.py >> "$GITHUB_OUTPUT"
-
       - name: Download verify_files.json and all artifacts
         id: all-artifacts
         uses: competitive-verifier/actions/download-verify-artifact@v2
         with:
           download-all: true
           artifact-root: .artifacts/
+      - name: Validate verify result artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
 
+          shopt -s nullglob
+          result_files=("$ARTIFACT_ROOT"/Result-*/result.json)
+          shopt -u nullglob
+
+          if [[ "${#result_files[@]}" -ne "$SPLIT_SIZE" ]]; then
+            echo "Unexpected number of verify result artifacts: expected=$SPLIT_SIZE actual=${#result_files[@]}" >&2
+            printf 'found: %s\n' "${result_files[@]}" >&2
+            exit 1
+          fi
+
+          for file in "${result_files[@]}"; do
+            python3 -m json.tool "$file" >/dev/null
+          done
+        env:
+          ARTIFACT_ROOT: ${{ steps.all-artifacts.outputs.artifacts-root }}
+          SPLIT_SIZE: "20"
       - name: Set up competitive-verifier
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
           package: ${{ steps.competitive-verifier-package.outputs.package }}
-
       - name: Check
         uses: competitive-verifier/actions/check@v2
         with:
@@ -186,6 +207,27 @@ jobs:
         with:
           download-all: true
           artifact-root: .artifacts/
+      - name: Validate verify result artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          result_files=("$ARTIFACT_ROOT"/Result-*/result.json)
+          shopt -u nullglob
+
+          if [[ "${#result_files[@]}" -ne "$SPLIT_SIZE" ]]; then
+            echo "Unexpected number of verify result artifacts: expected=$SPLIT_SIZE actual=${#result_files[@]}" >&2
+            printf 'found: %s\n' "${result_files[@]}" >&2
+            exit 1
+          fi
+
+          for file in "${result_files[@]}"; do
+            python3 -m json.tool "$file" >/dev/null
+          done
+        env:
+          ARTIFACT_ROOT: ${{ steps.all-artifacts.outputs.artifacts-root }}
+          SPLIT_SIZE: "20"
       - name: Extract bundled
         shell: bash
         run: |

@@ -131,6 +131,11 @@ for i in $(seq 0 "$((SPLIT_SIZE - 1))"); do
     --split-index "$index" \
     --timeout "$TIMEOUT" \
     "${prev_result_args[@]}"
+
+  if [[ ! -s "$output" ]]; then
+    echo "The verify result was not generated: $output" >&2
+    exit 1
+  fi
 done
 
 read -r -a CV_CMD <<< "$COMPETITIVE_VERIFIER_CMD"
@@ -141,6 +146,12 @@ shopt -u nullglob
 
 if [[ "${#result_files[@]}" -eq 0 ]]; then
   echo "The verify result has not been generated." >&2
+  exit 1
+fi
+
+if [[ "${#result_files[@]}" -ne "$SPLIT_SIZE" ]]; then
+  echo "Unexpected number of verify results: expected=$SPLIT_SIZE actual=${#result_files[@]}" >&2
+  printf 'found: %s\n' "${result_files[@]}" >&2
   exit 1
 fi
 
