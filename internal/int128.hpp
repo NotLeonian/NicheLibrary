@@ -4,6 +4,7 @@
 // 128 bit 符号なし整数型 UInt128 と 128 bit 符号付き整数型 Int128 を提供する。
 // GCC 拡張には依存しない。
 
+#include <bit>
 #include <cassert>
 #include <cstdint>
 #include <iostream>
@@ -132,15 +133,7 @@ class UInt128 {
         assert(rhs != UInt128{});
 
         UInt128 q, r;
-        if (rhs.high_ == 0 &&
-            rhs.low_ <= std::numeric_limits<std::uint32_t>::max()) {
-            std::uint32_t rem = 0;
-            q = div_mod_uint32(lhs, static_cast<std::uint32_t>(rhs.low_), rem);
-            r = UInt128(rem);
-        } else {
-            div_mod_binary(lhs, rhs, q, r);
-        }
-
+        div_mod_32bit_words(lhs, rhs, q, r);
         quotient = q;
         remainder = r;
     }
@@ -160,72 +153,221 @@ class UInt128 {
     }
 
   private:
+    static constexpr std::uint64_t word_base() {
+        return std::uint64_t{1} << 32;
+    }
+
+    static constexpr std::uint64_t word_mask() { return word_base() - 1; }
+
+    static constexpr void to_words(UInt128 value, std::uint32_t words[4]) {
+        words[0] = static_cast<std::uint32_t>(value.low_ & word_mask());
+        words[1] = static_cast<std::uint32_t>(value.low_ >> 32);
+        words[2] = static_cast<std::uint32_t>(value.high_ & word_mask());
+        words[3] = static_cast<std::uint32_t>(value.high_ >> 32);
+    }
+
+    static constexpr UInt128 from_32bit_words(const std::uint32_t words[4]) {
+        return UInt128::from_words(
+            (static_cast<std::uint64_t>(words[3]) << 32) | words[2],
+            (static_cast<std::uint64_t>(words[1]) << 32) | words[0]);
+    }
+
+    static constexpr int word_length(const std::uint32_t words[4]) {
+        int length = 4;
+        while (length > 0 && words[length - 1] == 0) {
+            --length;
+        }
+        return length;
+    }
+
     static constexpr UInt128 div_mod_uint32(UInt128 value,
                                             std::uint32_t divisor,
                                             std::uint32_t &remainder) {
         assert(divisor != 0);
 
-        constexpr std::uint64_t mask = (std::uint64_t{1} << 32) - 1;
         const std::uint32_t words[4] = {
-            static_cast<std::uint32_t>(value.high() >> 32),
-            static_cast<std::uint32_t>(value.high() & mask),
-            static_cast<std::uint32_t>(value.low() >> 32),
-            static_cast<std::uint32_t>(value.low() & mask),
+            static_cast<std::uint32_t>(value.low_ & word_mask()),
+            static_cast<std::uint32_t>(value.low_ >> 32),
+            static_cast<std::uint32_t>(value.high_ & word_mask()),
+            static_cast<std::uint32_t>(value.high_ >> 32),
         };
 
         std::uint32_t quotient_words[4] = {};
         std::uint64_t rem = 0;
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 3; i >= 0; --i) {
             const std::uint64_t current = (rem << 32) | words[i];
             quotient_words[i] = static_cast<std::uint32_t>(current / divisor);
             rem = current % divisor;
         }
 
         remainder = static_cast<std::uint32_t>(rem);
-        return UInt128::from_words(
-            (static_cast<std::uint64_t>(quotient_words[0]) << 32) |
-                quotient_words[1],
-            (static_cast<std::uint64_t>(quotient_words[2]) << 32) |
-                quotient_words[3]);
+        return from_32bit_words(quotient_words);
     }
 
-    static constexpr void div_mod_binary(UInt128 lhs, UInt128 rhs,
-                                         UInt128 &quotient,
-                                         UInt128 &remainder) {
-        assert(rhs != UInt128{});
+    static constexpr void shift_left_words(const std::uint32_t source[4],
+                                           int source_length, int shift,
+                                           std::uint32_t result[5]) {
+        std::uint64_t carry = 0;
 
-        quotient = UInt128{};
-        remainder = UInt128{};
-        for (int bit = 127; bit >= 0; --bit) {
-            shift_left_one(remainder);
-            if (get_bit(lhs, bit)) {
-                remainder.low_ |= 1;
+        for (int i = 0; i < source_length; ++i) {
+            const std::uint64_t current =
+                (static_cast<std::uint64_t>(source[i]) << shift) | carry;
+            result[i] = static_cast<std::uint32_t>(current & word_mask());
+            carry = current >> 32;
+        }
+
+        result[source_length] = static_cast<std::uint32_t>(carry);
+    }
+
+    static constexpr void shift_right_words(const std::uint32_t source[5],
+                                            int source_length, int shift,
+                                            std::uint32_t result[4]) {
+        if (shift == 0) {
+            for (int i = 0; i < source_length; ++i) {
+                result[i] = source[i];
             }
-            if (remainder >= rhs) {
-                remainder -= rhs;
-                set_bit(quotient, bit);
+            return;
+        }
+
+        for (int i = 0; i < source_length; ++i) {
+            const std::uint32_t next = i + 1 < 5 ? source[i + 1] : 0;
+            result[i] = static_cast<std::uint32_t>(
+                (source[i] >> shift) |
+                (static_cast<std::uint64_t>(next) << (32 - shift)));
+        }
+    }
+
+    static constexpr bool subtract_product(std::uint32_t words[5], int offset,
+                                           const std::uint32_t divisor[5],
+                                           int divisor_length,
+                                           std::uint32_t multiplier) {
+        std::uint64_t borrow = 0;
+        std::uint64_t carry = 0;
+
+        for (int i = 0; i < divisor_length; ++i) {
+            const std::uint64_t product =
+                static_cast<std::uint64_t>(multiplier) * divisor[i] + carry;
+            carry = product >> 32;
+            const std::uint64_t subtrahend = (product & word_mask()) + borrow;
+            if (static_cast<std::uint64_t>(words[offset + i]) >= subtrahend) {
+                words[offset + i] = static_cast<std::uint32_t>(
+                    static_cast<std::uint64_t>(words[offset + i]) - subtrahend);
+                borrow = 0;
+            } else {
+                words[offset + i] = static_cast<std::uint32_t>(
+                    word_base() + words[offset + i] - subtrahend);
+                borrow = 1;
             }
         }
-    }
 
-    static constexpr bool get_bit(UInt128 value, int index) {
-        if (index < 64) {
-            return ((value.low_ >> index) & 1) != 0;
+        const std::uint64_t subtrahend = carry + borrow;
+        if (static_cast<std::uint64_t>(words[offset + divisor_length]) >=
+            subtrahend) {
+            words[offset + divisor_length] = static_cast<std::uint32_t>(
+                static_cast<std::uint64_t>(words[offset + divisor_length]) -
+                subtrahend);
+            return false;
         }
-        return ((value.high_ >> (index - 64)) & 1) != 0;
+
+        words[offset + divisor_length] = static_cast<std::uint32_t>(
+            word_base() + words[offset + divisor_length] - subtrahend);
+        return true;
     }
 
-    static constexpr void set_bit(UInt128 &value, int index) {
-        if (index < 64) {
-            value.low_ |= std::uint64_t{1} << index;
-        } else {
-            value.high_ |= std::uint64_t{1} << (index - 64);
+    static constexpr void add_back(std::uint32_t words[5], int offset,
+                                   const std::uint32_t divisor[5],
+                                   int divisor_length) {
+        std::uint64_t carry = 0;
+        for (int i = 0; i < divisor_length; ++i) {
+            const std::uint64_t sum =
+                static_cast<std::uint64_t>(words[offset + i]) + divisor[i] +
+                carry;
+            words[offset + i] = static_cast<std::uint32_t>(sum & word_mask());
+            carry = sum >> 32;
+        }
+
+        words[offset + divisor_length] = static_cast<std::uint32_t>(
+            static_cast<std::uint64_t>(words[offset + divisor_length]) + carry);
+    }
+
+    static constexpr void div_mod_knuth(const std::uint32_t lhs_words[4],
+                                        int lhs_length,
+                                        const std::uint32_t rhs_words[4],
+                                        int rhs_length,
+                                        std::uint32_t quotient_words[4],
+                                        std::uint32_t remainder_words[4]) {
+        const int shift = std::countl_zero(rhs_words[rhs_length - 1]);
+        std::uint32_t normalized_lhs[5] = {};
+        std::uint32_t normalized_rhs[5] = {};
+        shift_left_words(lhs_words, lhs_length, shift, normalized_lhs);
+        shift_left_words(rhs_words, rhs_length, shift, normalized_rhs);
+
+        const int quotient_length = lhs_length - rhs_length + 1;
+        for (int j = quotient_length - 1; j >= 0; --j) {
+            const std::uint64_t numerator =
+                (static_cast<std::uint64_t>(normalized_lhs[j + rhs_length])
+                 << 32) |
+                normalized_lhs[j + rhs_length - 1];
+            std::uint64_t estimate = numerator / normalized_rhs[rhs_length - 1];
+            std::uint64_t estimate_remainder =
+                numerator % normalized_rhs[rhs_length - 1];
+            while (estimate == word_base() ||
+                   estimate * normalized_rhs[rhs_length - 2] >
+                       word_base() * estimate_remainder +
+                           normalized_lhs[j + rhs_length - 2]) {
+                --estimate;
+                estimate_remainder += normalized_rhs[rhs_length - 1];
+                if (estimate_remainder >= word_base()) {
+                    break;
+                }
+            }
+            quotient_words[j] = static_cast<std::uint32_t>(estimate);
+            if (subtract_product(normalized_lhs, j, normalized_rhs, rhs_length,
+                                 quotient_words[j])) {
+                --quotient_words[j];
+                add_back(normalized_lhs, j, normalized_rhs, rhs_length);
+            }
+        }
+
+        std::uint32_t shifted_remainder[4] = {};
+        shift_right_words(normalized_lhs, rhs_length, shift, shifted_remainder);
+        for (int i = 0; i < rhs_length; ++i) {
+            remainder_words[i] = shifted_remainder[i];
         }
     }
 
-    static constexpr void shift_left_one(UInt128 &value) {
-        value.high_ = (value.high_ << 1) | (value.low_ >> 63);
-        value.low_ <<= 1;
+    static constexpr void div_mod_32bit_words(UInt128 lhs, UInt128 rhs,
+                                              UInt128 &quotient,
+                                              UInt128 &remainder) {
+        std::uint32_t lhs_words[4] = {};
+        std::uint32_t rhs_words[4] = {};
+        to_words(lhs, lhs_words);
+        to_words(rhs, rhs_words);
+
+        const int lhs_length = word_length(lhs_words);
+        const int rhs_length = word_length(rhs_words);
+        assert(rhs_length > 0);
+
+        if (lhs_length < rhs_length || lhs < rhs) {
+            quotient = UInt128{};
+            remainder = lhs;
+            return;
+        }
+
+        if (rhs_length == 1) {
+            std::uint32_t rem = 0;
+            quotient = div_mod_uint32(lhs, rhs_words[0], rem);
+            remainder = UInt128(rem);
+            return;
+        }
+
+        std::uint32_t quotient_words[4] = {};
+        std::uint32_t remainder_words[4] = {};
+        div_mod_knuth(lhs_words, lhs_length, rhs_words, rhs_length,
+                      quotient_words, remainder_words);
+
+        quotient = from_32bit_words(quotient_words);
+        remainder = from_32bit_words(remainder_words);
     }
 
     static constexpr UInt128 multiply_u64(std::uint64_t lhs,
@@ -555,12 +697,10 @@ template <> class numeric_limits<NicheLibrary::UInt128> {
     static constexpr bool is_specialized = true;
 
     static constexpr NicheLibrary::UInt128 min() noexcept { return 0; }
-
     static constexpr NicheLibrary::UInt128 max() noexcept {
         return NicheLibrary::UInt128::from_words(~std::uint64_t{},
                                                  ~std::uint64_t{});
     }
-
     static constexpr NicheLibrary::UInt128 lowest() noexcept { return 0; }
 
     static constexpr int digits = 128;
@@ -572,7 +712,6 @@ template <> class numeric_limits<NicheLibrary::UInt128> {
     static constexpr int radix = 2;
 
     static constexpr NicheLibrary::UInt128 epsilon() noexcept { return 0; }
-
     static constexpr NicheLibrary::UInt128 round_error() noexcept { return 0; }
 
     static constexpr int min_exponent = 0;
@@ -587,13 +726,10 @@ template <> class numeric_limits<NicheLibrary::UInt128> {
     static constexpr bool has_denorm_loss = false;
 
     static constexpr NicheLibrary::UInt128 infinity() noexcept { return 0; }
-
     static constexpr NicheLibrary::UInt128 quiet_NaN() noexcept { return 0; }
-
     static constexpr NicheLibrary::UInt128 signaling_NaN() noexcept {
         return 0;
     }
-
     static constexpr NicheLibrary::UInt128 denorm_min() noexcept { return 0; }
 
     static constexpr bool is_iec559 = false;
@@ -611,12 +747,10 @@ template <> class numeric_limits<NicheLibrary::Int128> {
     static constexpr NicheLibrary::Int128 min() noexcept {
         return NicheLibrary::Int128::from_words(std::uint64_t{1} << 63, 0);
     }
-
     static constexpr NicheLibrary::Int128 max() noexcept {
         return NicheLibrary::Int128::from_words((std::uint64_t{1} << 63) - 1,
                                                 ~std::uint64_t{});
     }
-
     static constexpr NicheLibrary::Int128 lowest() noexcept { return min(); }
 
     static constexpr int digits = 127;
@@ -628,7 +762,6 @@ template <> class numeric_limits<NicheLibrary::Int128> {
     static constexpr int radix = 2;
 
     static constexpr NicheLibrary::Int128 epsilon() noexcept { return 0; }
-
     static constexpr NicheLibrary::Int128 round_error() noexcept { return 0; }
 
     static constexpr int min_exponent = 0;
@@ -643,11 +776,8 @@ template <> class numeric_limits<NicheLibrary::Int128> {
     static constexpr bool has_denorm_loss = false;
 
     static constexpr NicheLibrary::Int128 infinity() noexcept { return 0; }
-
     static constexpr NicheLibrary::Int128 quiet_NaN() noexcept { return 0; }
-
     static constexpr NicheLibrary::Int128 signaling_NaN() noexcept { return 0; }
-
     static constexpr NicheLibrary::Int128 denorm_min() noexcept { return 0; }
 
     static constexpr bool is_iec559 = false;
