@@ -9,19 +9,19 @@ on:
   workflow_dispatch:
     inputs:
       full_verify:
-        description: "Ignore cached verify result and re-run all verification"
+        description: "キャッシュを削除して全ての verify を再実行する"
         required: false
         default: false
         type: boolean
   schedule:
     - cron: "37 3 1 * *"
       timezone: "Asia/Tokyo"
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# GitHub Pages へのデプロイに必要な GITHUB_TOKEN の権限を設定
 permissions:
   contents: read
   pages: write
   id-token: write
-# Allow one concurrent deployment
+# 同時に複数のデプロイが実行できないように設定
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -58,7 +58,7 @@ jobs:
         with:
           cache-pip: true
           package: ${{ steps.competitive-verifier-package.outputs.package }}
-      # Initialize your own environment for resolving.
+      # verify の対象の resolve に必要な環境を準備
       - name: Resolve verify files
         run: bash .github/scripts/resolve_verify_files.sh verify_files.json
       - name: Upload verify_files.json
@@ -68,7 +68,7 @@ jobs:
       - name: Check bundled
         id: test-bundled
         run: |
-          echo "count=$(find .competitive-verifier/bundled/ -type f | wc -l)" >> $GITHUB_OUTPUT
+          echo "count=$(find .competitive-verifier/bundled -type f | wc -l)" >> $GITHUB_OUTPUT
       - name: Upload bundled
         uses: actions/upload-artifact@v6
         if: steps.test-bundled.outputs.count > 0
@@ -156,7 +156,7 @@ jobs:
         uses: competitive-verifier/actions/download-verify-artifact@v2
         with:
           download-all: true
-          artifact-root: .artifacts/
+          artifact-root: .artifacts
       - name: Validate verify result artifacts
         shell: bash
         run: |
@@ -206,7 +206,7 @@ jobs:
         uses: competitive-verifier/actions/download-verify-artifact@v2
         with:
           download-all: true
-          artifact-root: .artifacts/
+          artifact-root: .artifacts
       - name: Validate verify result artifacts
         shell: bash
         run: |
@@ -233,7 +233,7 @@ jobs:
         run: |
           rm -rf .competitive-verifier/bundled
           if test -d "$SRCDIR"; then
-            mkdir -p .competitive-verifier/
+            mkdir -p .competitive-verifier
             mv "$SRCDIR" .competitive-verifier/bundled
           else
             echo "$SRCDIR does not exist."

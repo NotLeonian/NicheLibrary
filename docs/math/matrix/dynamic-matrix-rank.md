@@ -1,5 +1,5 @@
 ---
-title: 行列の階数と動的な 1 行・1 列更新
+title: 行列の階数と動的な 1 行、1 列の更新
 documentation_of: math/matrix/dynamic-matrix-rank.hpp
 ---
 
@@ -9,7 +9,7 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
 
 - 体上の $r \times c$ 行列を前処理し、現在の階数を求める。
 - $u$ をサイズ $r$ の列ベクトル、$v$ をサイズ $c$ の列ベクトルとして、$A + uv^{\top}$ の階数を求める。
-- さらに、1 行差し替え・1 列差し替え・外積 1 項更新を内部状態に反映できる。
+- さらに、1 行差し替え、1 列差し替え、外積 1 項更新を内部状態に反映できる。
 - 現在の行列は左右の階数分解と片側逆元で保持する。
 
 ## 使い方
