@@ -172,17 +172,20 @@ done
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
-if [[ -z "$LOCAL_CACHE_DIR" ]]; then
-  cache_base="${XDG_CACHE_HOME:-$HOME/.cache}/niche-library/local-verify"
-  repo_key="$("$PYTHON_BIN" - <<'PY'
-import hashlib
-import os
+if [[ -z "$LOCAL_CACHE_ROOT" ]]; then
+  LOCAL_CACHE_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}/niche-library/local-verify"
+fi
 
-print(hashlib.sha256(os.getcwd().encode("utf-8")).hexdigest()[:16])
+repo_key="$("$PYTHON_BIN" - "$ROOT" <<'PY'
+import hashlib
+import pathlib
+import sys
+root = pathlib.Path(sys.argv[1]).resolve()
+print(hashlib.sha256(str(root).encode("utf-8")).hexdigest()[:16])
 PY
 )"
-  LOCAL_CACHE_DIR="$cache_base/$repo_key"
-fi
+
+LOCAL_REPO_CACHE_DIR="$LOCAL_CACHE_ROOT/$repo_key"
 
 if [[ -z "${COMPETITIVE_VERIFIER_CMD:-}" ]]; then
   if command -v uv >/dev/null 2>&1; then
