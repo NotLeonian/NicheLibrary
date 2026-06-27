@@ -14,7 +14,7 @@
 - マークダウンの番号なし箇条書きが `- ` である（`* ` や `  - ` などでない）。
 - マークダウンの番号付き箇条書きが常に `1. ` である（`2. ` 以降は使わない）。
 - ソースコード中のコメントやドキュメントなどの文章は日本語で書かれており、次の項で示すファイルを除いて文体が常体で統一されている（`です`、`ます` などの敬体が混ざっていない）。
-  - [pyproject.toml](pyproject.toml) の `[project]` 内の `description` は除く（英語で記述する）。
+  - [pyproject.toml](pyproject.toml) の `[project]` 内の `description` および [.gitignore](.gitignore) 中のコメントは除く（英語で記述する）。
   - 参考文献も除く（人名も含めて、英語で記述する）。
   - また、日本語で同じ内容が記述されている場合は、英語などの他の言語が併記されていてもよい。
 - リポジトリの [README.md](README.md) や [CONTRIBUTING.md](CONTRIBUTING.md)、GitHub Pages 上のドキュメントのトップページ（[.competitive-verifier/docs/index.md](.competitive-verifier/docs/index.md) を基に生成される）の文章は日本語で書かれており、文体が敬体で統一されている（`だ`、`である` などの常体が混ざっていない）。
