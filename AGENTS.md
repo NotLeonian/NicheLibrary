@@ -147,11 +147,11 @@
 - [.github/workflows/verify.yml](.github/workflows/verify.yml) に [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) の commit SHA やタグを直接書いていない。
 
 ### 設定ファイルなど
-- [.gitignore](.gitignore) には、各行が `## ` から始まるコメントでその下の ignore の内容を記述している。
-  - もしこのリポジトリに特有の記述であれば、その旨を記述している。
-  - もし [github/gitignore](https://github.com/github/gitignore) 等の記述を利用している場合は、対象とするプログラミング言語および元になったファイルの permalink を順に記述している。
-    - もし permalink 先の記述に変更を加えている場合は、変更内容も詳細にコメントで記述している。
-    - 利用した .gitignore に由来する、各行が `## ` で始まらないコメント（`# ` から始まるコメントなど）は変更しなくてよい。
+- [.gitignore](.gitignore) では、各行が `# ` から始まるコメントで下に続く ignore の内容を説明している。
+- [.gitignore](.gitignore) では、各行が `## ` から始まるコメントで下に続く記述の由来を説明している。
+  - もし下に続く記述が他のリポジトリのファイルに由来しないこのリポジトリ独自の記述であれば、その旨を説明している。
+  - もし下に続く記述が [github/gitignore](https://github.com/github/gitignore) 等の他のリポジトリのファイルに由来する場合は、対象とするプログラミング言語および元となったファイルの permalink を順に記述している。
+    - もし permalink 先の記述に変更を加えている場合は、変更内容も詳細に各行が `## ` から始まるコメントで説明している。
 
 ---
 
