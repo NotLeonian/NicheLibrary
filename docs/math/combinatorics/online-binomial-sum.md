@@ -33,6 +33,6 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 
 `max_m` を $M$ とおく。
 
-- コンストラクタ: 時間・空間 $O(M\sqrt M)$
+- コンストラクタ: 時間、空間 $O(M\sqrt M)$
 - `binom_prefix_sum(n, m)`: 時間 $O(\sqrt M)$
 - `binom_sum(l, u, m)`: 時間 $O(\sqrt M)$

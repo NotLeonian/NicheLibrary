@@ -1,11 +1,11 @@
 ---
-title: 値の追加・削除と中央値取得
+title: 値の追加、削除と中央値取得
 documentation_of: structure/others/dynamic-median.hpp
 ---
 
 ## 概要
 
-- 値を追加・削除しながら、中央値を求める。
+- 値の追加または削除を行いながら、中央値を求める。
 - 下側中央値、上側中央値、両側の算術平均を選べる。
 - `median()` は下側中央値を返す。
 - `lower_values` と `upper_values` の $2$ つの多重集合で値を分けて持つ。
