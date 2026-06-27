@@ -109,7 +109,7 @@ make_rooted_tree(int n, const std::vector<std::pair<int, int>> &edges,
 template <class Spec> struct hl_rec_dp_runner {
     using State = typename Spec::State;
     static constexpr int K = Spec::K;
-    static_assert(K >= 1);
+    static_assert(K >= 1, "Spec::K must be positive.");
     using Pack = std::array<State, K>;
 
     std::vector<std::vector<int>> child;
