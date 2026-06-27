@@ -1,5 +1,5 @@
 ---
-title: 区間インクリメント/デクリメントの最小回数（$\text{mod }m$）
+title: 2 つの数列を $\text{mod }m$ で一致させるために区間にインクリメントまたはデクリメントを行う最小回数
 documentation_of: other/minimum-mod-range-increment-decrement-operations.hpp
 ---
 
@@ -7,7 +7,7 @@ documentation_of: other/minimum-mod-range-increment-decrement-operations.hpp
 
 入力される列の各要素を $a_i,\,b_i$、法を $m$ とおく。
 
-- 数列を $\text{mod }m$ 上で見たとき、区間に $+1$ または $-1$ を 1 回加える操作の最小回数を求める。
+- 数列を $\text{mod }m$ 上で見たとき、$a$ を $b$ に一致させるために区間に $+1$ または $-1$ を加える操作の最小回数を求める。
 - 区間に整数 $x$ を加える操作の最小 $\sum \lvert x\rvert$ と同値である。
 
 ## 使い方
