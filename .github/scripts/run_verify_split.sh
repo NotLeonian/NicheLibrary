@@ -82,7 +82,7 @@ fi
 read -r -a CV_CMD <<< "$COMPETITIVE_VERIFIER_CMD"
 
 if [[ "$FULL_VERIFY" == "true" ]]; then
-  rm -rf .competitive-verifier/cache .verify-helper/cache
+  rm -rf .competitive-verifier/cache
   PREV_RESULT=""
 fi
 
