@@ -146,6 +146,12 @@
 - [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) は [pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` は、`rev` による 40 文字の commit SHA または `tag` によるタグのどちらかによって固定されている（`branch` などの更新されうる参照ではない）。
 - [.github/workflows/verify.yml](.github/workflows/verify.yml) に [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) の commit SHA やタグを直接書いていない。
 
+### 設定ファイルなど
+- [.gitignore](.gitignore) には、各行が `## ` から始まるコメントでその下の ignore の内容を記述している。
+  - もしこのリポジトリに特有の記述であれば、その旨を記述している。
+  - もし [github/gitignore](https://github.com/github/gitignore) 等の記述を利用している場合は、対象とするプログラミング言語と元になったファイルの permalink を順に記述している。
+    - もし permalink 先の記述に変更を加えている場合は、変更内容も詳細にコメントで記述している。
+
 ---
 
 ### 逆にレビューしないでよいこと
