@@ -149,8 +149,9 @@
 ### 設定ファイルなど
 - [.gitignore](.gitignore) には、各行が `## ` から始まるコメントでその下の ignore の内容を記述している。
   - もしこのリポジトリに特有の記述であれば、その旨を記述している。
-  - もし [github/gitignore](https://github.com/github/gitignore) 等の記述を利用している場合は、対象とするプログラミング言語と元になったファイルの permalink を順に記述している。
+  - もし [github/gitignore](https://github.com/github/gitignore) 等の記述を利用している場合は、対象とするプログラミング言語および元になったファイルの permalink を順に記述している。
     - もし permalink 先の記述に変更を加えている場合は、変更内容も詳細にコメントで記述している。
+    - 利用した .gitignore に由来する、各行が `## ` で始まらないコメント（`# ` から始まるコメントなど）は変更しなくてよい。
 
 ---
 
