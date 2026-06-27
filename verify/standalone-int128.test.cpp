@@ -121,13 +121,19 @@ int main() {
     using NicheLibrary::Int128;
     using NicheLibrary::UInt128;
 
-    static_assert(std::numeric_limits<UInt128>::is_integer);
-    static_assert(!std::numeric_limits<UInt128>::is_signed);
-    static_assert(std::numeric_limits<UInt128>::digits == 128);
+    static_assert(std::numeric_limits<UInt128>::is_integer,
+                  "UInt128 must be integer.");
+    static_assert(!std::numeric_limits<UInt128>::is_signed,
+                  "UInt128 must be unsigned.");
+    static_assert(std::numeric_limits<UInt128>::digits == 128,
+                  "UInt128 must have 128 value bits.");
 
-    static_assert(std::numeric_limits<Int128>::is_integer);
-    static_assert(std::numeric_limits<Int128>::is_signed);
-    static_assert(std::numeric_limits<Int128>::digits == 127);
+    static_assert(std::numeric_limits<Int128>::is_integer,
+                  "Int128 must be integer.");
+    static_assert(std::numeric_limits<Int128>::is_signed,
+                  "Int128 must be signed.");
+    static_assert(std::numeric_limits<Int128>::digits == 127,
+                  "Int128 must have 127 value bits.");
 
     const UInt128 unsigned_values[] = {
         UInt128(0),

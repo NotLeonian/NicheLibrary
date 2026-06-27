@@ -27,10 +27,10 @@ def load_competitive_verifier_source() -> dict[str, Any]:
     try:
         source = data["tool"]["uv"]["sources"]["competitive-verifier"]
     except KeyError:
-        error("pyproject.toml に [tool.uv.sources].competitive-verifier がありません")
+        error("pyproject.toml does not contain [tool.uv.sources].competitive-verifier.")
 
     if not isinstance(source, dict):
-        error("[tool.uv.sources].competitive-verifier はテーブルで指定してください")
+        error("[tool.uv.sources].competitive-verifier must be a TOML table.")
 
     return source
 
@@ -38,14 +38,14 @@ def load_competitive_verifier_source() -> dict[str, Any]:
 def normalize_git_url(source: dict[str, Any]) -> str:
     _git_url = source.get("git")
     if not isinstance(_git_url, str):
-        error("competitive-verifier の URL は文字列で指定してください")
+        error("competitive-verifier URL must be a string.")
 
     git_url = cast(str, _git_url)
 
     url_without_suffix = git_url[:-4] if git_url.endswith(".git") else git_url
     if url_without_suffix != EXPECTED_GIT_URL:
         error(
-            f"competitive-verifier の URL がこのスクリプトで指定されたものと異なります: {git_url!r}"
+            f"competitive-verifier URL does not match the expected URL: {git_url!r}"
         )
 
     return EXPECTED_GIT_URL + ".git"
@@ -54,7 +54,7 @@ def normalize_git_url(source: dict[str, Any]) -> str:
 def read_source_ref(source: dict[str, Any]) -> tuple[str, str]:
     if "branch" in source:
         error(
-            "competitive-verifier は branch ではなく、rev（commit SHA）または tag で固定してください"
+            "competitive-verifier must be pinned by rev (commit SHA) or tag, not by branch."
         )
 
     has_rev = "rev" in source
@@ -62,22 +62,20 @@ def read_source_ref(source: dict[str, Any]) -> tuple[str, str]:
 
     if has_rev == has_tag:
         error(
-            "competitive-verifier は rev または tag のどちらか一方のみによって固定してください"
+            "competitive-verifier must be pinned by exactly one of rev or tag."
         )
 
     if has_rev:
         rev = source["rev"]
         if not isinstance(rev, str) or not SHA_RE.fullmatch(rev):
-            error(
-                "competitive-verifier の rev は 40 文字の commit SHA で指定してください"
-            )
+            error("competitive-verifier rev must be a 40-character commit SHA.")
         return "rev", rev.lower()
 
     tag = source["tag"]
     if not isinstance(tag, str) or tag == "":
-        error("competitive-verifier の tag は空でない文字列で指定してください")
+        error("competitive-verifier tag must be a non-empty string.")
     if "\n" in tag or "\r" in tag:
-        error("competitive-verifier の tag に改行を含めないでください")
+        error("competitive-verifier tag must not contain a newline.")
 
     check = subprocess.run(
         ["git", "check-ref-format", f"refs/tags/{tag}"],
@@ -86,7 +84,7 @@ def read_source_ref(source: dict[str, Any]) -> tuple[str, str]:
         text=True,
     )
     if check.returncode != 0:
-        error(f"competitive-verifier の tag 名が invalid です: {tag!r}")
+        error(f"competitive-verifier tag name is invalid: {tag!r}")
 
     return "tag", tag
 
@@ -100,7 +98,7 @@ def resolve_tag_to_commit(git_url: str, tag: str) -> str:
         text=True,
     )
     if proc.returncode != 0:
-        error(f"competitive-verifier の tag を取得できません: {tag!r}")
+        error(f"Could not fetch the competitive-verifier tag: {tag!r}")
 
     direct_sha: str | None = None
     peeled_sha: str | None = None
@@ -117,7 +115,7 @@ def resolve_tag_to_commit(git_url: str, tag: str) -> str:
 
     resolved = peeled_sha or direct_sha
     if resolved is None or not SHA_RE.fullmatch(resolved):
-        error(f"competitive-verifier の tag を commit SHA に解決できません: {tag!r}")
+        error(f"Could not resolve the competitive-verifier tag to a commit SHA: {tag!r}")
         assert False  # 上の error で落ちる、型注釈のエラーを防ぐため
 
     return resolved.lower()
