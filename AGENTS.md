@@ -17,7 +17,8 @@
   - [pyproject.toml](pyproject.toml) の `[project]` 内の `description` および [.gitignore](.gitignore) 中のコメントは除く（英語で記述する）。
   - 参考文献も除く（人名も含めて、英語で記述する）。
   - また、日本語で同じ内容が記述されている場合は、英語などの他の言語が併記されていてもよい。
-- リポジトリの [README.md](README.md) や [CONTRIBUTING.md](CONTRIBUTING.md)、GitHub Pages 上のドキュメントのトップページ（[.competitive-verifier/docs/index.md](.competitive-verifier/docs/index.md) を基に生成される）の文章は日本語で書かれており、文体が敬体で統一されている（`だ`、`である` などの常体が混ざっていない）。
+- リポジトリの [README.md](README.md) や [CONTRIBUTING.md](CONTRIBUTING.md)、GitHub Pages 上のドキュメントのトップページ（[.competitive-verifier/docs/index.md](.competitive-verifier/docs/index.md) を基に生成される）の文章は日本語で書かれており、文体が敬体で統一されている（以下の例外を除いて、`だ`、`である` などの常体が混ざっていない）。
+  - ただし、箇条書き内の文章は常体でも敬体でもよいとする（少なくとも深さが最も小さい部分の文章は常体を推奨するが、厳密に片方に決める運用はしないものとする）。
 - プログラム、スクリプトやコンパイラが出力するエラーメッセージは英語で書かれている。
 - 「ならば」の代わりに「なら」を使用していない。
 - ハイフン、エンダッシュ、エムダッシュの使い分けがされている。
