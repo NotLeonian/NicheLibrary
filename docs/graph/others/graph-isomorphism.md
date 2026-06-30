@@ -37,14 +37,14 @@ documentation_of: graph/others/graph-isomorphism.hpp
 - $D$ を内部隣接リストの全長の合計とする。$D\le 2U$ である。
 - $L$ を色分割中に作られる signature の最大長とする。$L\le 2n+2$ である。
 - $S$ を DFS で訪問した状態数、$R$ を全状態を通した色分割更新回数の合計とする。$R\le S(n+1)$ である。
-- 探索メモは平衡二分探索木で持つ。状態キーの比較は最悪 $O(n)$ 時間である。
+- 探索メモは平衡二分探索木で持つ。状態キーの比較の最悪時間計算量は $O(n)$ である。
 - $C_{\mathrm{build}}=M_1\log M_1+M_2\log M_2+n\log n+n+M_1+M_2$ とする。
 - $C_{\mathrm{ref}}=D\log n+Ln\log n+Ln+D+n$ とする。
 - $C_{\mathrm{memo}}=n\log S+n$ とする。
 - $C_{\mathrm{check}}=U\log U+U+n$ とする。
-- 構築は $O(C_{\mathrm{build}})$ 時間である。
-- 色分割更新 $1$ 回は $O(C_{\mathrm{ref}})$ 時間である。
-- 探索メモの検索または挿入は $O(C_{\mathrm{memo}})$ 時間である。
-- 色がすべて単独になった状態での辺集合比較は $O(C_{\mathrm{check}})$ 時間である。
-- 全体は $O(C_{\mathrm{build}}+RC_{\mathrm{ref}}+S(C_{\mathrm{memo}}+C_{\mathrm{check}}))$ 時間である。
+- 構築は時間 $O(C_{\mathrm{build}})$ である。
+- 色分割更新 $1$ 回は時間 $O(C_{\mathrm{ref}})$ である。
+- 探索メモの検索または挿入は時間 $O(C_{\mathrm{memo}})$ である。
+- 色がすべて単独になった状態での辺集合比較は時間 $O(C_{\mathrm{check}})$ である。
+- 全体は時間 $O(C_{\mathrm{build}}+RC_{\mathrm{ref}}+S(C_{\mathrm{memo}}+C_{\mathrm{check}}))$ である。
 - 最悪の場合、$S$ は指数的に大きくなる。
