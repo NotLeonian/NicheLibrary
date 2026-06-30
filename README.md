@@ -57,7 +57,16 @@ bash .github/scripts/local_verify.sh --format
 yukicoder の問題を verify する場合は、`YUKICODER_TOKEN` を環境変数に設定する必要があります。
 
 ```sh
-YUKICODER_TOKEN=... bash .github/scripts/local_verify.sh
+IFS= read -r -s -p 'YUKICODER_TOKEN: ' YUKICODER_TOKEN; echo; export YUKICODER_TOKEN
+bash .github/scripts/local_verify.sh
+```
+
+なお、`read` コマンドでトークンを入力する際にキーボードの矢印キーなどを押してしまうと、制御文字が混ざって不正なトークンになる場合があります。
+bash ターミナルを使用している場合、以下のように `-e` オプションも付けるとよいでしょう。
+
+```sh
+IFS= read -r -e -s -p 'YUKICODER_TOKEN: ' YUKICODER_TOKEN; echo; export YUKICODER_TOKEN
+bash .github/scripts/local_verify.sh
 ```
 
 ## Contributing
