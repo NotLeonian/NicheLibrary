@@ -100,9 +100,9 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
-          key: competitive-verifier-ci-result-${{ runner.os }}-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            competitive-verifier-ci-result-${{ runner.os }}-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-
+            competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-
       - name: Download verify_files.json
         id: verify_files
         uses: competitive-verifier/actions/download-verify-artifact@v2
@@ -278,7 +278,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
-          key: competitive-verifier-ci-result-${{ runner.os }}-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
   deploy:
     if: (success() || failure()) && github.ref == 'refs/heads/main' && needs.docs.outputs.upload-pages == 'true'
     runs-on: ubuntu-latest
