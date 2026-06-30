@@ -37,4 +37,4 @@ documentation_of: graph/tree/01-on-tree.hpp
 
 頂点数を $n$ とする。
 
-- 固定幅整数の算術演算を $O(1)$ として、$O(n\log n)$ 時間、$O(n)$ 空間である。
+- 固定幅の整数の算術演算の計算量を $O(1)$ として、時間 $O(n\log n)$、空間 $O(n)$ である。
