@@ -25,8 +25,8 @@
 *.eot   binary
 
 # Markdown
-*.md  text diff=md whitespace=-blank-at-eol
-*.mdx text diff=md whitespace=-blank-at-eol
+*.md   text diff=markdown whitespace=-blank-at-eol
+*.mdx  text diff=markdown whitespace=-blank-at-eol
 
 # C / C++
 *.c    text diff=cpp
@@ -48,10 +48,10 @@
 *.pyw  text diff=python
 
 # Generated C++ and Python binary files
-*.a     binary
-*.lib   binary
-*.o     binary
-*.obj   binary
-*.pyc   binary
-*.pyo   binary
-*.pyd   binary
+*.a    binary
+*.lib  binary
+*.o    binary
+*.obj  binary
+*.pyc  binary
+*.pyo  binary
+*.pyd  binary
