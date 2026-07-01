@@ -12,6 +12,9 @@ insert_final_newline = true
 # Common binary files
 [*.{png,jpg,jpeg,gif,webp,ico,pdf,zip,gz,tar,7z,jar,war,class,exe,dll,so,dylib,woff,woff2,ttf,eot}]
 end_of_line = unset
+charset = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
 
 # Markdown
 [*.{md,mdx}]
@@ -21,3 +24,6 @@ trim_trailing_whitespace = false
 # Generated C++ and Python binary files
 [*.{a,lib,o,obj,pyc,pyo,pyd}]
 end_of_line = unset
+charset = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset
