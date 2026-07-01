@@ -46,3 +46,12 @@
 *.py   text diff=python
 *.pyi  text diff=python
 *.pyw  text diff=python
+
+# Generated C++ and Python binary files
+*.a     binary
+*.lib   binary
+*.o     binary
+*.obj   binary
+*.pyc   binary
+*.pyo   binary
+*.pyd   binary

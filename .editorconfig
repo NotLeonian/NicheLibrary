@@ -15,3 +15,7 @@ end_of_line = unset
 
 [*.{md,mdx}]
 trim_trailing_whitespace = false
+
+# Generated C++ and Python binary files
+[*.{a,lib,o,obj,pyc,pyo,pyd}]
+end_of_line = unset
