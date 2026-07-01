@@ -13,6 +13,7 @@ insert_final_newline = true
 [*.{png,jpg,jpeg,gif,webp,ico,pdf,zip,gz,tar,7z,jar,war,class,exe,dll,so,dylib,woff,woff2,ttf,eot}]
 end_of_line = unset
 
+# Markdown
 [*.{md,mdx}]
 trim_trailing_whitespace = false
 
