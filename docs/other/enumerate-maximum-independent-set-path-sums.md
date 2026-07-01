@@ -13,8 +13,7 @@ documentation_of: other/enumerate-maximum-independent-set-path-sums.hpp
 
 ## 使い方
 
-`enumerate_maximum_independent_set_path_sums<T, bool maximum = true>(a)`  
-`enumerate_maximum_independent_set_path_sums<bool maximum, T>(a)`
+`enumerate_maximum_independent_set_path_sums<T, bool maximum = true>(a)`, `enumerate_maximum_independent_set_path_sums<bool maximum, T>(a)`
 
 - 比較ソートを用いる。
 - 引数 $a$ は重みの列である。
@@ -24,8 +23,7 @@ documentation_of: other/enumerate-maximum-independent-set-path-sums.hpp
 - 前提: アルゴリズム中に現れる加減算結果、および返り値の各要素が `T` の範囲に収まる。
 - 前提: `std::is_unsigned_v<T>` が `false` である。
 
-`enumerate_maximum_independent_set_path_sums_bucket_sort<T, bool maximum = true>(a)`  
-`enumerate_maximum_independent_set_path_sums_bucket_sort<bool maximum, T>(a)`
+`enumerate_maximum_independent_set_path_sums_bucket_sort<T, bool maximum = true>(a)`, `enumerate_maximum_independent_set_path_sums_bucket_sort<bool maximum, T>(a)`
 
 - バケットソートを用いる。
 - 引数 $a$ は重みの列である。
