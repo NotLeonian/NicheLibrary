@@ -8,7 +8,8 @@
 
 #include "../other/enumerate-maximum-independent-set-path-sums.hpp"
 
-template <class T> std::vector<T> brute_force(const std::vector<T> &a) {
+template <class T, bool maximum = true>
+std::vector<T> brute_force(const std::vector<T> &a) {
     const std::size_t n = a.size();
     const std::size_t m = (n + 1) / 2;
     std::vector<T> answer(m + 1, T());
@@ -28,9 +29,19 @@ template <class T> std::vector<T> brute_force(const std::vector<T> &a) {
                 sum += a[i];
             }
         }
-        if (ok && (!found[count] || answer[count] < sum)) {
+        if (ok && !found[count]) {
             answer[count] = sum;
             found[count] = true;
+        } else if (ok) {
+            if constexpr (maximum) {
+                if (answer[count] < sum) {
+                    answer[count] = sum;
+                }
+            } else {
+                if (sum < answer[count]) {
+                    answer[count] = sum;
+                }
+            }
         }
     }
     for (std::size_t i = 0; i <= m; i += 1) {
@@ -44,8 +55,16 @@ void test_signed_exhaustive() {
         std::vector<long long> a(n);
         auto dfs = [&](auto self, const std::size_t i) -> void {
             if (i == n) {
+                const std::vector<long long> expected = brute_force(a);
+                const std::vector<long long> expected_min =
+                    brute_force<long long, false>(a);
                 assert(enumerate_maximum_independent_set_path_sums(a) ==
-                       brute_force(a));
+                       expected);
+                assert((enumerate_maximum_independent_set_path_sums<long long,
+                                                                    false>(a) ==
+                        expected_min));
+                assert(enumerate_maximum_independent_set_path_sums<false>(a) ==
+                       expected_min);
                 return;
             }
             for (long long x = -3; x <= 3; x += 1) {
@@ -62,8 +81,14 @@ void test_small_signed_type_exhaustive() {
         std::vector<signed char> a(n);
         auto dfs = [&](auto self, const std::size_t i) -> void {
             if (i == n) {
+                const std::vector<signed char> expected = brute_force(a);
+                const std::vector<signed char> expected_min =
+                    brute_force<signed char, false>(a);
                 assert(enumerate_maximum_independent_set_path_sums(a) ==
-                       brute_force(a));
+                       expected);
+                assert((enumerate_maximum_independent_set_path_sums<signed char,
+                                                                    false>(a) ==
+                        expected_min));
                 return;
             }
             for (signed char x = -3; x <= 3;
@@ -81,8 +106,15 @@ void test_signed_bucket_sort() {
         std::vector<int> a(n);
         auto dfs = [&](auto self, const std::size_t i) -> void {
             if (i == n) {
+                const std::vector<int> expected = brute_force(a);
+                const std::vector<int> expected_min =
+                    brute_force<int, false>(a);
                 assert(enumerate_maximum_independent_set_path_sums_bucket_sort(
-                           a) == brute_force(a));
+                           a) == expected);
+                assert((enumerate_maximum_independent_set_path_sums_bucket_sort<
+                            int, false>(a) == expected_min));
+                assert(enumerate_maximum_independent_set_path_sums_bucket_sort<
+                           false>(a) == expected_min);
                 return;
             }
             for (int x = 0; x <= 4; x += 1) {
@@ -97,26 +129,44 @@ void test_signed_bucket_sort() {
 void test_bucket_large_values() {
     const std::vector<int> a = {100, 1, 100, 1, 100, 1, 100};
     const std::vector<int> expected = brute_force(a);
+    const std::vector<int> expected_min = brute_force<int, false>(a);
     assert(enumerate_maximum_independent_set_path_sums(a) == expected);
+    assert((enumerate_maximum_independent_set_path_sums<int, false>(a) ==
+            expected_min));
     assert(enumerate_maximum_independent_set_path_sums_bucket_sort(a) ==
            expected);
+    assert((enumerate_maximum_independent_set_path_sums_bucket_sort<int, false>(
+                a) == expected_min));
 
     const std::vector<std::int32_t> b = {3, 0, 5, 0, 4, 1};
     const std::vector<std::int32_t> expected_b = brute_force(b);
+    const std::vector<std::int32_t> expected_b_min =
+        brute_force<std::int32_t, false>(b);
     assert(enumerate_maximum_independent_set_path_sums_bucket_sort(b) ==
            expected_b);
+    assert((enumerate_maximum_independent_set_path_sums_bucket_sort<
+                std::int32_t, false>(b) == expected_b_min));
 }
 
 void test_bucket_small_signed_types() {
     const std::vector<short> a = {2, 0, 3, 1, 4};
     const std::vector<short> expected = brute_force(a);
+    const std::vector<short> expected_min = brute_force<short, false>(a);
     assert(enumerate_maximum_independent_set_path_sums_bucket_sort(a) ==
            expected);
+    assert(
+        (enumerate_maximum_independent_set_path_sums_bucket_sort<short, false>(
+             a) == expected_min));
 
     const std::vector<signed char> b = {2, 0, 3, 1, 4};
     const std::vector<signed char> expected_b = brute_force(b);
+    const std::vector<signed char> expected_b_min =
+        brute_force<signed char, false>(b);
     assert(enumerate_maximum_independent_set_path_sums_bucket_sort(b) ==
            expected_b);
+    assert((enumerate_maximum_independent_set_path_sums_bucket_sort<signed char,
+                                                                    false>(b) ==
+            expected_b_min));
 }
 
 struct TestNumber {
@@ -153,11 +203,15 @@ void test_custom_type() {
                                        TestNumber(1), TestNumber(4),
                                        TestNumber(5)};
     assert(enumerate_maximum_independent_set_path_sums(a) == brute_force(a));
+    assert((enumerate_maximum_independent_set_path_sums<TestNumber, false>(a) ==
+            brute_force<TestNumber, false>(a)));
 }
 
 void test_floating_point() {
     const std::vector<double> a = {1.5, 100.25, 1.5, -3.0, 10.0, 2.0};
     assert(enumerate_maximum_independent_set_path_sums(a) == brute_force(a));
+    assert((enumerate_maximum_independent_set_path_sums<double, false>(a) ==
+            brute_force<double, false>(a)));
 }
 
 void test_type_traits() {
