@@ -1,4 +1,9 @@
 # AGENTS.md
+## Markdown の空白に関する方針
+Markdown では、改行のために行末を意図的に 2 個の空白にすることがある。
+
+ユーザーから明示的に行末の 2 個の空白の削除を求められた場合、もしくは改行ではなく接続詞または `、` や `, ` といった記号による区切りに変更することがふさわしい場合を除いて、既存の Markdown ファイルおよび MDX ファイルから行末の 2 個の空白を削除してはならない。
+
 ## レビューについて
 ライブラリを構成するヘッダファイル、verify ソースコード、ドキュメントと、リポジトリ内のスクリプト、設定ファイル、ドキュメントなどの両方をレビューすること。
 
@@ -14,7 +19,7 @@
 - マークダウンの番号なし箇条書きが `- ` である（`* ` や `  - ` などでない）。
 - マークダウンの番号付き箇条書きが常に `1. ` である（`2. ` 以降は使わない）。
 - ソースコード中のコメントやドキュメントなどの文章は日本語で書かれており、次の項で示すファイルを除いて文体が常体で統一されている（`です`、`ます` などの敬体が混ざっていない）。
-  - [pyproject.toml](pyproject.toml) の `[project]` 内の `description` および [.gitignore](.gitignore) 中のコメントは除く（英語で記述する）。
+  - [pyproject.toml](pyproject.toml) の `[project]` 内の `description` および [.editorconfig](.editorconfig), [.gitattributes](.gitattributes), [.gitignore](.gitignore) 内のコメントは除く（英語で記述する）。
   - 参考文献も除く（人名も含めて、英語で記述する）。
   - また、日本語で同じ内容が記述されている場合は、英語などの他の言語が併記されていてもよい。
 - リポジトリの [README.md](README.md) や [CONTRIBUTING.md](CONTRIBUTING.md)、GitHub Pages 上のドキュメントのトップページ（[.competitive-verifier/docs/index.md](.competitive-verifier/docs/index.md) を基に生成される）の文章は日本語で書かれており、文体が敬体で統一されている（以下の例外を除いて、`だ`、`である` などの常体が混ざっていない）。
