@@ -1,5 +1,5 @@
 ---
-title: 凸包と直線の交点（$O(\log N)$）
+title: 凸包と直線の交点（ $O(\log N)$ ）
 documentation_of: geometry/line-convex-polygon-intersection.hpp
 ---
 
@@ -61,7 +61,7 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 
 - `LinePolygonIntersectionPoint<T>::x_numerator`, `y_numerator`, `denominator`
   - 交点の有理表現である。
-  - `denominator` を $q$ として、$q>0$ になるように正規化している。
+  - `denominator` を $q$ として、 $q>0$ になるように正規化している。
   - 前提: `x_numerator`, `y_numerator`, `denominator` が `T` で表せる。
 
 ## 計算量

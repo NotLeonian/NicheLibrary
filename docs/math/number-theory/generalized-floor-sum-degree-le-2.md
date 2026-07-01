@@ -22,7 +22,7 @@ documentation_of: math/number-theory/generalized-floor-sum-degree-le-2.hpp
   - `Internal` は省略できる。省略した場合、標準の 64 bit 以下の整数型では `NicheLibrary::Int128` を用いる。
   - 前提: `T` と明示的に与える場合の `Internal` は整数型である。
   - 前提: `T` が符号付きなら、明示的に与える場合の `Internal` も符号付きである。
-  - 前提: $n\ge 0,\;m>0$。
+  - 前提: $n\ge 0,\;m>0$ 。
   - 前提: 内部計算が `Internal` の範囲に収まる。
   - 備考: `T` が符号付き整数型の場合、返り値が `T` の範囲に収まる必要がある。
   - 備考: `T` が符号なし整数型の場合、内部計算の結果を `T` に変換した値を返す。
@@ -40,4 +40,4 @@ documentation_of: math/number-theory/generalized-floor-sum-degree-le-2.hpp
 ## 計算量
 
 - 時間: $O(\log m)$
-- 空間: $O(\log m)$（再帰）
+- 空間: $O(\log m)$ （再帰）

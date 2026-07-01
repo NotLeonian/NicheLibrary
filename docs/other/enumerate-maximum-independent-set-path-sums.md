@@ -18,7 +18,7 @@ documentation_of: other/enumerate-maximum-independent-set-path-sums.hpp
 - 比較ソートを用いる。
 - 引数 $a$ は重みの列である。
 - `maximum` は既定で `true` であり、`true` であれば最大値、`false` であれば最小値を返す。
-- 返り値は、$k$ 個選ぶときの最大値または最小値を $k$ 番目 (0-based indexing) の要素に持つ列である。
+- 返り値は、 $k$ 個選ぶときの最大値または最小値を $k$ 番目 (0-based indexing) の要素に持つ列である。
 - 前提: `T` は加算、減算、比較が正しく定義されている。
 - 前提: アルゴリズム中に現れる加減算結果、および返り値の各要素が `T` の範囲に収まる。
 - 前提: `std::is_unsigned_v<T>` が `false` である。
@@ -28,7 +28,7 @@ documentation_of: other/enumerate-maximum-independent-set-path-sums.hpp
 - バケットソートを用いる。
 - 引数 $a$ は重みの列である。
 - `maximum` は既定で `true` であり、`true` であれば最大値、`false` であれば最小値を返す。
-- 返り値は、$k$ 個選ぶときの最大値または最小値を $k$ 番目 (0-based indexing) の要素に持つ列である。
+- 返り値は、 $k$ 個選ぶときの最大値または最小値を $k$ 番目 (0-based indexing) の要素に持つ列である。
 - 前提: `T` は `bool` でない 32 bit 以下のプリミティブな符号付き整数型である。
 - 前提: `std::is_unsigned_v<T>` が `false` である。
 - 前提: 引数として与えられる列は非負整数列である。
@@ -36,5 +36,5 @@ documentation_of: other/enumerate-maximum-independent-set-path-sums.hpp
 
 ## 計算量
 
-- `enumerate_maximum_independent_set_path_sums(a)`: 時間 $O(n \log n)$、空間 $O(n)$。
-- `enumerate_maximum_independent_set_path_sums_bucket_sort(a)`: 列 $a$ の総和を $S$ として時間 $O(n + S)$、空間 $O(n + S)$。
+- `enumerate_maximum_independent_set_path_sums(a)`: 時間 $O(n \log n)$ 、空間 $O(n)$ 。
+- `enumerate_maximum_independent_set_path_sums_bucket_sort(a)`: 列 $a$ の総和を $S$ として時間 $O(n + S)$ 、空間 $O(n + S)$ 。

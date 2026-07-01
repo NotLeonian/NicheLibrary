@@ -20,7 +20,7 @@ documentation_of: structure/others/dynamic-median.hpp
   - `Lower` は昇順で $0$ 始まりの $(N - 1) / 2$ 番目の値を指定する。
   - `Upper` は昇順で $0$ 始まりの $N / 2$ 番目の値を指定する。
   - `Average` は `Lower` と `Upper` の算術平均を指定する。
-  - 備考: 要素数が奇数の場合、$3$ 種類は同じ値になる。
+  - 備考: 要素数が奇数の場合、 $3$ 種類は同じ値になる。
 - `void add(T x)`
   - 値 $x$ を $1$ 個追加する。
 - `bool erase(T x)`
