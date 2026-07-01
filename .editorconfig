@@ -21,7 +21,7 @@ insert_final_newline = unset
 indent_size = 2
 trim_trailing_whitespace = false
 
-# Generated C++ and Python binary files
+# Generated C, C++ and Python binary files
 [*.{a,lib,o,obj,pyc,pyo,pyd}]
 end_of_line = unset
 charset = unset

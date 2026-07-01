@@ -28,7 +28,7 @@
 *.md    text diff=markdown whitespace=-blank-at-eol
 *.mdx   text diff=markdown whitespace=-blank-at-eol
 
-# C / C++
+# C, C++
 *.c     text diff=cpp
 *.cc    text diff=cpp
 *.cpp   text diff=cpp
@@ -47,7 +47,7 @@
 *.pyi   text diff=python
 *.pyw   text diff=python
 
-# Generated C++ and Python binary files
+# Generated C, C++ and Python binary files
 *.a     binary
 *.lib   binary
 *.o     binary
