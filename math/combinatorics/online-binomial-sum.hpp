@@ -3,10 +3,12 @@
 
 // Σ_{i=l}^{u-1} r^i binom(m,i) をオンラインで求める。
 // 0 <= l <= u と 0 <= m <= max_m を仮定する。
-// m のバケット境界の累積和と、バケット内の二項係数を前計算する。
+// m のバケット境界の累積和を n のバケット境界でサンプルし、
+// バケット内の二項係数を前計算する。
 // T は四則演算を持つ型で、std::numeric_limits<T>::is_integer が
 // false の場合は T(1) から T(max_m) で除算できる。
-// 計算量は前計算 O(max_m √max_m)、クエリ O(√max_m)。
+// 時間計算量は前計算 O(max_m √max_m)、クエリ O(√max_m)。
+// 空間計算量は O(max_m)。
 
 #include <cassert>
 #include <limits>
@@ -18,8 +20,10 @@ template <class T> struct OnlineBinomialSum {
     T r;
     std::vector<int> prefix_sum_offset;
     std::vector<T> prefix_sum_table;
+    std::vector<T> prefix_term_table;
     std::vector<int> weighted_binomial_offset;
     std::vector<T> weighted_binomial_table;
+    std::vector<T> integer_inverse;
 
     explicit OnlineBinomialSum(int m, T r = T(1)) : max_m(m), r(r) {
         assert(max_m >= 0);
@@ -50,19 +54,6 @@ template <class T> struct OnlineBinomialSum {
                                             d - 1];
         }
 
-        const int bucket_count = max_m / bucket_size + 1;
-        prefix_sum_offset.assign(bucket_count + 1, 0);
-        for (int b = 0; b < bucket_count; ++b) {
-            const int base = b * bucket_size;
-            int last = base + bucket_size;
-            if (last > max_m + 1) {
-                last = max_m + 1;
-            }
-            prefix_sum_offset[b + 1] = prefix_sum_offset[b] + last + 1;
-        }
-        prefix_sum_table.assign(prefix_sum_offset[bucket_count], T());
-
-        std::vector<T> integer_inverse;
         if constexpr (!std::numeric_limits<T>::is_integer) {
             integer_inverse.assign(max_m + 1, T());
             for (int i = 1; i <= max_m; ++i) {
@@ -70,17 +61,28 @@ template <class T> struct OnlineBinomialSum {
             }
         }
 
+        const int bucket_count = max_m / bucket_size + 1;
+        prefix_sum_offset.assign(bucket_count + 1, 0);
+        for (int b = 0; b < bucket_count; ++b) {
+            prefix_sum_offset[b + 1] = prefix_sum_offset[b] + b + 1;
+        }
+
+        prefix_sum_table.assign(prefix_sum_offset[bucket_count], T());
+        prefix_term_table.assign(prefix_sum_offset[bucket_count], T());
+
         for (int b = 0; b < bucket_count; ++b) {
             const int base = b * bucket_size;
             const int offset = prefix_sum_offset[b];
-            const int row_size = prefix_sum_offset[b + 1] - offset;
             T sum = T();
             T term = T(1);
-            prefix_sum_table[offset] = T();
             for (int i = 0; i <= base; ++i) {
-                sum += term;
-                prefix_sum_table[offset + i + 1] = sum;
+                if (i % bucket_size == 0) {
+                    const int q = i / bucket_size;
+                    prefix_sum_table[offset + q] = sum;
+                    prefix_term_table[offset + q] = term;
+                }
                 if (i < base) {
+                    sum += term;
                     term *= r;
                     term *= T(base - i);
                     if constexpr (std::numeric_limits<T>::is_integer) {
@@ -89,9 +91,6 @@ template <class T> struct OnlineBinomialSum {
                         term *= integer_inverse[i + 1];
                     }
                 }
-            }
-            for (int i = base + 2; i < row_size; ++i) {
-                prefix_sum_table[offset + i] = sum;
             }
         }
     }
@@ -106,15 +105,47 @@ template <class T> struct OnlineBinomialSum {
         if (n > m) {
             n = m + 1;
         }
+
         const int bucket = m / bucket_size;
         const int base = bucket * bucket_size;
         const int d = m - base;
-        const int prefix_offset = prefix_sum_offset[bucket];
         const int weight_offset = weighted_binomial_offset[d];
+
+        int last_j = d;
+        if (last_j >= n) {
+            last_j = n - 1;
+        }
+        const int first_n = n - last_j;
+
+        int sample_index = first_n / bucket_size;
+        if (sample_index > bucket) {
+            sample_index = bucket;
+        }
+        const int sample_n = sample_index * bucket_size;
+        const int sample_offset = prefix_sum_offset[bucket] + sample_index;
+
+        T sum = prefix_sum_table[sample_offset];
+        T term = prefix_term_table[sample_offset];
         T ans = T();
-        for (int j = 0; j <= d && j < n; ++j) {
-            ans += weighted_binomial_table[weight_offset + j] *
-                   prefix_sum_table[prefix_offset + n - j];
+        for (int current_n = sample_n; current_n <= n; ++current_n) {
+            if (current_n >= first_n) {
+                const int j = n - current_n;
+                ans += weighted_binomial_table[weight_offset + j] * sum;
+            }
+            if (current_n < n) {
+                sum += term;
+                if (current_n < base) {
+                    term *= r;
+                    term *= T(base - current_n);
+                    if constexpr (std::numeric_limits<T>::is_integer) {
+                        term /= T(current_n + 1);
+                    } else {
+                        term *= integer_inverse[current_n + 1];
+                    }
+                } else {
+                    term = T();
+                }
+            }
         }
         return ans;
     }
