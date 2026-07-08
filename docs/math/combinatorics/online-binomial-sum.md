@@ -8,7 +8,8 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - 整数 $n,m$ と重み $r$ に対する二項係数の prefix sum を $\displaystyle F(n,m)=\sum_{i=0}^{n-1}r^i\binom{m}{i}$ とおく。
 - 半開区間の左端、右端をそれぞれ $l,u$ とする。 $\displaystyle \sum_{i=l}^{u-1}r^i\binom{m}{i}$ をオンラインで求める。
 - $\binom{m}{i}=0\;(i>m)$ として扱う。
-- $r=0$ や $r=-1$ でも $r+1$ による除算は行わない。
+- クエリでは前計算を行った最も近い点から復元する。
+- $r=0$ のときは閉形式を用い、 $r=-1$ でも $r+1$ による除算は行わない。
 
 ## 使い方
 
@@ -16,7 +17,9 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - `OnlineBinomialSum<T>(int max_m, T r = T(1))`
   - $0\le m\le M$ のクエリに対する前計算を行う。
   - `r` は重みで、省略時は $1$ である。
-  - 前提: `T` は四則演算を持つ。`std::numeric_limits<T>::is_integer` が `false` の場合、 $T(1),T(2),\ldots,T(M)$ で除算できる。
+  - 前提: `T` は四則演算と `T()` との等値比較を持つ。
+  - 前提: $r \ne 0$ の場合は `r` で除算できる。
+  - 前提: `std::numeric_limits<T>::is_integer` が `false` の場合、 $T(1),T(2),\ldots,T(M)$ で除算できる。
   - 備考: 整数型では中間値が `T` の範囲を超えない必要がある。
 - `T binom_prefix_sum(int n, int m) const`
   - $\displaystyle \sum_{i=0}^{n-1}r^i\binom{m}{i}$ を返す。
