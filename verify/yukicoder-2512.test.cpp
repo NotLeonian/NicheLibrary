@@ -89,7 +89,7 @@ int main() {
 
     constexpr int max_n = 200000;
     constexpr int max_m = 400000;
-    constexpr int bucket_size = 512;
+    constexpr int bucket_size = 256;
     OnlineBinomialSum<modint998244353> binom_sum(max_m, modint998244353(-2),
                                                  bucket_size);
 
