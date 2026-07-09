@@ -35,6 +35,23 @@ long long brute_sum(const std::vector<std::vector<long long>> &binom, int l,
     return ans;
 }
 
+void verify(const std::vector<std::vector<long long>> &binom,
+            const OnlineBinomialSum<long long> &online_binomial_sum, int max_m,
+            long long r) {
+    for (int m = 0; m <= max_m; ++m) {
+        for (int n = 0; n <= max_m + 10; ++n) {
+            assert(online_binomial_sum.binom_prefix_sum(n, m) ==
+                   brute_prefix_sum(binom, n, m, r));
+        }
+        for (int l = 0; l <= max_m + 5; ++l) {
+            for (int u = l; u <= max_m + 10; ++u) {
+                assert(online_binomial_sum.binom_sum(l, u, m) ==
+                       brute_sum(binom, l, u, m, r));
+            }
+        }
+    }
+}
+
 int main() {
     constexpr int max_m = 30;
     std::vector<std::vector<long long>> binom(
@@ -48,18 +65,12 @@ int main() {
 
     for (long long r : {-2, -1, 0, 1, 3}) {
         OnlineBinomialSum<long long> online_binomial_sum(max_m, r);
-        for (int m = 0; m <= max_m; ++m) {
-            for (int n = 0; n <= max_m + 10; ++n) {
-                assert(online_binomial_sum.binom_prefix_sum(n, m) ==
-                       brute_prefix_sum(binom, n, m, r));
-            }
-            for (int l = 0; l <= max_m + 5; ++l) {
-                for (int u = l; u <= max_m + 10; ++u) {
-                    assert(online_binomial_sum.binom_sum(l, u, m) ==
-                           brute_sum(binom, l, u, m, r));
-                }
-            }
-        }
+        verify(binom, online_binomial_sum, max_m, r);
+
+        OnlineBinomialSum<long long> online_binomial_sum_with_bucket(max_m, r,
+                                                                     1);
+        assert(online_binomial_sum_with_bucket.bucket_size == 1);
+        verify(binom, online_binomial_sum_with_bucket, max_m, r);
     }
 
     return 0;
