@@ -10,7 +10,7 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - $\binom{m}{i}=0\;(i>m)$ として扱う。
 - クエリでは、前計算を行ったうちの最も近い点から復元する。
 - バケットサイズを指定できる。
-  - 以下、バケットサイズを $B$ とする。
+  - 以下、クエリで与えられる $m$ の最大値を $M$ 、バケットサイズを $B$ とする。
   - クエリの時間計算量は $O(B)$ であり、 $B$ が小さいほど各クエリは高速である。
   - 前計算は時間計算量が $O(M^2/B+B^2+M)$ 、空間計算量が $O((M/B)^2+B^2+M)$ である。 $B$ が小さい場合、時空間ともに前計算のコストが大きい。
   - バケットサイズ $B$ を指定しない場合、 $B^2\ge M+1$ を満たす最小の $2$ の冪が使われる。
@@ -22,7 +22,7 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 
 - `OnlineBinomialSum<T>(int max_m, T r, int bucket_size)`
   - $0\le m\le M$ のクエリに対する前計算を行う。
-  - `r` は重みで、省略時は $1$ である。
+  - `r` は重みである。
   - 引数の `bucket_size` をバケットサイズとして、前計算を行う。
   - 前提: $M\ge 0,\,B>0$ 。
   - 前提: `T` は四則演算と `T()` との等値比較を持つ。
