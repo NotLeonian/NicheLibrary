@@ -9,14 +9,16 @@
 // r != T() の場合は r で除算できることを前提とする。
 // std::numeric_limits<T>::is_integer が false の場合は、
 // さらに T(1) から T(max_m) で除算できることを前提とする。
-// 時間計算量は前計算 O(max_m √max_m)、クエリ O(√max_m)。
-// 空間計算量は O(max_m)。
+// B をバケット幅として、
+// 時間計算量は前計算 O(max_m^2 / B + B^2 + max_m)、クエリ O(B)。
+// 空間計算量は O((max_m / B)^2 + B^2 + max_m)。
 
 #include <cassert>
 #include <limits>
 #include <vector>
 
 template <class T> struct OnlineBinomialSum {
+  public:
     int max_m;
     int bucket_size;
     T r;
@@ -29,14 +31,13 @@ template <class T> struct OnlineBinomialSum {
     std::vector<T> integer_inverse;
     T r_inverse;
 
-    explicit OnlineBinomialSum(int m, T r = T(1))
-        : max_m(m), bucket_size(1), r(r), r_is_zero(r == T()) {
+    explicit OnlineBinomialSum(int max_m, T r, int bucket_size)
+        : max_m(max_m), bucket_size(bucket_size), r(r), r_is_zero(r == T()) {
         assert(max_m >= 0);
+        assert(bucket_size > 0);
+
         if (r_is_zero) {
             return;
-        }
-        while (1LL * bucket_size * bucket_size < max_m + 1) {
-            bucket_size <<= 1;
         }
 
         weighted_binomial_offset.assign(bucket_size + 1, 0);
@@ -105,6 +106,9 @@ template <class T> struct OnlineBinomialSum {
             prefix_term_table[offset + b + 1] = T();
         }
     }
+
+    explicit OnlineBinomialSum(int max_m, T r = T(1))
+        : OnlineBinomialSum<T>(max_m, r, default_bucket_size(max_m)) {}
 
     T binom_prefix_sum(int n, int m) const {
         assert(n >= 0);
@@ -244,6 +248,18 @@ template <class T> struct OnlineBinomialSum {
         assert(l >= 0);
         assert(l <= u);
         return binom_prefix_sum(u, m) - binom_prefix_sum(l, m);
+    }
+
+  private:
+    static int default_bucket_size(int max_m) {
+        assert(max_m >= 0);
+
+        int bucket_size = 1;
+        while (1LL * bucket_size * bucket_size < max_m + 1) {
+            bucket_size <<= 1;
+        }
+
+        return bucket_size;
     }
 };
 
