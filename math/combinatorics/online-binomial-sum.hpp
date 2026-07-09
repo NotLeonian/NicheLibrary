@@ -255,7 +255,7 @@ template <class T> struct OnlineBinomialSum {
         assert(max_m >= 0);
 
         int bucket_size = 1;
-        while (1LL * bucket_size * bucket_size < max_m + 1) {
+        while (1LL * bucket_size * bucket_size <= max_m) {
             bucket_size <<= 1;
         }
 
