@@ -89,9 +89,7 @@ int main() {
 
     constexpr int max_n = 200000;
     constexpr int max_m = 400000;
-    constexpr int bucket_size = 256;
-    OnlineBinomialSum<modint998244353> binom_sum(max_m, modint998244353(-2),
-                                                 bucket_size);
+    OnlineBinomialSum<modint998244353> binom_sum(max_m, modint998244353(-2));
 
     const modint998244353 minus_inv2 = modint998244353(-1) / modint998244353(2);
     std::vector<modint998244353> pow_minus_inv2(max_n + 2);
