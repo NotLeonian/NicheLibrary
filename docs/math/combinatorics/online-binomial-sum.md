@@ -55,6 +55,11 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - `binom_prefix_sum(n, m)`: 時間 $O(B)$
 - `binom_sum(l, u, m)`: 時間 $O(B)$
 
-コンストラクタで $B$ を指定しない場合は $B=O(\sqrt M)$ である。
-このとき、コンストラクタの時間計算量は $O(M\sqrt M)$ 、空間計算量は $O(M)$ である。
-また、各クエリは時間 $O(\sqrt M)$ である。
+コンストラクタで $B$ を指定しない場合、 $B=O(\sqrt M)$ である。
+このとき、
+
+- コンストラクタ: 時間 $O(M\sqrt M)$ 、空間 $O(M)$
+- `binom_prefix_sum(n, m)`: 時間 $O(\sqrt M)$
+- `binom_sum(l, u, m)`: 時間 $O(\sqrt M)$
+
+である。
