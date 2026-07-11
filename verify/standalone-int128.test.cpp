@@ -115,11 +115,38 @@ void test_signed_division(Int128 lhs, Int128 rhs) {
         assert(remainder.is_negative() == lhs.is_negative());
     }
 }
+constexpr bool test_uint128_div_mod_fast_paths() {
+    UInt128 quotient;
+    UInt128 remainder;
+
+    UInt128::div_mod(UInt128::from_words(0, ~std::uint64_t{}),
+                     UInt128::from_words(0, (std::uint64_t{1} << 63) + 1),
+                     quotient, remainder);
+    if (quotient != UInt128(1) ||
+        remainder != UInt128::from_words(0, (std::uint64_t{1} << 63) - 2)) {
+        return false;
+    }
+
+    const UInt128 wide =
+        UInt128::from_words(0x123456789abcdef0ULL, 0xfedcba9876543210ULL);
+    UInt128::div_mod(wide, UInt128(1), quotient, remainder);
+    if (quotient != wide || remainder != UInt128{}) {
+        return false;
+    }
+
+    const UInt128 smaller = UInt128::from_words(1, ~std::uint64_t{});
+    const UInt128 larger = UInt128::from_words(2, 0);
+    UInt128::div_mod(smaller, larger, quotient, remainder);
+    return quotient == UInt128{} && remainder == smaller;
+}
 } // namespace
 
 int main() {
     using NicheLibrary::Int128;
     using NicheLibrary::UInt128;
+
+    static_assert(test_uint128_div_mod_fast_paths(),
+                  "UInt128 division fast paths must be constexpr-correct.");
 
     static_assert(std::numeric_limits<UInt128>::is_integer,
                   "UInt128 must be integer.");
