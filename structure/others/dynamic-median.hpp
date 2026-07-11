@@ -81,7 +81,8 @@ template <class T> struct DynamicMedian {
 
   private:
     void balance() {
-        // add または erase の直前に不変条件が成り立つため、移動は高々 1 回でよい。
+        // add または erase でこの関数が呼び出される位置と
+        // この関数を呼ばない関数についての不変条件より、移動は高々 1 回でよい。
         if (lower_values.size() < upper_values.size()) {
             lower_values.insert(upper_values.extract(upper_values.begin()));
         } else if (lower_values.size() > upper_values.size() + 1) {
