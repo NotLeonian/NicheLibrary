@@ -133,7 +133,22 @@ class UInt128 {
         assert(rhs != UInt128{});
 
         UInt128 q, r;
-        div_mod_32bit_words(lhs, rhs, q, r);
+        if (rhs.high_ == 0) {
+            if (lhs.high_ == 0) {
+                q = UInt128(lhs.low_ / rhs.low_);
+                r = UInt128(lhs.low_ % rhs.low_);
+            } else if (rhs.low_ == 1) {
+                q = lhs;
+                r = UInt128{};
+            } else {
+                div_mod_32bit_words(lhs, rhs, q, r);
+            }
+        } else if (lhs < rhs) {
+            q = UInt128{};
+            r = lhs;
+        } else {
+            div_mod_32bit_words(lhs, rhs, q, r);
+        }
         quotient = q;
         remainder = r;
     }
@@ -336,6 +351,7 @@ class UInt128 {
         }
     }
 
+    // 呼び出し元で lhs >= rhs が保証されていることを仮定する。
     static constexpr void div_mod_32bit_words(UInt128 lhs, UInt128 rhs,
                                               UInt128 &quotient,
                                               UInt128 &remainder) {
@@ -347,12 +363,6 @@ class UInt128 {
         const int lhs_length = word_length(lhs_words);
         const int rhs_length = word_length(rhs_words);
         assert(rhs_length > 0);
-
-        if (lhs_length < rhs_length || lhs < rhs) {
-            quotient = UInt128{};
-            remainder = lhs;
-            return;
-        }
 
         if (rhs_length == 1) {
             std::uint32_t rem = 0;
