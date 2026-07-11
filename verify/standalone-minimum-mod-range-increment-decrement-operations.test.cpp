@@ -74,6 +74,10 @@ long long mod_difference_ll(long long from, long long to, long long mod) {
 }
 
 void self_test() {
+    const std::vector<long long> empty;
+    assert(minimum_mod_range_increment_decrement_operations(empty, empty,
+                                                            1LL) == 0);
+
     for (int n = 1; n <= 4; ++n) {
         for (int mod = 1; mod <= 3; ++mod) {
             int total = 1;

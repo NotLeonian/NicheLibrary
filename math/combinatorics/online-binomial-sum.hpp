@@ -119,6 +119,21 @@ template <class T> struct OnlineBinomialSum {
         assert(m >= 0);
         assert(m <= max_m);
 
+        return binom_prefix_sum_unchecked(n, m);
+    }
+
+    T binom_sum(int l, int u, int m) const {
+        assert(l >= 0);
+        assert(l <= u);
+        assert(m >= 0);
+        assert(m <= max_m);
+
+        return binom_prefix_sum_unchecked(u, m) -
+               binom_prefix_sum_unchecked(l, m);
+    }
+
+  private:
+    T binom_prefix_sum_unchecked(int n, int m) const {
         if (n == 0) {
             return T();
         }
@@ -131,6 +146,9 @@ template <class T> struct OnlineBinomialSum {
         if (r_is_minus_one) {
             if (m == 0) {
                 return T(1);
+            }
+            if (n > m) {
+                return T();
             }
 
             T ans = binomial(m - 1, n - 1);
@@ -149,18 +167,24 @@ template <class T> struct OnlineBinomialSum {
             sample_sum_table[sample_m_index * sample_n_count + sample_n_index];
 
         while (current_n < n) {
-            sum += power_r[current_n] * binomial(current_m, current_n);
+            if (current_n <= current_m) {
+                sum += power_r[current_n] * binomial(current_m, current_n);
+            }
             ++current_n;
         }
 
         while (current_n > n) {
             --current_n;
-            sum -= power_r[current_n] * binomial(current_m, current_n);
+            if (current_n <= current_m) {
+                sum -= power_r[current_n] * binomial(current_m, current_n);
+            }
         }
 
         while (current_m < m) {
             sum *= r_plus_one;
-            sum -= power_r[current_n] * binomial(current_m, current_n - 1);
+            if (current_n - 1 <= current_m) {
+                sum -= power_r[current_n] * binomial(current_m, current_n - 1);
+            }
             ++current_m;
         }
 
@@ -173,19 +197,7 @@ template <class T> struct OnlineBinomialSum {
         return sum;
     }
 
-    T binom_sum(int l, int u, int m) const {
-        assert(l >= 0);
-        assert(l <= u);
-
-        return binom_prefix_sum(u, m) - binom_prefix_sum(l, m);
-    }
-
-  private:
     T binomial(int n, int k) const {
-        if (k < 0 || k > n) {
-            return T();
-        }
-
         return factorial[n] * inverse_factorial[k] * inverse_factorial[n - k];
     }
 
@@ -207,9 +219,6 @@ template <class T> struct OnlineBinomialSum {
                              int value) const {
         int index = value / bucket_size;
         const int sample_count = static_cast<int>(sample_list.size());
-        if (index >= sample_count) {
-            index = sample_count - 1;
-        }
         if (index + 1 >= sample_count) {
             return index;
         }

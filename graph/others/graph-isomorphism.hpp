@@ -22,7 +22,6 @@ struct GraphIsomorphism {
         std::vector<std::vector<std::pair<int, int>>> adjacency;
         std::vector<int> loop_count;
         std::vector<int> degree;
-        std::vector<std::array<int, 3>> edges;
         int edge_count;
 
         Graph(int n_, const std::vector<std::pair<int, int>> &input_edges)
@@ -46,7 +45,6 @@ struct GraphIsomorphism {
             }
 
             std::sort(sorted_edges.begin(), sorted_edges.end());
-            edges.reserve(sorted_edges.size());
             for (int i = 0; i < static_cast<int>(sorted_edges.size());) {
                 int j = i + 1;
                 while (j < static_cast<int>(sorted_edges.size()) &&
@@ -56,7 +54,6 @@ struct GraphIsomorphism {
                 const int u = sorted_edges[i][0];
                 const int v = sorted_edges[i][1];
                 const int count = j - i;
-                edges.push_back({u, v, count});
                 if (u == v) {
                     adjacency[u].push_back({v, count});
                     loop_count[u] += count;
@@ -90,9 +87,7 @@ struct GraphIsomorphism {
 
     GraphIsomorphism(int n_, const std::vector<std::pair<int, int>> &edges_1,
                      const std::vector<std::pair<int, int>> &edges_2)
-        : n(n_), graph{Graph(n_, edges_1), Graph(n_, edges_2)} {
-        assert(n >= 0);
-    }
+        : n(n_), graph{Graph(n_, edges_1), Graph(n_, edges_2)} {}
 
     bool run() {
         if (graph[0].edge_count != graph[1].edge_count) {
@@ -102,26 +97,25 @@ struct GraphIsomorphism {
             return true;
         }
 
-        std::vector<std::array<int, 2>> keys;
+        std::vector<std::array<int, 4>> keys;
         keys.reserve(2 * n);
         for (int t = 0; t < 2; ++t) {
             for (int v = 0; v < n; ++v) {
-                keys.push_back({graph[t].loop_count[v], graph[t].degree[v]});
+                keys.push_back(
+                    {graph[t].loop_count[v], graph[t].degree[v], t, v});
             }
         }
         std::sort(keys.begin(), keys.end());
-        keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
 
         std::array<std::vector<int>, 2> color{std::vector<int>(n),
                                               std::vector<int>(n)};
-        for (int t = 0; t < 2; ++t) {
-            for (int v = 0; v < n; ++v) {
-                const std::array<int, 2> key{graph[t].loop_count[v],
-                                             graph[t].degree[v]};
-                color[t][v] = static_cast<int>(
-                    std::lower_bound(keys.begin(), keys.end(), key) -
-                    keys.begin());
+        int color_count = 0;
+        for (int i = 0; i < static_cast<int>(keys.size()); ++i) {
+            if (i == 0 || keys[i][0] != keys[i - 1][0] ||
+                keys[i][1] != keys[i - 1][1]) {
+                ++color_count;
             }
+            color[keys[i][2]][keys[i][3]] = color_count - 1;
         }
         if (!same_color_count(color)) {
             return false;
@@ -132,73 +126,102 @@ struct GraphIsomorphism {
     }
 
   private:
-    bool refine(std::array<std::vector<int>, 2> &color) const {
+    struct RefineWorkspace {
+        std::vector<std::vector<int>> signatures;
+        std::vector<int> multiplicity;
+        std::vector<int> touched_colors;
+        std::vector<int> order;
+        std::vector<std::array<int, 2>> count;
+        std::array<std::vector<int>, 2> next_color;
+    };
+
+    RefineWorkspace refine_workspace;
+
+    bool refine(std::array<std::vector<int>, 2> &color) {
+        auto &signatures = refine_workspace.signatures;
+        auto &multiplicity = refine_workspace.multiplicity;
+        auto &touched_colors = refine_workspace.touched_colors;
+        auto &order = refine_workspace.order;
+        auto &count = refine_workspace.count;
+        auto &next_color = refine_workspace.next_color;
+        signatures.resize(2 * n);
+        order.resize(2 * n);
+        next_color[0].resize(n);
+        next_color[1].resize(n);
         while (true) {
-            std::vector<std::vector<int>> signatures(2 * n);
+            int color_count = 0;
+            for (int v = 0; v < n; ++v) {
+                color_count = std::max(color_count, color[0][v] + 1);
+            }
+
+            multiplicity.assign(color_count, 0);
+            touched_colors.clear();
+            touched_colors.reserve(color_count);
             for (int t = 0; t < 2; ++t) {
                 for (int v = 0; v < n; ++v) {
-                    std::vector<std::pair<int, int>> neighbor_colors;
-                    neighbor_colors.reserve(graph[t].adjacency[v].size());
                     for (const auto &[to, count] : graph[t].adjacency[v]) {
                         if (to != v) {
-                            neighbor_colors.push_back({color[t][to], count});
+                            const int neighbor_color = color[t][to];
+                            if (multiplicity[neighbor_color] == 0) {
+                                touched_colors.push_back(neighbor_color);
+                            }
+                            multiplicity[neighbor_color] += count;
                         }
                     }
-                    std::sort(neighbor_colors.begin(), neighbor_colors.end());
+                    std::sort(touched_colors.begin(), touched_colors.end());
 
-                    std::vector<int> signature;
-                    signature.reserve(2 + 2 * neighbor_colors.size());
+                    std::vector<int> &signature = signatures[t * n + v];
+                    signature.clear();
+                    signature.reserve(2 + 2 * touched_colors.size());
                     signature.push_back(color[t][v]);
                     signature.push_back(graph[t].loop_count[v]);
-                    for (int i = 0;
-                         i < static_cast<int>(neighbor_colors.size());) {
-                        int j = i + 1;
-                        int count_sum = neighbor_colors[i].second;
-                        while (j < static_cast<int>(neighbor_colors.size()) &&
-                               neighbor_colors[i].first ==
-                                   neighbor_colors[j].first) {
-                            count_sum += neighbor_colors[j].second;
-                            ++j;
-                        }
-                        signature.push_back(neighbor_colors[i].first);
-                        signature.push_back(count_sum);
-                        i = j;
+                    for (int neighbor_color : touched_colors) {
+                        signature.push_back(neighbor_color);
+                        signature.push_back(multiplicity[neighbor_color]);
+                        multiplicity[neighbor_color] = 0;
                     }
-                    signatures[t * n + v] = std::move(signature);
+                    touched_colors.clear();
                 }
             }
 
-            std::vector<std::vector<int>> keys = signatures;
-            std::sort(keys.begin(), keys.end());
-            keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
+            for (int i = 0; i < 2 * n; ++i) {
+                order[i] = i;
+            }
+            std::sort(order.begin(), order.end(), [&](int lhs, int rhs) {
+                return signatures[lhs] < signatures[rhs];
+            });
 
-            std::array<std::vector<int>, 2> next_color{std::vector<int>(n),
-                                                       std::vector<int>(n)};
+            int next_color_count = 0;
+            for (int i = 0; i < 2 * n; ++i) {
+                if (i == 0 ||
+                    signatures[order[i - 1]] != signatures[order[i]]) {
+                    ++next_color_count;
+                }
+                const int t = order[i] / n;
+                const int v = order[i] % n;
+                next_color[t][v] = next_color_count - 1;
+            }
+
+            count.assign(next_color_count, std::array<int, 2>{});
             for (int t = 0; t < 2; ++t) {
                 for (int v = 0; v < n; ++v) {
-                    next_color[t][v] = static_cast<int>(
-                        std::lower_bound(keys.begin(), keys.end(),
-                                         signatures[t * n + v]) -
-                        keys.begin());
+                    ++count[next_color[t][v]][t];
                 }
             }
-            if (!same_color_count(next_color)) {
-                return false;
+            for (const auto &color_count_pair : count) {
+                if (color_count_pair[0] != color_count_pair[1]) {
+                    return false;
+                }
             }
-            if (next_color[0] == color[0] && next_color[1] == color[1]) {
+            if (next_color_count == color_count) {
                 return true;
             }
-            color = std::move(next_color);
+            color.swap(next_color);
         }
     }
 
     bool dfs(std::array<std::vector<int>, 2> color) {
         if (!refine(color)) {
-            return false;
-        }
-
-        StateKey key = make_state_key(color);
-        if (dead_states.find(key) != dead_states.end()) {
             return false;
         }
 
@@ -222,7 +245,12 @@ struct GraphIsomorphism {
         }
 
         if (branch_color == -1) {
-            return check_mapping(color);
+            return true;
+        }
+
+        StateKey key = make_state_key(color);
+        if (dead_states.contains(key)) {
+            return false;
         }
 
         int u = -1;
@@ -232,7 +260,6 @@ struct GraphIsomorphism {
                 break;
             }
         }
-        assert(u != -1);
 
         const int new_color = color_count;
         for (int v = 0; v < n; ++v) {
@@ -256,42 +283,17 @@ struct GraphIsomorphism {
                 color_count = std::max(color_count, color[t][v] + 1);
             }
         }
-        std::vector<int> count0(color_count, 0), count1(color_count, 0);
+        std::vector<std::array<int, 2>> count(color_count);
         for (int v = 0; v < n; ++v) {
-            ++count0[color[0][v]];
-            ++count1[color[1][v]];
+            ++count[color[0][v]][0];
+            ++count[color[1][v]][1];
         }
-        return count0 == count1;
-    }
-
-    bool check_mapping(const std::array<std::vector<int>, 2> &color) const {
-        int color_count = 0;
-        for (int v = 0; v < n; ++v) {
-            color_count = std::max(color_count, color[0][v] + 1);
-        }
-        std::vector<int> position(color_count, -1);
-        for (int v = 0; v < n; ++v) {
-            position[color[1][v]] = v;
-        }
-
-        std::vector<int> permutation(n, -1);
-        for (int v = 0; v < n; ++v) {
-            permutation[v] = position[color[0][v]];
-            assert(permutation[v] != -1);
-        }
-
-        std::vector<std::array<int, 3>> mapped_edges;
-        mapped_edges.reserve(graph[0].edges.size());
-        for (const auto &edge : graph[0].edges) {
-            int u = permutation[edge[0]];
-            int v = permutation[edge[1]];
-            if (v < u) {
-                std::swap(u, v);
+        for (const auto &color_count_pair : count) {
+            if (color_count_pair[0] != color_count_pair[1]) {
+                return false;
             }
-            mapped_edges.push_back({u, v, edge[2]});
         }
-        std::sort(mapped_edges.begin(), mapped_edges.end());
-        return mapped_edges == graph[1].edges;
+        return true;
     }
 
     static std::uint64_t mix(std::uint64_t x) {

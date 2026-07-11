@@ -116,8 +116,8 @@ documentation_of: other/rectangle-add-max-get.hpp
 また、可変 y 範囲について、`lower_y` が表す関数を $f$ 、`upper_y` が表す関数を $g$ とおく。
 そして、 $x$ を範囲 $[l,r)$ の座標として、 $Y=\max_x g(x)-\min_x f(x)$ とおく。
 
-- `add_rectangle`: $O(1)$
-- `CompressedRectangleAddMaxGet` の各 `calc_...`: $O(N\log N)$
-- `RectangleAddMaxGet` の長方形範囲の各 `calc_...`: $O(H+W+N\log H)$
-- `RectangleAddMaxGet` の可変 y 範囲の各 `calc_...`: $O(Y+(W+N)\log Y)$
+- `add_rectangle`: 時間 $O(1)$
+- `CompressedRectangleAddMaxGet` の各 `calc_...`: 時間 $O(N\log N)$
+- `RectangleAddMaxGet` の長方形範囲の各 `calc_...`: 時間 $O(H+W+N\log H)$
+- `RectangleAddMaxGet` の可変 y 範囲の各 `calc_...`: 時間 $O(Y+(W+N)\log Y)$
 - `RectangleAddMaxGet` では、 $W,\,H,\,Y$ は `int` に収まる必要がある。

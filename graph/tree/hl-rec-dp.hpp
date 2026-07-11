@@ -41,31 +41,6 @@ inline void put_heavy_child_first(std::vector<std::vector<int>> &child,
     }
 }
 
-inline std::vector<int>
-validate_rooted_tree(const std::vector<std::vector<int>> &child, int root) {
-    const int n = static_cast<int>(child.size());
-    assert(n >= 1);
-    assert(0 <= root && root < n);
-    std::vector<int> parent(n, -2);
-    std::vector<int> order;
-    order.reserve(n);
-    std::vector<int> stack{root};
-    parent[root] = -1;
-    while (!stack.empty()) {
-        const int v = stack.back();
-        stack.pop_back();
-        order.push_back(v);
-        for (int to : child[v]) {
-            assert(0 <= to && to < n);
-            assert(parent[to] == -2);
-            parent[to] = v;
-            stack.push_back(to);
-        }
-    }
-    assert(static_cast<int>(order.size()) == n);
-    return order;
-}
-
 inline std::vector<std::vector<int>>
 make_rooted_tree(int n, const std::vector<std::pair<int, int>> &edges,
                  int root) {
@@ -81,29 +56,33 @@ make_rooted_tree(int n, const std::vector<std::pair<int, int>> &edges,
         graph[v].push_back(u);
     }
 
-    std::vector<std::vector<int>> child(n);
     std::vector<int> parent(n, -2);
     std::vector<int> order;
     order.reserve(n);
-    std::vector<int> stack{root};
+    std::vector<int> stack;
+    stack.reserve(n);
+    stack.push_back(root);
     parent[root] = -1;
     while (!stack.empty()) {
         const int v = stack.back();
         stack.pop_back();
         order.push_back(v);
+        int child_count = 0;
         for (int to : graph[v]) {
             if (to == parent[v]) {
                 continue;
             }
             assert(parent[to] == -2);
             parent[to] = v;
-            child[v].push_back(to);
+            graph[v][child_count] = to;
+            ++child_count;
             stack.push_back(to);
         }
+        graph[v].resize(child_count);
     }
     assert(static_cast<int>(order.size()) == n);
-    put_heavy_child_first(child, order);
-    return child;
+    put_heavy_child_first(graph, order);
+    return graph;
 }
 
 template <class Spec> struct hl_rec_dp_runner {
@@ -113,17 +92,20 @@ template <class Spec> struct hl_rec_dp_runner {
     using Pack = std::array<State, K>;
 
     std::vector<std::vector<int>> child;
+    std::vector<int> path;
     Spec &spec;
 
     hl_rec_dp_runner(std::vector<std::vector<int>> child, Spec &spec)
-        : child(std::move(child)), spec(spec) {}
-
-    Pack run(int root, const State &initial_state) {
-        return dfs_heavy_path(root, initial_state, true);
+        : child(std::move(child)), spec(spec) {
+        path.reserve(this->child.size());
     }
 
-    Pack dfs_heavy_path(int start, const State &in, bool collect) {
-        std::vector<int> path;
+    Pack run(int root, const State &initial_state) {
+        return dfs_heavy_path<true>(root, initial_state);
+    }
+
+    template <bool Collect> Pack dfs_heavy_path(int start, const State &in) {
+        const int path_begin = static_cast<int>(path.size());
         for (int v = start;; v = child[v][0]) {
             path.push_back(v);
             if (child[v].empty()) {
@@ -131,31 +113,33 @@ template <class Spec> struct hl_rec_dp_runner {
             }
         }
 
-        Pack cur = spec.make_pack(path.back(), in);
-        for (int i = static_cast<int>(path.size()) - 1; i >= 0; --i) {
+        const int path_end = static_cast<int>(path.size());
+        Pack cur = spec.make_pack(path[path_end - 1], in);
+        for (int i = path_end - 1; i >= path_begin; --i) {
             const int v = path[i];
-            if (i + 1 < static_cast<int>(path.size())) {
+            if (i + 1 < path_end) {
                 cur = spec.take_heavy(v, path[i + 1], std::move(cur));
             }
             for (int idx = 1; idx < static_cast<int>(child[v].size()); ++idx) {
                 const int to = child[v][idx];
                 for (int lane = 0; lane < K; ++lane) {
-                    Pack got = dfs_heavy_path(to, cur[lane], false);
-                    cur[lane] = spec.take_light(v, to, lane, std::move(got));
+                    cur[lane] = spec.take_light(
+                        v, to, lane, dfs_heavy_path<false>(to, cur[lane]));
                 }
             }
-            if (collect) {
+            if constexpr (Collect) {
                 spec.before_vertex(v, cur);
             }
             spec.add_vertex(v, cur);
-            if (collect) {
+            if constexpr (Collect) {
                 spec.after_vertex(v, cur);
                 for (int idx = 1; idx < static_cast<int>(child[v].size());
                      ++idx) {
-                    dfs_heavy_path(child[v][idx], in, true);
+                    dfs_heavy_path<true>(child[v][idx], in);
                 }
             }
         }
+        path.resize(path_begin);
         return cur;
     }
 };

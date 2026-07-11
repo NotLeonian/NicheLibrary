@@ -1,8 +1,10 @@
 // competitive-verifier: STANDALONE
 
 #include <cassert>
+#include <cstdint>
 #include <vector>
 
+#include "../internal/int128.hpp"
 #include "../math/number-theory/generalized-garner.hpp"
 
 namespace {
@@ -114,12 +116,12 @@ void self_test_small() {
     }
 }
 
-#ifdef __SIZEOF_INT128__
 void self_test_int128() {
-    using i128 = __int128_t;
+    using i128 = NicheLibrary::Int128;
     const i128 x0 = 123456789;
-    const i128 m0 = i128(1) << 70;
-    const i128 m1 = i128(1) << 69;
+    const i128 m0 = i128::from_words(std::uint64_t{1} << 6, 0);
+    const i128 m1 = i128::from_words(std::uint64_t{1} << 5, 0);
+    const i128 m2 = 1000003;
     {
         const std::vector<i128> a = {3, 5};
         const std::vector<i128> b = {3 * x0, 5 * x0};
@@ -127,6 +129,23 @@ void self_test_int128() {
         const auto res = generalized_garner<i128>(a, b, m);
         assert(res.first == x0);
         assert(res.second == m0);
+    }
+    {
+        const std::vector<i128> a = {3, 5};
+        const std::vector<i128> b = {3 * x0, 5 * x0};
+        const std::vector<i128> m = {m0, m2};
+        const auto res = generalized_garner<i128>(a, b, m);
+        assert(res.first == x0);
+        assert(res.second == m0 * m2);
+    }
+    {
+        const std::vector<i128> a = {1, 1};
+        const std::vector<i128> b = {5, 3};
+        const std::vector<i128> m = {m0, m2};
+        const auto res = generalized_garner<i128>(a, b, m);
+        assert(res.first % m0 == 5);
+        assert(res.first % m2 == 3);
+        assert(res.second == m0 * m2);
     }
     {
         const std::vector<i128> a = {1, 1};
@@ -137,14 +156,11 @@ void self_test_int128() {
         assert(res.second == 0);
     }
 }
-#endif
 } // namespace
 
 int main() {
     self_test_small();
-#ifdef __SIZEOF_INT128__
     self_test_int128();
-#endif
 
     return 0;
 }

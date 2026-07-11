@@ -134,6 +134,13 @@ constexpr bool test_uint128_div_mod_fast_paths() {
         return false;
     }
 
+    UInt128::div_mod(UInt128::from_words(1, 0), UInt128(2), quotient,
+                     remainder);
+    if (quotient != UInt128::from_words(0, std::uint64_t{1} << 63) ||
+        remainder != UInt128{}) {
+        return false;
+    }
+
     const UInt128 smaller = UInt128::from_words(1, ~std::uint64_t{});
     const UInt128 larger = UInt128::from_words(2, 0);
     UInt128::div_mod(smaller, larger, quotient, remainder);
@@ -161,6 +168,16 @@ int main() {
                   "Int128 must be signed.");
     static_assert(std::numeric_limits<Int128>::digits == 127,
                   "Int128 must have 127 value bits.");
+    static_assert(static_cast<long double>(UInt128(123)) == 123.0L,
+                  "UInt128 must convert to long double.");
+    static_assert(static_cast<long double>(Int128(-123)) == -123.0L,
+                  "Int128 must convert to long double.");
+    static_assert(static_cast<long double>(UInt128::from_words(1, 0)) ==
+                      0x1p64L,
+                  "wide UInt128 must convert to long double.");
+    static_assert(static_cast<long double>(
+                      Int128::from_words(~std::uint64_t{}, 0)) == -0x1p64L,
+                  "wide negative Int128 must convert to long double.");
 
     const UInt128 unsigned_values[] = {
         UInt128(0),

@@ -8,6 +8,32 @@
 #include "../structure/others/dynamic-median.hpp"
 
 namespace {
+struct CopyCountedValue {
+    static inline int copy_count = 0;
+
+    int value;
+
+    explicit CopyCountedValue(int value_) : value(value_) {}
+
+    CopyCountedValue(const CopyCountedValue &other) : value(other.value) {
+        copy_count += 1;
+    }
+
+    CopyCountedValue(CopyCountedValue &&) noexcept = default;
+
+    CopyCountedValue &operator=(const CopyCountedValue &other) {
+        value = other.value;
+        copy_count += 1;
+        return *this;
+    }
+
+    CopyCountedValue &operator=(CopyCountedValue &&) noexcept = default;
+
+    bool operator<(const CopyCountedValue &other) const {
+        return value < other.value;
+    }
+};
+
 template <class T> std::vector<T> sorted_values(std::vector<T> values) {
     std::sort(values.begin(), values.end());
     return values;
@@ -92,9 +118,32 @@ void check_known_cases() {
     assert(signed_median.median(DynamicMedianMode::Average) == 0);
 }
 
+void check_value_transfers() {
+    DynamicMedian<CopyCountedValue> median;
+    const CopyCountedValue values[] = {CopyCountedValue(4), CopyCountedValue(5),
+                                       CopyCountedValue(3),
+                                       CopyCountedValue(2)};
+    for (const auto &value : values) {
+        CopyCountedValue::copy_count = 0;
+        median.add(value);
+        assert(CopyCountedValue::copy_count == 1);
+    }
+
+    const CopyCountedValue five(5);
+    CopyCountedValue::copy_count = 0;
+    assert(median.erase(five));
+    assert(CopyCountedValue::copy_count == 0);
+
+    const CopyCountedValue four(4);
+    CopyCountedValue::copy_count = 0;
+    assert(median.erase(four));
+    assert(CopyCountedValue::copy_count == 0);
+}
+
 void self_test() {
     check_known_cases();
     check_scripted_operations();
+    check_value_transfers();
 }
 } // namespace
 

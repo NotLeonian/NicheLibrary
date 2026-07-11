@@ -74,6 +74,17 @@ void self_test() {
             }
         }
     }
+
+    const auto table = prime_counting_modulo_table(500, 7).second;
+    const auto converted =
+        prime_counting_modulo_mf_prefix_sum_table<int>(500, 7);
+    assert(converted.size() == table.size());
+    for (int r = 0; r < static_cast<int>(table.size()); ++r) {
+        assert(converted[r].size() == table[r].size());
+        for (int i = 0; i < static_cast<int>(table[r].size()); ++i) {
+            assert(converted[r][i] == table[r][i]);
+        }
+    }
 }
 } // namespace
 

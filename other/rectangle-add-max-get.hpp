@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <limits>
 #include <tuple>
 #include <type_traits>
@@ -24,7 +25,7 @@ template <class T, class C> struct Rectangle {
     C w;
 };
 
-template <class C> void assert_valid_weight(C w) {
+template <class C> void assert_valid_weight([[maybe_unused]] const C &w) {
     if constexpr (std::numeric_limits<C>::is_specialized &&
                   std::numeric_limits<C>::is_integer &&
                   std::numeric_limits<C>::is_signed) {
@@ -32,8 +33,8 @@ template <class C> void assert_valid_weight(C w) {
     }
 }
 
+// 呼び出し元で l <= r が保証されていることを仮定する。
 template <class T> CoordinateLength<T> coordinate_difference(T l, T r) {
-    assert(l <= r);
     return static_cast<CoordinateLength<T>>(r) -
            static_cast<CoordinateLength<T>>(l);
 }
@@ -63,16 +64,16 @@ template <class T, class C> struct SegmentTree {
 
     SegmentTree() = default;
 
-    explicit SegmentTree(const std::vector<Node> &leaves) {
+    // leaves が空でないことを仮定する。
+    explicit SegmentTree(std::vector<Node> leaves) {
         const int n = static_cast<int>(leaves.size());
-        assert(n > 0);
         while (size < n) {
             size <<= 1;
         }
         data.assign(size << 1, Node{C(), Length(), T(), T()});
         lazy.assign(size << 1, C());
         for (int i = 0; i < n; ++i) {
-            data[size + i] = leaves[i];
+            data[size + i] = std::move(leaves[i]);
         }
         for (int i = size - 1; i >= 1; --i) {
             data[i] = merge(data[i << 1], data[i << 1 | 1]);
@@ -95,14 +96,20 @@ template <class T, class C> struct SegmentTree {
         return Node{a.max_value, a.length + b.length, a.minimum_y, b.maximum_y};
     }
 
-    void apply(int l, int r, C w, bool add) { apply(1, 0, size, l, r, w, add); }
+    void apply(int l, int r, const C &w, bool add) {
+        if (add) {
+            apply<true>(1, 0, size, l, r, w);
+        } else {
+            apply<false>(1, 0, size, l, r, w);
+        }
+    }
 
     const Node &all_prod() const { return data[1]; }
 
     Node prod(int l, int r) { return prod(1, 0, size, l, r); }
 
-    void add_node(int v, C w, bool add) {
-        if (add) {
+    template <bool Add> void add_node(int v, const C &w) {
+        if constexpr (Add) {
             data[v].max_value += w;
             lazy[v] += w;
         } else {
@@ -115,23 +122,24 @@ template <class T, class C> struct SegmentTree {
         if (lazy[v] == C()) {
             return;
         }
-        add_node(v << 1, lazy[v], true);
-        add_node(v << 1 | 1, lazy[v], true);
+        add_node<true>(v << 1, lazy[v]);
+        add_node<true>(v << 1 | 1, lazy[v]);
         lazy[v] = C();
     }
 
-    void apply(int v, int l, int r, int ql, int qr, C w, bool add) {
+    template <bool Add>
+    void apply(int v, int l, int r, int ql, int qr, const C &w) {
         if (qr <= l || r <= ql) {
             return;
         }
         if (ql <= l && r <= qr) {
-            add_node(v, w, add);
+            add_node<Add>(v, w);
             return;
         }
         push(v);
         const int m = (l + r) >> 1;
-        apply(v << 1, l, m, ql, qr, w, add);
-        apply(v << 1 | 1, m, r, ql, qr, w, add);
+        apply<Add>(v << 1, l, m, ql, qr, w);
+        apply<Add>(v << 1 | 1, m, r, ql, qr, w);
         data[v] = merge(data[v << 1], data[v << 1 | 1]);
     }
 
@@ -172,7 +180,7 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
             return;
         }
         rectangle_add_max_get_internal::assert_valid_weight(w);
-        rectangles.emplace_back(Rectangle{l, d, r, u, w});
+        rectangles.emplace_back(Rectangle{l, d, r, u, std::move(w)});
     }
 
     std::tuple<C, T, T> calc_max_lexicographically_minimum_point() const {
@@ -256,7 +264,8 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
         T d = rectangles[0].d;
         T r = rectangles[0].r;
         T u = rectangles[0].u;
-        for (const auto &rect : rectangles) {
+        for (std::size_t i = 1; i < rectangles.size(); ++i) {
+            const auto &rect = rectangles[i];
             l = std::min(l, rect.l);
             d = std::min(d, rect.d);
             r = std::max(r, rect.r);
@@ -275,6 +284,8 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
     Result<T2> calc_impl(const QueryRange &query) const {
         std::vector<T> xs{query.l, query.r};
         std::vector<T> ys{query.d, query.u};
+        xs.reserve(rectangles.size() * 2 + 2);
+        ys.reserve(rectangles.size() * 2 + 2);
         std::vector<Rectangle> clipped;
         clipped.reserve(rectangles.size());
         for (const auto &rect : rectangles) {
@@ -323,7 +334,7 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
                          ys[i], ys[i + 1]),
                      ys[i], static_cast<T>(ys[i + 1] - T(1))});
         }
-        SegmentTree seg(leaves);
+        SegmentTree seg(std::move(leaves));
 
         Result<T2> ret;
         bool found = false;
@@ -356,16 +367,9 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
                 }
                 found = true;
             } else if (ret.max_value == now.max_value) {
-                if (std::make_pair(minimum_x, now.minimum_y) <
-                    std::make_pair(ret.minimum_x, ret.minimum_y)) {
-                    ret.minimum_x = minimum_x;
-                    ret.minimum_y = now.minimum_y;
-                }
-                if (std::make_pair(ret.maximum_x, ret.maximum_y) <
-                    std::make_pair(maximum_x, now.maximum_y)) {
-                    ret.maximum_x = maximum_x;
-                    ret.maximum_y = now.maximum_y;
-                }
+                // x 座標を昇順に走査しているため、最小点は更新せず、最大点は常に更新する。
+                ret.maximum_x = maximum_x;
+                ret.maximum_y = now.maximum_y;
                 if constexpr (NeedArea) {
                     ret.max_area += area;
                 }
@@ -397,7 +401,7 @@ template <class T, class C> struct RectangleAddMaxGet {
             return;
         }
         rectangle_add_max_get_internal::assert_valid_weight(w);
-        rectangles.emplace_back(Rectangle{l, d, r, u, w});
+        rectangles.emplace_back(Rectangle{l, d, r, u, std::move(w)});
     }
 
     std::tuple<C, T, T> calc_max_lexicographically_minimum_point() const {
@@ -517,7 +521,8 @@ template <class T, class C> struct RectangleAddMaxGet {
         T d = rectangles[0].d;
         T r = rectangles[0].r;
         T u = rectangles[0].u;
-        for (const auto &rect : rectangles) {
+        for (std::size_t i = 1; i < rectangles.size(); ++i) {
+            const auto &rect = rectangles[i];
             l = std::min(l, rect.l);
             d = std::min(d, rect.d);
             r = std::max(r, rect.r);
@@ -566,7 +571,7 @@ template <class T, class C> struct RectangleAddMaxGet {
     }
 
     static void add_event(std::vector<int> &head, std::vector<Event> &events,
-                          int x, int d, int u, C w) {
+                          int x, int d, int u, const C &w) {
         events.emplace_back(Event{head[x], d, u, w});
         head[x] = static_cast<int>(events.size()) - 1;
     }
@@ -584,13 +589,13 @@ template <class T, class C> struct RectangleAddMaxGet {
             if (cl >= cr || cd >= cu) {
                 continue;
             }
-            const int xl = rectangle_add_max_get_internal::checked_size(
+            const int xl = static_cast<int>(
                 rectangle_add_max_get_internal::coordinate_difference(l, cl));
-            const int xr = rectangle_add_max_get_internal::checked_size(
+            const int xr = static_cast<int>(
                 rectangle_add_max_get_internal::coordinate_difference(l, cr));
-            const int yd = rectangle_add_max_get_internal::checked_size(
+            const int yd = static_cast<int>(
                 rectangle_add_max_get_internal::coordinate_difference(d, cd));
-            const int yu = rectangle_add_max_get_internal::checked_size(
+            const int yu = static_cast<int>(
                 rectangle_add_max_get_internal::coordinate_difference(d, cu));
             add_event(event_list.add_head, event_list.events, xl, yd, yu,
                       rect.w);
@@ -627,7 +632,7 @@ template <class T, class C> struct RectangleAddMaxGet {
     }
 
     template <class T2, bool NeedArea>
-    static void update_result(Result<T2> &ret, bool &found, C value,
+    static void update_result(Result<T2> &ret, bool &found, const C &value,
                               T minimum_x, T minimum_y, T maximum_x,
                               T maximum_y, T2 area) {
         if (!found || ret.max_value < value) {
@@ -641,16 +646,9 @@ template <class T, class C> struct RectangleAddMaxGet {
             }
             found = true;
         } else if (ret.max_value == value) {
-            if (std::make_pair(minimum_x, minimum_y) <
-                std::make_pair(ret.minimum_x, ret.minimum_y)) {
-                ret.minimum_x = minimum_x;
-                ret.minimum_y = minimum_y;
-            }
-            if (std::make_pair(ret.maximum_x, ret.maximum_y) <
-                std::make_pair(maximum_x, maximum_y)) {
-                ret.maximum_x = maximum_x;
-                ret.maximum_y = maximum_y;
-            }
+            // x 座標を昇順に走査しているため、最小点は更新せず、最大点は常に更新する。
+            ret.maximum_x = maximum_x;
+            ret.maximum_y = maximum_y;
             if constexpr (NeedArea) {
                 ret.max_area += area;
             }
@@ -682,7 +680,6 @@ template <class T, class C> struct RectangleAddMaxGet {
             update_result<T2, NeedArea>(ret, found, now.max_value, x,
                                         now.minimum_y, x, now.maximum_y, area);
         }
-        assert(found);
         return ret;
     }
 
@@ -703,10 +700,10 @@ template <class T, class C> struct RectangleAddMaxGet {
             if (query.lower_y[i] == query.upper_y[i]) {
                 continue;
             }
-            const int d = rectangle_add_max_get_internal::checked_size(
+            const int d = static_cast<int>(
                 rectangle_add_max_get_internal::coordinate_difference(
                     query.d, query.lower_y[i]));
-            const int u = rectangle_add_max_get_internal::checked_size(
+            const int u = static_cast<int>(
                 rectangle_add_max_get_internal::coordinate_difference(
                     query.d, query.upper_y[i]));
             const Node now = seg.prod(d, u);
@@ -718,7 +715,6 @@ template <class T, class C> struct RectangleAddMaxGet {
             update_result<T2, NeedArea>(ret, found, now.max_value, x,
                                         now.minimum_y, x, now.maximum_y, area);
         }
-        assert(found);
         return ret;
     }
 };

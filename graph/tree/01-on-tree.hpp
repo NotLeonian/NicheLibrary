@@ -1,5 +1,5 @@
-#ifndef GRAPH_TREE_01_ON_TREE_HPP
-#define GRAPH_TREE_01_ON_TREE_HPP
+#ifndef GRAPH_TREE_ZERO_ONE_ON_TREE_HPP
+#define GRAPH_TREE_ZERO_ONE_ON_TREE_HPP
 
 // 根付き木上で、親が子より左に出る順序の 01 列の転倒数最小値を求める。
 // 頂点 v には c0[v] 個の 0 の後に c1[v] 個の 1 を置いた列が書かれている。
@@ -86,8 +86,10 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
 
     std::vector<int> parent(n, -2);
     parent[root] = -1;
-    int visited = 0;
-    std::vector<int> stack{root};
+    [[maybe_unused]] int visited = 0;
+    std::vector<int> stack;
+    stack.reserve(n);
+    stack.push_back(root);
     while (!stack.empty()) {
         const int v = stack.back();
         stack.pop_back();
@@ -112,6 +114,9 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
 
     struct QueueCompare {
         bool operator()(const QueueNode &a, const QueueNode &b) const {
+            if (a.zero == b.zero && a.one == b.one) {
+                return a.vertex < b.vertex;
+            }
             if (a.one == Count{} && b.one == Count{}) {
                 return a.vertex < b.vertex;
             }
@@ -120,6 +125,15 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
             }
             if (b.one == Count{}) {
                 return true;
+            }
+            if (a.zero == Count{} && b.zero == Count{}) {
+                return a.vertex < b.vertex;
+            }
+            if (a.zero == Count{}) {
+                return true;
+            }
+            if (b.zero == Count{}) {
+                return false;
             }
             const int result = zero_one_on_tree_impl::compare_fraction(
                 a.zero, a.one, b.zero, b.one);
@@ -133,7 +147,7 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
         }
     };
 
-    std::vector<int> leader(n), up = parent, version(n, 0);
+    std::vector<int> leader(n), up = std::move(parent), version(n, 0);
     for (int v = 0; v < n; ++v) {
         leader[v] = v;
     }
@@ -146,7 +160,10 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
         return v;
     };
 
-    std::priority_queue<QueueNode, std::vector<QueueNode>, QueueCompare> que;
+    std::vector<QueueNode> queue_storage;
+    queue_storage.reserve(n);
+    std::priority_queue<QueueNode, std::vector<QueueNode>, QueueCompare> que(
+        QueueCompare{}, std::move(queue_storage));
     auto push = [&](int v) {
         if (up[v] != -1) {
             que.push(QueueNode{v, version[v], zero[v], one[v]});
@@ -159,20 +176,19 @@ solve_01_on_tree(int n, const std::vector<std::pair<int, int>> &edges,
 
     Answer answer{};
     for (int merge_count = 0; merge_count < n - 1; ++merge_count) {
-        QueueNode current{};
+        int v = -1;
         while (true) {
-            assert(!que.empty());
-            current = que.top();
+            const QueueNode &current = que.top();
+            const int current_vertex = current.vertex;
+            const int current_version = current.version;
             que.pop();
-            const int v = find(current.vertex);
-            if (v == current.vertex && current.version == version[v]) {
+            v = find(current_vertex);
+            if (v == current_vertex && current_version == version[v]) {
                 break;
             }
         }
 
-        const int v = current.vertex;
         const int p = find(up[v]);
-        assert(p != v);
 
         answer += static_cast<Answer>(one[p]) * static_cast<Answer>(zero[v]);
         zero[p] += zero[v];
