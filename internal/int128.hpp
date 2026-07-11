@@ -182,7 +182,7 @@ class UInt128 {
         return length;
     }
 
-    // divisor != 0 が呼び出し元で保証されていることを仮定する。
+    // divisor ≠ 0 が呼び出し元で保証されていることを仮定する。
     static constexpr UInt128 div_mod_uint32(UInt128 value,
                                             std::uint32_t divisor,
                                             std::uint32_t &remainder) {
@@ -365,7 +365,7 @@ class UInt128 {
         remainder = from_32bit_words(remainder_words);
     }
 
-    // rhs != 0 が呼び出し元で保証されていることを仮定する。
+    // rhs ≠ 0 が呼び出し元で保証されていることを仮定する。
     static constexpr void div_mod_unchecked(UInt128 lhs, UInt128 rhs,
                                             UInt128 &quotient,
                                             UInt128 &remainder) {
@@ -589,7 +589,8 @@ class Int128 {
         return from_unsigned_unchecked(value, negative);
     }
 
-    // 符号を付けた value が Int128 の範囲に収まることを仮定する。
+    // 引数 negative で指定した通りに符号を付けた value が
+    // Int128 の範囲に収まることを仮定する。
     static constexpr Int128 from_unsigned_unchecked(UInt128 value,
                                                     bool negative) {
         return from_twos_complement(negative ? -value : value);

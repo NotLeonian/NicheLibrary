@@ -7,8 +7,8 @@
 // 係数や法は互いに素でなくてよい。解がなければ (0, 0) を返す。
 // 標準の 64 bit 以下の整数型では剰余乗算に 128 bit 整数型を用いる。
 // それ以外の整数型では加算と 2 倍による剰余乗算を用いる。
-// 式の個数を N、2 と全ての法の最大値を V とすると、計算量 O(N log V)。
-// ただし、通常乗算を使えない型では O(N log^2 V)。
+// 式の個数を N、全ての法と 2 の最大値を V とすると、計算量 O(N log V)。
+// ただし、通常の乗算を使えない型では O(N log^2 V)。
 
 #include <cassert>
 #include <cstddef>
@@ -117,7 +117,7 @@ template <class T> T inv_mod(T a, T m) {
         const T c = a - q * b;
         a = b;
         b = c;
-        // 初期値と呼び出し元が保証する互いに素という条件から 0 < q < m。
+        // 初期値と呼び出し元が互いに素を保証することから 0 < q < m。
         const T qy = mul_mod_normalized(q, y, m);
         const T z = x >= qy ? x - qy : x + (m - qy);
         x = y;
@@ -168,7 +168,7 @@ template <class T> std::pair<T, T> solve_linear_congruence(T a, T b, T m) {
     if (a == 1) {
         return {b, m};
     }
-    // 0 < a < m なので、引数順をこの向きにすると最初の剰余計算を省ける。
+    // 0 < a < m なので、引数をこの順序にすると最初の剰余の計算を省ける。
     const T g = gcd(m, a);
     const T b_div_g = b / g;
     if (b_div_g * g != b) {

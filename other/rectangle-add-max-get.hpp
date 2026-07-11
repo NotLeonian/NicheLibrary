@@ -367,7 +367,7 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
                 }
                 found = true;
             } else if (ret.max_value == now.max_value) {
-                // x 座標を昇順に走査しているため、最小点は更新せず、最大点は常に更新する。
+                // x 座標を昇順に走査しているため、最小の点は更新せず、最大の点は常に更新する。
                 ret.maximum_x = maximum_x;
                 ret.maximum_y = now.maximum_y;
                 if constexpr (NeedArea) {
@@ -646,7 +646,7 @@ template <class T, class C> struct RectangleAddMaxGet {
             }
             found = true;
         } else if (ret.max_value == value) {
-            // x 座標を昇順に走査しているため、最小点は更新せず、最大点は常に更新する。
+            // x 座標を昇順に走査しているため、最小の点は更新せず、最大の点は常に更新する。
             ret.maximum_x = maximum_x;
             ret.maximum_y = maximum_y;
             if constexpr (NeedArea) {

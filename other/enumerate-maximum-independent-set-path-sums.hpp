@@ -63,7 +63,7 @@ std::vector<T> marginal_values(const std::vector<T> &a) {
     return res;
 }
 
-// 呼び出し元で x の絶対値が offset 以下であることを保証する。
+// x の絶対値が offset 以下であることを呼び出し元で保証する。
 template <class T>
 std::size_t bucket_index(const T x, const std::size_t offset) {
     if (T(0) <= x) {

@@ -32,5 +32,5 @@ documentation_of: math/number-theory/generalized-garner.hpp
 入力する式の個数を $N$ 、全ての法と $2$ の最大値を $V$ とする。
 
 - 標準の 64 bit 以下の整数型では時間 $O(N\log V)$ 。
-- それ以外の整数型で通常乗算を使えない場合は時間 $O(N\log^2 V)$ 。
+- それ以外の整数型で通常の乗算を使えない場合は時間 $O(N\log^2 V)$ 。
 - 空間 $O(1)$ 。
