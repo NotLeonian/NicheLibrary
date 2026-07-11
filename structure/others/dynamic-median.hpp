@@ -10,6 +10,7 @@
 #include <cassert>
 #include <set>
 #include <type_traits>
+#include <utility>
 
 enum class DynamicMedianMode { Lower, Upper, Average };
 
@@ -19,29 +20,26 @@ template <class T> struct DynamicMedian {
 
     void add(T x) {
         if (lower_values.empty() || !(*lower_values.rbegin() < x)) {
-            lower_values.insert(x);
+            lower_values.insert(std::move(x));
         } else {
-            upper_values.insert(x);
+            upper_values.insert(std::move(x));
         }
         balance();
     }
 
-    bool erase(T x) {
-        auto lower_itr = lower_values.find(x);
-        if (lower_itr != lower_values.end()) {
-            lower_values.erase(lower_itr);
-            balance();
-            return true;
+    bool erase(const T &x) {
+        if (lower_values.empty()) {
+            return false;
         }
 
-        auto upper_itr = upper_values.find(x);
-        if (upper_itr != upper_values.end()) {
-            upper_values.erase(upper_itr);
-            balance();
-            return true;
+        auto &values = *lower_values.rbegin() < x ? upper_values : lower_values;
+        const auto itr = values.find(x);
+        if (itr == values.end()) {
+            return false;
         }
-
-        return false;
+        values.erase(itr);
+        balance();
+        return true;
     }
 
     template <class Result = T>
@@ -83,15 +81,14 @@ template <class T> struct DynamicMedian {
 
   private:
     void balance() {
-        while (lower_values.size() < upper_values.size()) {
-            lower_values.insert(*upper_values.begin());
-            upper_values.erase(upper_values.begin());
-        }
-        while (lower_values.size() > upper_values.size() + 1) {
+        // add または erase でこの関数が呼び出される位置と
+        // この関数を呼ばない関数についての不変条件より、移動は高々 1 回でよい。
+        if (lower_values.size() < upper_values.size()) {
+            lower_values.insert(upper_values.extract(upper_values.begin()));
+        } else if (lower_values.size() > upper_values.size() + 1) {
             auto itr = lower_values.end();
             --itr;
-            upper_values.insert(*itr);
-            lower_values.erase(itr);
+            upper_values.insert(lower_values.extract(itr));
         }
     }
 };

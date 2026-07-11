@@ -13,42 +13,34 @@
 #include <utility>
 
 namespace floor_sum_internal {
-template <class T> T floor_div(T x, T y) {
-    assert(y > 0);
+template <class T> std::pair<T, T> floor_div_mod(T x, T y) {
     if constexpr (std::numeric_limits<T>::is_signed) {
+        if (x >= 0 && x < y) {
+            return {0, x};
+        }
         T q = x / y;
-        T r = x % y;
+        T r = x - q * y;
         if (r < 0) {
             q -= 1;
-        }
-        return q;
-    } else {
-        return x / y;
-    }
-}
-
-template <class T> T floor_mod(T x, T y) {
-    assert(y > 0);
-    if constexpr (std::numeric_limits<T>::is_signed) {
-        T r = x % y;
-        if (r < 0) {
             r += y;
         }
-        return r;
+        return {q, r};
     } else {
-        return x % y;
+        if (x < y) {
+            return {0, x};
+        }
+        const T q = x / y;
+        return {q, x - q * y};
     }
 }
 
 // Σ_{i=0}^{n-1} i = n(n-1)/2
 template <class T> T sum_0_to_n_minus_1(T n) {
-    if (n == 0) {
-        return 0;
+    const T half = n / 2;
+    if (n == half * 2) {
+        return half * (n - 1);
     }
-    if (n % 2 == 0) {
-        return (n / 2) * (n - 1);
-    }
-    return n * ((n - 1) / 2);
+    return n * half;
 }
 } // namespace floor_sum_internal
 
@@ -61,40 +53,49 @@ template <class T> T floor_sum(T n, T m, T a, T b) {
     if (n == 0) {
         return 0;
     }
+    if (n == 1) {
+        return floor_sum_internal::floor_div_mod(b, m).first;
+    }
 
     T ans = 0;
 
     {
-        const T q = floor_sum_internal::floor_div(a, m);
-        a = floor_sum_internal::floor_mod(a, m);
-        ans += q * floor_sum_internal::sum_0_to_n_minus_1(n);
+        const auto [q, r] = floor_sum_internal::floor_div_mod(a, m);
+        a = r;
+        if (q != 0) {
+            ans += q * floor_sum_internal::sum_0_to_n_minus_1(n);
+        }
     }
     {
-        const T q = floor_sum_internal::floor_div(b, m);
-        b = floor_sum_internal::floor_mod(b, m);
-        ans += q * n;
+        const auto [q, r] = floor_sum_internal::floor_div_mod(b, m);
+        b = r;
+        if (q != 0) {
+            ans += q * n;
+        }
+    }
+    if (a == 0) {
+        return ans;
     }
 
     while (true) {
-        if (a >= m) {
-            const T q = a / m;
-            ans += q * floor_sum_internal::sum_0_to_n_minus_1(n);
-            a %= m;
-        }
-        if (b >= m) {
-            const T q = b / m;
-            ans += q * n;
-            b %= m;
-        }
-
         const T y_max = a * n + b;
         if (y_max < m) {
             break;
         }
 
-        n = y_max / m;
-        b = y_max % m;
+        const T new_n = y_max / m;
+        b = y_max - new_n * m;
+        n = new_n;
         std::swap(m, a);
+
+        const T qa = a / m;
+        ans += qa * floor_sum_internal::sum_0_to_n_minus_1(n);
+        a -= qa * m;
+        if (b >= m) {
+            const T qb = b / m;
+            ans += qb * n;
+            b -= qb * m;
+        }
     }
     return ans;
 }

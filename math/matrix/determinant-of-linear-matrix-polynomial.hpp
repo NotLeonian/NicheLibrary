@@ -12,14 +12,21 @@
 #include <utility>
 #include <vector>
 
+namespace determinant_of_linear_matrix_polynomial_internal {
+template <class T>
+bool is_square_matrix(const std::vector<std::vector<T>> &matrix) {
+    const int n = static_cast<int>(matrix.size());
+    for (const std::vector<T> &row : matrix) {
+        if (static_cast<int>(row.size()) != n) {
+            return false;
+        }
+    }
+    return true;
+}
+
 template <class T>
 void hessenberg_reduction(std::vector<std::vector<T>> &matrix) {
     const int n = static_cast<int>(matrix.size());
-    assert(n == 0 || static_cast<int>(matrix[0].size()) == n);
-    for (int i = 1; i < n; ++i) {
-        assert(static_cast<int>(matrix[i].size()) == n);
-    }
-
     for (int r = 0; r < n - 2; ++r) {
         int piv = -1;
         for (int h = r + 1; h < n; ++h) {
@@ -45,7 +52,8 @@ void hessenberg_reduction(std::vector<std::vector<T>> &matrix) {
             if (coef == T()) {
                 continue;
             }
-            for (int j = 0; j < n; ++j) {
+            matrix[i][r] = T();
+            for (int j = r + 1; j < n; ++j) {
                 matrix[i][j] -= matrix[r + 1][j] * coef;
             }
             for (int j = 0; j < n; ++j) {
@@ -58,12 +66,8 @@ void hessenberg_reduction(std::vector<std::vector<T>> &matrix) {
 template <class T>
 std::vector<T> characteristic_polynomial(std::vector<std::vector<T>> matrix) {
     const int n = static_cast<int>(matrix.size());
-    assert(n == 0 || static_cast<int>(matrix[0].size()) == n);
-    for (int i = 1; i < n; ++i) {
-        assert(static_cast<int>(matrix[i].size()) == n);
-    }
-
-    hessenberg_reduction(matrix);
+    determinant_of_linear_matrix_polynomial_internal::hessenberg_reduction(
+        matrix);
 
     // p[i] = det(x I_i - matrix[0..i-1][0..i-1])（係数は昇順）
     std::vector<std::vector<T>> p(n + 1);
@@ -71,16 +75,21 @@ std::vector<T> characteristic_polynomial(std::vector<std::vector<T>> matrix) {
     for (int i = 0; i < n; ++i) {
         p[i + 1].assign(i + 2, T());
 
-        for (int j = 0; j <= i; ++j) {
-            p[i + 1][j + 1] += p[i][j];
+        p[i + 1][0] = T() - p[i][0] * matrix[i][i];
+        for (int j = 1; j <= i; ++j) {
+            p[i + 1][j] = p[i][j - 1] - p[i][j] * matrix[i][i];
         }
-        for (int j = 0; j <= i; ++j) {
-            p[i + 1][j] -= p[i][j] * matrix[i][i];
-        }
+        p[i + 1][i + 1] = p[i][i];
 
         T betas = T(1);
         for (int j = i - 1; j >= 0; --j) {
             betas *= matrix[j + 1][j];
+            if (betas == T()) {
+                break;
+            }
+            if (matrix[j][i] == T()) {
+                continue;
+            }
             const T hb = (T() - matrix[j][i]) * betas;
             for (int k = 0; k <= j; ++k) {
                 p[i + 1][k] += hb * p[j][k];
@@ -89,6 +98,25 @@ std::vector<T> characteristic_polynomial(std::vector<std::vector<T>> matrix) {
     }
     return p[n];
 }
+} // namespace determinant_of_linear_matrix_polynomial_internal
+
+template <class T>
+void hessenberg_reduction(std::vector<std::vector<T>> &matrix) {
+    assert(determinant_of_linear_matrix_polynomial_internal::is_square_matrix(
+        matrix));
+
+    determinant_of_linear_matrix_polynomial_internal::hessenberg_reduction(
+        matrix);
+}
+
+template <class T>
+std::vector<T> characteristic_polynomial(std::vector<std::vector<T>> matrix) {
+    assert(determinant_of_linear_matrix_polynomial_internal::is_square_matrix(
+        matrix));
+
+    return determinant_of_linear_matrix_polynomial_internal::
+        characteristic_polynomial(std::move(matrix));
+}
 
 template <class T>
 std::vector<T>
@@ -96,12 +124,12 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
                                         std::vector<std::vector<T>> M1) {
     const int n = static_cast<int>(M0.size());
     assert(static_cast<int>(M1.size()) == n);
+    assert(
+        determinant_of_linear_matrix_polynomial_internal::is_square_matrix(M0));
+    assert(
+        determinant_of_linear_matrix_polynomial_internal::is_square_matrix(M1));
     if (n == 0) {
         return {T(1)};
-    }
-    for (int i = 0; i < n; ++i) {
-        assert(static_cast<int>(M0[i].size()) == n);
-        assert(static_cast<int>(M1[i].size()) == n);
     }
 
     int multiply_by_x = 0; // 特定の列に x を掛ける操作の回数
@@ -134,9 +162,10 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
                 }
             }
 
-            // (M0 + x M1) の p 列に x を掛ける（M1 の p 列が 0 のとき swap で実現できる）。
+            // M1 の p 列が 0 なので、M0 の p 列を M1 に移して列に x を掛ける。
             for (int i = 0; i < n; ++i) {
-                std::swap(M0[i][p], M1[i][p]);
+                M1[i][p] = std::move(M0[i][p]);
+                M0[i][p] = T();
             }
 
             --p; // 同じ列をやり直す（高々 n 回）
@@ -150,11 +179,13 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
         }
 
         const T v = M1[p][p];
-        assert(v != T());
         det_inv *= v;
         const T vinv = T(1) / v;
         for (int col = 0; col < n; ++col) {
             M0[p][col] *= vinv;
+        }
+        M1[p][p] = T(1);
+        for (int col = p + 1; col < n; ++col) {
             M1[p][col] *= vinv;
         }
 
@@ -168,6 +199,9 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
             }
             for (int col = 0; col < n; ++col) {
                 M0[row][col] -= M0[p][col] * coef;
+            }
+            M1[row][p] = T();
+            for (int col = p + 1; col < n; ++col) {
                 M1[row][col] -= M1[p][col] * coef;
             }
         }
@@ -179,7 +213,8 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
             M0[i][j] = T() - M0[i][j];
         }
     }
-    std::vector<T> poly = characteristic_polynomial(M0);
+    std::vector<T> poly = determinant_of_linear_matrix_polynomial_internal::
+        characteristic_polynomial(std::move(M0));
     for (T &c : poly) {
         c *= det_inv;
     }

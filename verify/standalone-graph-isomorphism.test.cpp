@@ -147,6 +147,20 @@ void self_test() {
         }
     }
 
+    const std::vector<std::pair<int, int>> cycle_6{{0, 1}, {1, 2}, {2, 3},
+                                                   {3, 4}, {4, 5}, {5, 0}};
+    const std::vector<std::pair<int, int>> two_triangles{
+        {0, 1}, {1, 2}, {2, 0}, {3, 4}, {4, 5}, {5, 3}};
+    GraphIsomorphism regular_graphs(6, cycle_6, two_triangles);
+    assert(!regular_graphs.run());
+    assert(!regular_graphs.run());
+
+    const std::vector<std::pair<int, int>> complete_bipartite_3_3{
+        {0, 3}, {0, 4}, {0, 5}, {1, 3}, {1, 4}, {1, 5}, {2, 3}, {2, 4}, {2, 5}};
+    const std::vector<std::pair<int, int>> triangular_prism{
+        {0, 1}, {1, 2}, {2, 0}, {3, 4}, {4, 5}, {5, 3}, {0, 3}, {1, 4}, {2, 5}};
+    assert(!is_graph_isomorphic(6, complete_bipartite_3_3, triangular_prism));
+
     const std::vector<std::pair<int, int>> edges{{0, 1}, {1, 2}, {2, 3},
                                                  {3, 4}, {4, 0}, {2, 2}};
     const std::vector<int> permutation{2, 4, 1, 3, 0};

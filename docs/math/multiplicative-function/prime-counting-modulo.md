@@ -38,5 +38,5 @@ documentation_of: math/multiplicative-function/prime-counting-modulo.hpp
 
 ## 計算量
 
-- 時間: $O(m N^{3/4}/\log N)$
-- 空間: $O(m\sqrt{N})$
+- 時間計算量: $O(m N^{3/4}/\log N)$
+- 空間計算量: $O(m\sqrt{N})$

@@ -5,7 +5,7 @@
 // 区間に整数 x を加える操作の最小 sum |x| と同値である。
 // a, b は同じ長さで、各要素は [0, m) を仮定する。
 // T は 64 bit 整数型、m <= 10^9 を想定する。
-// 計算量 O(N log N)。
+// 平均計算量 O(N)。
 
 #include <algorithm>
 #include <cassert>
@@ -14,8 +14,9 @@
 #include <vector>
 
 template <class T>
-T minimum_mod_range_increment_decrement_operations(std::vector<T> a,
-                                                   std::vector<T> b, T m) {
+T minimum_mod_range_increment_decrement_operations(const std::vector<T> &a,
+                                                   const std::vector<T> &b,
+                                                   T m) {
     static_assert(std::is_integral_v<T>, "T must be integer.");
     static_assert(sizeof(T) >= sizeof(long long),
                   "T must be at least 64-bit integer type.");
@@ -65,9 +66,13 @@ T minimum_mod_range_increment_decrement_operations(std::vector<T> a,
     assert(remainder == 0);
     assert(negative_count <= n + 1);
 
-    std::sort(differences.begin(), differences.end());
-
     const std::size_t keep_count = n + 1 - negative_count;
+    if (0 < keep_count && keep_count < differences.size()) {
+        std::nth_element(differences.begin(),
+                         differences.begin() +
+                             static_cast<std::ptrdiff_t>(keep_count),
+                         differences.end());
+    }
     T answer = 0;
     for (std::size_t i = 0; i < keep_count; ++i) {
         answer += differences[i];

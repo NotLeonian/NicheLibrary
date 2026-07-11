@@ -1,5 +1,5 @@
-#ifndef INTERNAL_INT128_HPP
-#define INTERNAL_INT128_HPP
+#ifndef INTERNAL_INT_ONE_TWO_EIGHT_HPP
+#define INTERNAL_INT_ONE_TWO_EIGHT_HPP
 
 // 128 bit 符号なし整数型 UInt128 と 128 bit 符号付き整数型 Int128 を提供する。
 // GCC 拡張には依存しない。
@@ -7,8 +7,9 @@
 #include <bit>
 #include <cassert>
 #include <cstdint>
-#include <iostream>
+#include <istream>
 #include <limits>
+#include <ostream>
 #include <string>
 #include <type_traits>
 
@@ -48,6 +49,9 @@ class UInt128 {
     explicit constexpr operator bool() const { return high_ != 0 || low_ != 0; }
 
     explicit constexpr operator long double() const {
+        if (high_ == 0) {
+            return static_cast<long double>(low_);
+        }
         return static_cast<long double>(high_) * 0x1p64L +
                static_cast<long double>(low_);
     }
@@ -131,26 +135,7 @@ class UInt128 {
     static constexpr void div_mod(UInt128 lhs, UInt128 rhs, UInt128 &quotient,
                                   UInt128 &remainder) {
         assert(rhs != UInt128{});
-
-        UInt128 q, r;
-        if (rhs.high_ == 0) {
-            if (lhs.high_ == 0) {
-                q = UInt128(lhs.low_ / rhs.low_);
-                r = UInt128(lhs.low_ % rhs.low_);
-            } else if (rhs.low_ == 1) {
-                q = lhs;
-                r = UInt128{};
-            } else {
-                div_mod_32bit_words(lhs, rhs, q, r);
-            }
-        } else if (lhs < rhs) {
-            q = UInt128{};
-            r = lhs;
-        } else {
-            div_mod_32bit_words(lhs, rhs, q, r);
-        }
-        quotient = q;
-        remainder = r;
+        div_mod_unchecked(lhs, rhs, quotient, remainder);
     }
 
     friend constexpr UInt128 operator/(UInt128 lhs, UInt128 rhs) {
@@ -168,6 +153,8 @@ class UInt128 {
     }
 
   private:
+    friend class Int128;
+
     static constexpr std::uint64_t word_base() {
         return std::uint64_t{1} << 32;
     }
@@ -195,11 +182,10 @@ class UInt128 {
         return length;
     }
 
+    // divisor ≠ 0 が呼び出し元で保証されていることを仮定する。
     static constexpr UInt128 div_mod_uint32(UInt128 value,
                                             std::uint32_t divisor,
                                             std::uint32_t &remainder) {
-        assert(divisor != 0);
-
         const std::uint32_t words[4] = {
             static_cast<std::uint32_t>(value.low_ & word_mask()),
             static_cast<std::uint32_t>(value.low_ >> 32),
@@ -351,7 +337,7 @@ class UInt128 {
         }
     }
 
-    // 呼び出し元で lhs >= rhs が保証されていることを仮定する。
+    // 呼び出し元で lhs >= rhs > 0 が保証されていることを仮定する。
     static constexpr void div_mod_32bit_words(UInt128 lhs, UInt128 rhs,
                                               UInt128 &quotient,
                                               UInt128 &remainder) {
@@ -362,7 +348,6 @@ class UInt128 {
 
         const int lhs_length = word_length(lhs_words);
         const int rhs_length = word_length(rhs_words);
-        assert(rhs_length > 0);
 
         if (rhs_length == 1) {
             std::uint32_t rem = 0;
@@ -378,6 +363,36 @@ class UInt128 {
 
         quotient = from_32bit_words(quotient_words);
         remainder = from_32bit_words(remainder_words);
+    }
+
+    // rhs ≠ 0 が呼び出し元で保証されていることを仮定する。
+    static constexpr void div_mod_unchecked(UInt128 lhs, UInt128 rhs,
+                                            UInt128 &quotient,
+                                            UInt128 &remainder) {
+        UInt128 q, r;
+        if (rhs.high_ == 0) {
+            if (lhs.high_ == 0) {
+                q = UInt128(lhs.low_ / rhs.low_);
+                r = UInt128(lhs.low_ % rhs.low_);
+            } else if (rhs.low_ == 1) {
+                q = lhs;
+                r = UInt128{};
+            } else if (rhs.low_ <= std::numeric_limits<std::uint32_t>::max()) {
+                std::uint32_t rem = 0;
+                q = div_mod_uint32(lhs, static_cast<std::uint32_t>(rhs.low_),
+                                   rem);
+                r = UInt128(rem);
+            } else {
+                div_mod_32bit_words(lhs, rhs, q, r);
+            }
+        } else if (lhs < rhs) {
+            q = UInt128{};
+            r = lhs;
+        } else {
+            div_mod_32bit_words(lhs, rhs, q, r);
+        }
+        quotient = q;
+        remainder = r;
     }
 
     static constexpr UInt128 multiply_u64(std::uint64_t lhs,
@@ -428,9 +443,10 @@ class Int128 {
     constexpr bool is_negative() const { return (value_.high() >> 63) != 0; }
 
     explicit constexpr operator long double() const {
+        const bool negative = is_negative();
         const long double magnitude =
-            static_cast<long double>(abs_unsigned(*this));
-        return is_negative() ? -magnitude : magnitude;
+            static_cast<long double>(negative ? -value_ : value_);
+        return negative ? -magnitude : magnitude;
     }
 
     friend constexpr bool operator==(Int128 lhs, Int128 rhs) {
@@ -515,16 +531,18 @@ class Int128 {
         assert(rhs != Int128{});
         assert(!(lhs == min_value() && rhs == Int128(-1)));
 
-        const bool quotient_negative = lhs.is_negative() != rhs.is_negative();
-        const bool remainder_negative = lhs.is_negative();
+        const bool lhs_negative = lhs.is_negative();
+        const bool rhs_negative = rhs.is_negative();
+        const bool quotient_negative = lhs_negative != rhs_negative;
 
         UInt128 quotient_abs;
         UInt128 remainder_abs;
-        UInt128::div_mod(abs_unsigned(lhs), abs_unsigned(rhs), quotient_abs,
-                         remainder_abs);
+        UInt128::div_mod_unchecked(abs_unsigned(lhs), abs_unsigned(rhs),
+                                   quotient_abs, remainder_abs);
 
-        const Int128 q = from_unsigned(quotient_abs, quotient_negative);
-        const Int128 r = from_unsigned(remainder_abs, remainder_negative);
+        const Int128 q =
+            from_unsigned_unchecked(quotient_abs, quotient_negative);
+        const Int128 r = from_unsigned_unchecked(remainder_abs, lhs_negative);
 
         quotient = q;
         remainder = r;
@@ -565,10 +583,17 @@ class Int128 {
     static constexpr Int128 from_unsigned(UInt128 value, bool negative) {
         if (!negative) {
             assert((value.high() >> 63) == 0);
-            return from_twos_complement(value);
+        } else {
+            assert(value <= UInt128::from_words(std::uint64_t{1} << 63, 0));
         }
-        assert(value <= UInt128::from_words(std::uint64_t{1} << 63, 0));
-        return from_twos_complement(-value);
+        return from_unsigned_unchecked(value, negative);
+    }
+
+    // 引数 negative で指定した通りに符号を付けた value が
+    // Int128 の範囲に収まることを仮定する。
+    static constexpr Int128 from_unsigned_unchecked(UInt128 value,
+                                                    bool negative) {
+        return from_twos_complement(negative ? -value : value);
     }
 
     friend std::istream &operator>>(std::istream &input, Int128 &value);
@@ -578,10 +603,9 @@ class Int128 {
 };
 
 namespace int128_internal {
+// first < text.size() が呼び出し元で保証されていることを仮定する。
 inline UInt128 read_uint128_decimal(const std::string &text,
                                     std::size_t first) {
-    assert(first < text.size());
-
     UInt128 value = 0;
 
     std::size_t i = first;

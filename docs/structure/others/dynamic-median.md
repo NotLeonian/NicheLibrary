@@ -23,7 +23,7 @@ documentation_of: structure/others/dynamic-median.hpp
   - 備考: 要素数が奇数の場合、 $3$ 種類は同じ値になる。
 - `void add(T x)`
   - 値 $x$ を $1$ 個追加する。
-- `bool erase(T x)`
+- `bool erase(const T &x)`
   - 値 $x$ を $1$ 個削除する。
   - 返り値: 削除に成功した場合は `true`、値 $x$ が存在しなかった場合は `false` が返る。
   - 備考: 同じ値が複数ある場合はいずれか $1$ 個だけを削除する。
@@ -44,6 +44,6 @@ documentation_of: structure/others/dynamic-median.hpp
 
 要素数を $N$ とする。
 
-- `add`, `erase`: $O(\log N)$
-- `median`: $O(1)$
-- 空間: $O(N)$
+- `add`, `erase`: 時間 $O(\log N)$
+- `median`: 時間 $O(1)$
+- 空間計算量: $O(N)$

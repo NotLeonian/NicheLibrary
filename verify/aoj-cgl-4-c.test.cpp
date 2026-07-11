@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 #include "../geometry/line-convex-polygon-intersection.hpp"
@@ -16,9 +17,6 @@ struct Point {
     Point() : x(0), y(0) {}
     Point(long long x_, long long y_) : x(x_), y(y_) {}
 
-    Point operator+(const Point &other) const {
-        return Point(x + other.x, y + other.y);
-    }
     Point operator-(const Point &other) const {
         return Point(x - other.x, y - other.y);
     }
@@ -28,16 +26,7 @@ struct RealPoint {
     long double x;
     long double y;
 
-    RealPoint() : x(0), y(0) {}
     RealPoint(long double x_, long double y_) : x(x_), y(y_) {}
-
-    RealPoint operator+(const RealPoint &other) const {
-        return RealPoint(x + other.x, y + other.y);
-    }
-    RealPoint operator-(const RealPoint &other) const {
-        return RealPoint(x - other.x, y - other.y);
-    }
-    RealPoint operator*(long double k) const { return RealPoint(x * k, y * k); }
 };
 
 __int128_t cross_value(const Point &a, const Point &b) {
@@ -74,78 +63,28 @@ long double dot_ld(const RealPoint &a, const RealPoint &b) {
     return a.x * b.x + a.y * b.y;
 }
 
-bool same_point(const RealPoint &a, const RealPoint &b) {
-    return std::abs(a.x - b.x) <= 1e-12L && std::abs(a.y - b.y) <= 1e-12L;
-}
-
-void add_unique(std::vector<RealPoint> &points, const RealPoint &point) {
-    for (const auto &q : points) {
-        if (same_point(q, point)) {
-            return;
-        }
-    }
-    points.push_back(point);
-}
-
-RealPoint line_intersection(const Point &line_a, const Point &line_b,
-                            const Point &segment_a, const Point &segment_b) {
-    const RealPoint u = to_real_point(segment_a);
-    const RealPoint v = to_real_point(segment_b);
-    const RealPoint dir = to_real_point(line_b - line_a);
-    const RealPoint edge = v - u;
-    const long double denominator = cross_ld(edge, dir);
-    const long double numerator =
-        cross_ld(to_real_point(line_a - segment_a), dir);
-    const long double t = numerator / denominator;
-    return u + edge * t;
-}
-
-std::vector<RealPoint> brute_intersections(const std::vector<Point> &polygon,
-                                           const Point &line_a,
-                                           const Point &line_b) {
-    const int n = static_cast<int>(polygon.size());
-    const Point direction = line_b - line_a;
-    std::vector<RealPoint> points;
-    for (int i = 0; i < n; ++i) {
-        const Point &u = polygon[i];
-        const Point &v = polygon[(i + 1) % n];
-        const __int128_t hu = cross_value(u - line_a, direction);
-        const __int128_t hv = cross_value(v - line_a, direction);
-        const int su = sign_value(hu);
-        const int sv = sign_value(hv);
-        if (su == 0 && sv == 0) {
-            add_unique(points, to_real_point(u));
-            add_unique(points, to_real_point(v));
-        } else if (su == 0) {
-            add_unique(points, to_real_point(u));
-        } else if (sv == 0) {
-            add_unique(points, to_real_point(v));
-        } else if (su != sv) {
-            add_unique(points, line_intersection(line_a, line_b, u, v));
-        }
-    }
-    if (points.size() <= 2) {
-        return points;
-    }
-    const RealPoint dir = to_real_point(direction);
-    int min_index = 0;
-    int max_index = 0;
-    for (int i = 1; i < static_cast<int>(points.size()); ++i) {
-        if (dot_ld(points[i], dir) < dot_ld(points[min_index], dir)) {
-            min_index = i;
-        }
-        if (dot_ld(points[i], dir) > dot_ld(points[max_index], dir)) {
-            max_index = i;
-        }
-    }
-    return {points[min_index], points[max_index]};
-}
-
 std::vector<RealPoint> convex_cut(const std::vector<Point> &polygon,
                                   const Point &line_a, const Point &line_b) {
     const int n = static_cast<int>(polygon.size());
     const Point direction = line_b - line_a;
+    const RealPoint real_direction = to_real_point(direction);
+
+    const auto exact_intersections =
+        line_polygon_intersection(polygon, line_a, line_b);
+    std::vector<RealPoint> intersections;
+    intersections.reserve(exact_intersections.size());
+    for (const auto &point : exact_intersections) {
+        intersections.emplace_back(point.template x_as<long double>(),
+                                   point.template y_as<long double>());
+    }
+    if (intersections.size() == 2 &&
+        dot_ld(intersections[1], real_direction) <
+            dot_ld(intersections[0], real_direction)) {
+        std::swap(intersections[0], intersections[1]);
+    }
+
     std::vector<RealPoint> result;
+    result.reserve(n + 2);
     for (int i = 0; i < n; ++i) {
         const Point &now = polygon[i];
         const Point &next = polygon[(i + 1) % n];
@@ -157,9 +96,12 @@ std::vector<RealPoint> convex_cut(const std::vector<Point> &polygon,
         if (sign_value(current) >= 0) {
             result.push_back(to_real_point(now));
         }
-        if ((current < 0 && next_value > 0) ||
-            (current > 0 && next_value < 0)) {
-            result.push_back(line_intersection(line_a, line_b, now, next));
+        if (current < 0 && next_value > 0) {
+            assert(intersections.size() == 2);
+            result.push_back(intersections[1]);
+        } else if (current > 0 && next_value < 0) {
+            assert(intersections.size() == 2);
+            result.push_back(intersections[0]);
         }
     }
     return result;
@@ -192,31 +134,6 @@ remove_collinear_vertices(const std::vector<Point> &polygon) {
     return result;
 }
 
-void verify_intersection(const std::vector<Point> &polygon, const Point &line_a,
-                         const Point &line_b) {
-    const auto fast = line_polygon_intersection(polygon, line_a, line_b);
-    const auto slow = brute_intersections(polygon, line_a, line_b);
-    assert(fast.size() == slow.size());
-    if (fast.empty()) {
-        return;
-    }
-
-    auto to_real = [](const auto &point) {
-        return RealPoint(point.template x_as<long double>(),
-                         point.template y_as<long double>());
-    };
-
-    if (fast.size() == 1) {
-        assert(same_point(to_real(fast[0]), slow[0]));
-        return;
-    }
-    const RealPoint p0 = to_real(fast[0]);
-    const RealPoint p1 = to_real(fast[1]);
-    const bool ok = (same_point(p0, slow[0]) && same_point(p1, slow[1])) ||
-                    (same_point(p0, slow[1]) && same_point(p1, slow[0]));
-    assert(ok);
-}
-
 int main() {
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
@@ -235,7 +152,6 @@ int main() {
     while (q--) {
         const Point line_a = read_point();
         const Point line_b = read_point();
-        verify_intersection(polygon, line_a, line_b);
         std::cout << polygon_area(convex_cut(polygon, line_a, line_b)) << '\n';
     }
 

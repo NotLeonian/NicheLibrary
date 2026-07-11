@@ -30,6 +30,6 @@ documentation_of: math/matrix/determinant-of-linear-matrix-polynomial.hpp
 
 ## 計算量
 
-- `hessenberg_reduction`: $O(N^3)$
-- `characteristic_polynomial`: $O(N^3)$
-- `determinant_of_linear_matrix_polynomial`: $O(N^3)$
+- `hessenberg_reduction`: 時間 $O(N^3)$
+- `characteristic_polynomial`: 時間 $O(N^3)$
+- `determinant_of_linear_matrix_polynomial`: 時間 $O(N^3)$

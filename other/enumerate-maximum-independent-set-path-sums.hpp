@@ -45,13 +45,13 @@ std::vector<T> marginal_values(const std::vector<T> &a) {
         while (stack.size() >= 2 && stack.back().first &&
                removable_side<maximum>(x, stack.back()) &&
                removable_side<maximum>(stack[stack.size() - 2], stack.back())) {
-            const P l = stack[stack.size() - 2];
-            const P p = stack.back();
-            res.push_back(p.second);
-            stack.pop_back();
-            stack.pop_back();
+            P l = std::move(stack[stack.size() - 2]);
+            P p = std::move(stack.back());
             x = l.first && x.first ? P(true, l.second - p.second + x.second)
                                    : none;
+            res.push_back(std::move(p.second));
+            stack.pop_back();
+            stack.pop_back();
         }
         stack.push_back(x);
     };
@@ -60,17 +60,24 @@ std::vector<T> marginal_values(const std::vector<T> &a) {
         add(P(true, x));
     }
     add(none);
-    assert(res.size() == (a.size() + 1) / 2);
     return res;
 }
 
-template <class T> std::size_t bucket_index(const T x, const T offset) {
-    assert(-offset <= x && x <= offset);
-    const std::size_t base = static_cast<std::size_t>(offset);
+// x の絶対値が offset 以下であることを呼び出し元で保証する。
+template <class T>
+std::size_t bucket_index(const T x, const std::size_t offset) {
     if (T(0) <= x) {
-        return base + static_cast<std::size_t>(x);
+        return offset + static_cast<std::size_t>(x);
     }
-    return base - static_cast<std::size_t>(T(0) - x);
+    return offset - static_cast<std::size_t>(T(0) - x);
+}
+
+template <class T>
+T bucket_value(const std::size_t index, const std::size_t offset) {
+    if (offset <= index) {
+        return static_cast<T>(index - offset);
+    }
+    return T(0) - static_cast<T>(offset - index);
 }
 } // namespace enumerate_maximum_independent_set_path_sums_internal
 
@@ -134,36 +141,38 @@ std::vector<T> enumerate_maximum_independent_set_path_sums_bucket_sort(
     std::vector<std::size_t> count(offset * 2 + 1, 0);
     for (const T &x : xs) {
         count[enumerate_maximum_independent_set_path_sums_internal::
-                  bucket_index(x, total)] += 1;
+                  bucket_index(x, offset)] += 1;
     }
 
     std::vector<T> res(1, T());
     res.reserve(xs.size() + 1);
     T sum = T();
     if constexpr (maximum) {
-        for (T x = total;; x -= T(1)) {
-            const std::size_t c =
-                count[enumerate_maximum_independent_set_path_sums_internal::
-                          bucket_index(x, total)];
+        for (std::size_t index_plus_one = count.size(); index_plus_one > 0;
+             index_plus_one -= 1) {
+            const std::size_t index = index_plus_one - 1;
+            const std::size_t c = count[index];
+            if (c == 0) {
+                continue;
+            }
+            const T x = enumerate_maximum_independent_set_path_sums_internal::
+                bucket_value<T>(index, offset);
             for (std::size_t i = 0; i < c; i += 1) {
                 sum += x;
                 res.push_back(sum);
-            }
-            if (x == -total) {
-                break;
             }
         }
     } else {
-        for (T x = -total;; x += T(1)) {
-            const std::size_t c =
-                count[enumerate_maximum_independent_set_path_sums_internal::
-                          bucket_index(x, total)];
+        for (std::size_t index = 0; index < count.size(); index += 1) {
+            const std::size_t c = count[index];
+            if (c == 0) {
+                continue;
+            }
+            const T x = enumerate_maximum_independent_set_path_sums_internal::
+                bucket_value<T>(index, offset);
             for (std::size_t i = 0; i < c; i += 1) {
                 sum += x;
                 res.push_back(sum);
-            }
-            if (x == total) {
-                break;
             }
         }
     }

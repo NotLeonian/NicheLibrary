@@ -7,9 +7,11 @@
 // 係数や法は互いに素でなくてよい。解がなければ (0, 0) を返す。
 // 標準の 64 bit 以下の整数型では剰余乗算に 128 bit 整数型を用いる。
 // それ以外の整数型では加算と 2 倍による剰余乗算を用いる。
-// 計算量 O(N log max M_i)。ただし、通常乗算を使えない型では O(N log^2 max M_i)。
+// 式の個数を N、全ての法と 2 の最大値を V とすると、計算量 O(N log V)。
+// ただし、通常の乗算を使えない型では O(N log^2 V)。
 
 #include <cassert>
+#include <cstddef>
 #include <limits>
 #include <type_traits>
 #include <utility>
@@ -37,7 +39,13 @@ constexpr bool use_uint128_mul_v =
     std::numeric_limits<std::remove_cv_t<T>>::digits <= 64;
 
 template <class T> T safe_mod(T x, T m) {
-    assert(m > 0);
+    if constexpr (is_signed_v<T>) {
+        if (x >= 0 && x < m) {
+            return x;
+        }
+    } else if (x < m) {
+        return x;
+    }
     x %= m;
     if constexpr (is_signed_v<T>) {
         if (x < 0) {
@@ -48,8 +56,6 @@ template <class T> T safe_mod(T x, T m) {
 }
 
 template <class T> T gcd(T a, T b) {
-    assert(a >= 0);
-    assert(b >= 0);
     while (b != 0) {
         const T c = a % b;
         a = b;
@@ -59,28 +65,37 @@ template <class T> T gcd(T a, T b) {
 }
 
 template <class T> T add_mod(T a, T b, T m) {
-    assert(0 <= a && a < m);
-    assert(0 <= b && b < m);
-    if (a >= m - b) {
-        return a - (m - b);
+    const T gap = m - b;
+    if (a >= gap) {
+        return a - gap;
     }
     return a + b;
 }
 
-template <class T> T mul_mod(T a, T b, T m) {
-    assert(m > 0);
-    a = safe_mod(a, m);
-    b = safe_mod(b, m);
+template <class T> T mul_mod_normalized(T a, T b, T m) {
+    if (a == 0 || b == 0) {
+        return 0;
+    }
+    if (a == 1) {
+        return b;
+    }
+    if (b == 1) {
+        return a;
+    }
     if constexpr (use_uint128_mul_v<T>) {
         using U = NicheLibrary::UInt128;
         return static_cast<T>((U(a) * U(b)) % U(m));
     } else {
+        if (a < b) {
+            std::swap(a, b);
+        }
         T res = 0;
         while (b != 0) {
-            if (b % 2 != 0) {
+            const T half_b = b / 2;
+            if (b != half_b * 2) {
                 res = add_mod(res, a, m);
             }
-            b /= 2;
+            b = half_b;
             if (b != 0) {
                 a = add_mod(a, a, m);
             }
@@ -90,56 +105,83 @@ template <class T> T mul_mod(T a, T b, T m) {
 }
 
 template <class T> T inv_mod(T a, T m) {
-    assert(m > 1);
-    a = safe_mod(a, m);
-    assert(gcd(a, m) == 1);
-    T b = m;
-    T x = 1;
-    T y = 0;
-    while (b != 0) {
+    if (a == 1) {
+        return 1;
+    }
+    T b = a;
+    a = m;
+    T x = 0;
+    T y = 1;
+    while (b != 1) {
         const T q = a / b;
         const T c = a - q * b;
         a = b;
         b = c;
-        const T z = safe_mod(x - mul_mod(q, y, m), m);
+        // 初期値と呼び出し元が互いに素を保証することから 0 < q < m。
+        const T qy = mul_mod_normalized(q, y, m);
+        const T z = x >= qy ? x - qy : x + (m - qy);
         x = y;
         y = z;
     }
-    assert(a == 1);
-    return x;
+    return y;
 }
 
 template <class T> std::pair<T, T> merge_congruence(T r0, T m0, T r1, T m1) {
-    assert(0 <= r0 && r0 < m0);
-    assert(0 <= r1 && r1 < m1);
+    if (m0 == 1) {
+        return {r1, m1};
+    }
+    if (m1 == 1) {
+        return {r0, m0};
+    }
     const T g = gcd(m0, m1);
     const T diff = r1 - r0;
-    if (diff % g != 0) {
+    if (diff == 0) {
+        return {r0, m0 * (m1 / g)};
+    }
+    const T diff_div_g = diff / g;
+    if (diff_div_g * g != diff) {
         return {0, 0};
     }
     const T u1 = m1 / g;
     if (u1 == 1) {
         return {r0, m0};
     }
-    const T t = mul_mod(diff / g, inv_mod(m0 / g, u1), u1);
-    r0 += t * m0;
+    const T factor = safe_mod(diff_div_g, u1);
+    if (factor != 0) {
+        const T t =
+            mul_mod_normalized(factor, inv_mod(safe_mod(m0 / g, u1), u1), u1);
+        r0 += t * m0;
+    }
     m0 *= u1;
     return {r0, m0};
 }
 
 template <class T> std::pair<T, T> solve_linear_congruence(T a, T b, T m) {
-    assert(m > 0);
+    if (m == 1) {
+        return {0, 1};
+    }
     a = safe_mod(a, m);
     b = safe_mod(b, m);
-    const T g = gcd(a, m);
-    if (b % g != 0) {
+    if (a == 0) {
+        return b == 0 ? std::pair<T, T>{0, 1} : std::pair<T, T>{0, 0};
+    }
+    if (a == 1) {
+        return {b, m};
+    }
+    // 0 < a < m なので、引数をこの順序にすると最初の剰余の計算を省ける。
+    const T g = gcd(m, a);
+    const T b_div_g = b / g;
+    if (b_div_g * g != b) {
         return {0, 0};
     }
     const T mod = m / g;
     if (mod == 1) {
         return {0, 1};
     }
-    const T rem = mul_mod(b / g, inv_mod(a / g, mod), mod);
+    if (b_div_g == 0) {
+        return {0, mod};
+    }
+    const T rem = mul_mod_normalized(b_div_g, inv_mod(a / g, mod), mod);
     return {rem, mod};
 }
 } // namespace generalized_garner_internal
@@ -165,8 +207,8 @@ std::pair<R1, R2> generalized_garner(const std::vector<T1> &a,
     assert(a.size() == m.size());
     R r0 = 0;
     R m0 = 1;
-    const int n = static_cast<int>(a.size());
-    for (int i = 0; i < n; ++i) {
+    const std::size_t n = a.size();
+    for (std::size_t i = 0; i < n; ++i) {
         const R mi = static_cast<R>(m[i]);
         assert(mi > 0);
         const auto [r1, m1] = gg_internal::solve_linear_congruence(

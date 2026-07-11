@@ -122,23 +122,26 @@ template <class Point, class Calc> Calc to_calc_y(const Point &point) {
     return static_cast<Calc>(get_y(point));
 }
 
+template <class Calc> struct LineParameters {
+    Calc base_x;
+    Calc base_y;
+    Calc direction_x;
+    Calc direction_y;
+};
+
 template <class Point, class Calc>
-Calc diff_x(const Point &lhs, const Point &rhs) {
-    return to_calc_x<Point, Calc>(lhs) - to_calc_x<Point, Calc>(rhs);
+LineParameters<Calc> make_line_parameters(const Point &line_a,
+                                          const Point &line_b) {
+    const Calc base_x = to_calc_x<Point, Calc>(line_a);
+    const Calc base_y = to_calc_y<Point, Calc>(line_a);
+    return {base_x, base_y, to_calc_x<Point, Calc>(line_b) - base_x,
+            to_calc_y<Point, Calc>(line_b) - base_y};
 }
 
 template <class Point, class Calc>
-Calc diff_y(const Point &lhs, const Point &rhs) {
-    return to_calc_y<Point, Calc>(lhs) - to_calc_y<Point, Calc>(rhs);
-}
-
-template <class Point, class Calc>
-Calc cross_diff(const Point &lhs_a, const Point &lhs_b, const Point &rhs_a,
-                const Point &rhs_b) {
-    return diff_x<Point, Calc>(lhs_a, lhs_b) *
-               diff_y<Point, Calc>(rhs_a, rhs_b) -
-           diff_y<Point, Calc>(lhs_a, lhs_b) *
-               diff_x<Point, Calc>(rhs_a, rhs_b);
+Calc line_height(const Point &point, const LineParameters<Calc> &line) {
+    return (to_calc_x<Point, Calc>(point) - line.base_x) * line.direction_y -
+           (to_calc_y<Point, Calc>(point) - line.base_y) * line.direction_x;
 }
 
 template <class Point, class Calc>
@@ -216,12 +219,14 @@ template <class Func> int last_non_negative(int length, Func &&func) {
     return left;
 }
 
-inline int positive_mod(int index, int mod) {
-    int ret = index % mod;
-    if (ret < 0) {
-        ret += mod;
+inline int wrap_nearby_index(int index, int size) {
+    if (index < 0) {
+        return index + size;
     }
-    return ret;
+    if (index >= size) {
+        return index - size;
+    }
+    return index;
 }
 
 inline int distance_forward(int from, int to, int n) {
@@ -237,7 +242,6 @@ template <class T> int compare_value(const T &lhs, const T &rhs) {
 
 template <class Func>
 std::pair<int, int> find_extreme_vertices(int n, Func &&height) {
-    assert(n >= 3);
     using Value = std::remove_cvref_t<decltype(height(0))>;
 
     int minimum_index = -1;
@@ -288,13 +292,13 @@ std::pair<int, int> find_extreme_vertices(int n, Func &&height) {
         const int offset = first_non_negative(n, [&](int index) -> Value {
             return height(base + index) - height(base + index + 1);
         });
-        maximum_index = positive_mod(minimum_index + offset, n);
+        maximum_index = wrap_nearby_index(minimum_index + offset, n);
     } else {
         const int base = maximum_index - n;
         const int offset = first_non_negative(n, [&](int index) -> Value {
             return height(base + index + 1) - height(base + index);
         });
-        minimum_index = positive_mod(maximum_index + offset, n);
+        minimum_index = wrap_nearby_index(maximum_index + offset, n);
     }
 
     return {minimum_index, maximum_index};
@@ -347,8 +351,16 @@ template <class T> struct LineConvexHullIntersectionPoint {
             return Point{static_cast<Coord>(x_numerator),
                          static_cast<Coord>(y_numerator)};
         } else {
-            return Point{static_cast<Coord>(x_as<long double>()),
-                         static_cast<Coord>(y_as<long double>())};
+            assert(denominator > 0);
+            const long double real_denominator =
+                lpi_internal::number_as_real<long double>(denominator);
+            return Point{
+                static_cast<Coord>(
+                    lpi_internal::number_as_real<long double>(x_numerator) /
+                    real_denominator),
+                static_cast<Coord>(
+                    lpi_internal::number_as_real<long double>(y_numerator) /
+                    real_denominator)};
         }
     }
 
@@ -401,21 +413,20 @@ LineConvexHullIntersectionPoint<Calc> make_integral_point(const Point &point) {
 
 template <class Point, class Calc>
 LineConvexHullIntersectionPoint<Calc>
-line_edge_intersection_integral(const Point &line_a, const Point &line_b,
+line_edge_intersection_integral(const LineParameters<Calc> &line,
                                 const Point &segment_a,
                                 const Point &segment_b) {
-    const Calc edge_x = diff_x<Point, Calc>(segment_b, segment_a);
-    const Calc edge_y = diff_y<Point, Calc>(segment_b, segment_a);
+    const Calc segment_a_x = to_calc_x<Point, Calc>(segment_a);
+    const Calc segment_a_y = to_calc_y<Point, Calc>(segment_a);
+    const Calc edge_x = to_calc_x<Point, Calc>(segment_b) - segment_a_x;
+    const Calc edge_y = to_calc_y<Point, Calc>(segment_b) - segment_a_y;
 
-    Calc denominator =
-        cross_diff<Point, Calc>(segment_b, segment_a, line_b, line_a);
-    assert(denominator != 0);
-    Calc numerator = cross_diff<Point, Calc>(line_a, segment_a, line_b, line_a);
+    Calc denominator = edge_x * line.direction_y - edge_y * line.direction_x;
+    Calc numerator = (line.base_x - segment_a_x) * line.direction_y -
+                     (line.base_y - segment_a_y) * line.direction_x;
 
-    Calc x_numerator =
-        to_calc_x<Point, Calc>(segment_a) * denominator + edge_x * numerator;
-    Calc y_numerator =
-        to_calc_y<Point, Calc>(segment_a) * denominator + edge_y * numerator;
+    Calc x_numerator = segment_a_x * denominator + edge_x * numerator;
+    Calc y_numerator = segment_a_y * denominator + edge_y * numerator;
 
     if (denominator < 0) {
         denominator = -denominator;
@@ -424,32 +435,30 @@ line_edge_intersection_integral(const Point &line_a, const Point &line_b,
     }
 
     const Calc g = gcd3_value(x_numerator, y_numerator, denominator);
-    if (g != 0) {
-        x_numerator /= g;
-        y_numerator /= g;
-        denominator /= g;
-    }
+    x_numerator /= g;
+    y_numerator /= g;
+    denominator /= g;
 
     return {x_numerator, y_numerator, denominator};
 }
 
 template <class Point, class Calc>
-Point line_edge_intersection_floating(const Point &line_a, const Point &line_b,
+Point line_edge_intersection_floating(const LineParameters<Calc> &line,
                                       const Point &segment_a,
                                       const Point &segment_b) {
-    const Calc edge_x = diff_x<Point, Calc>(segment_b, segment_a);
-    const Calc edge_y = diff_y<Point, Calc>(segment_b, segment_a);
+    const Calc segment_a_x = to_calc_x<Point, Calc>(segment_a);
+    const Calc segment_a_y = to_calc_y<Point, Calc>(segment_a);
+    const Calc edge_x = to_calc_x<Point, Calc>(segment_b) - segment_a_x;
+    const Calc edge_y = to_calc_y<Point, Calc>(segment_b) - segment_a_y;
 
     const Calc denominator =
-        cross_diff<Point, Calc>(segment_b, segment_a, line_b, line_a);
-    assert(sign_value(denominator) != 0);
-
-    const Calc numerator =
-        cross_diff<Point, Calc>(line_a, segment_a, line_b, line_a);
+        edge_x * line.direction_y - edge_y * line.direction_x;
+    const Calc numerator = (line.base_x - segment_a_x) * line.direction_y -
+                           (line.base_y - segment_a_y) * line.direction_x;
 
     const Calc t = numerator / denominator;
-    const Calc x = to_calc_x<Point, Calc>(segment_a) + edge_x * t;
-    const Calc y = to_calc_y<Point, Calc>(segment_a) + edge_y * t;
+    const Calc x = segment_a_x + edge_x * t;
+    const Calc y = segment_a_y + edge_y * t;
 
     return make_point<Point, Calc>(x, y);
 }
@@ -464,15 +473,15 @@ result_value_t<Point, Calc> make_vertex_result(const Point &point) {
 }
 
 template <class Point, class Calc>
-result_value_t<Point, Calc>
-make_edge_result(const Point &line_a, const Point &line_b,
-                 const Point &segment_a, const Point &segment_b) {
+result_value_t<Point, Calc> make_edge_result(const LineParameters<Calc> &line,
+                                             const Point &segment_a,
+                                             const Point &segment_b) {
     if constexpr (is_integer_v<coordinate_t<Point>>) {
-        return line_edge_intersection_integral<Point, Calc>(
-            line_a, line_b, segment_a, segment_b);
+        return line_edge_intersection_integral<Point, Calc>(line, segment_a,
+                                                            segment_b);
     } else {
-        return line_edge_intersection_floating<Point, Calc>(
-            line_a, line_b, segment_a, segment_b);
+        return line_edge_intersection_floating<Point, Calc>(line, segment_a,
+                                                            segment_b);
     }
 }
 
@@ -485,15 +494,9 @@ bool equals_point(const Point &lhs, const Point &rhs) {
 }
 
 template <class Point, class Calc>
-Calc line_height(const Point &point, const Point &line_a, const Point &line_b) {
-    return cross_diff<Point, Calc>(point, line_a, line_b, line_a);
-}
-
-template <class Point, class Calc>
 std::vector<result_value_t<Point, Calc>>
 line_degenerate_convex_hull_intersection(const std::vector<Point> &hull,
-                                         const Point &line_a,
-                                         const Point &line_b) {
+                                         const LineParameters<Calc> &line) {
     std::vector<result_value_t<Point, Calc>> result;
 
     if (hull.empty()) {
@@ -501,23 +504,21 @@ line_degenerate_convex_hull_intersection(const std::vector<Point> &hull,
     }
 
     if (hull.size() == 1) {
-        if (sign_value(line_height<Point, Calc>(hull[0], line_a, line_b)) ==
-            0) {
+        if (sign_value(line_height<Point, Calc>(hull[0], line)) == 0) {
             result.push_back(make_vertex_result<Point, Calc>(hull[0]));
         }
         return result;
     }
 
-    assert(hull.size() == 2);
     assert((!equals_point<Point, Calc>(hull[0], hull[1])));
 
-    const Calc first_height = line_height<Point, Calc>(hull[0], line_a, line_b);
-    const Calc second_height =
-        line_height<Point, Calc>(hull[1], line_a, line_b);
+    const Calc first_height = line_height<Point, Calc>(hull[0], line);
+    const Calc second_height = line_height<Point, Calc>(hull[1], line);
     const int first_sign = sign_value(first_height);
     const int second_sign = sign_value(second_height);
 
     if (first_sign == 0 && second_sign == 0) {
+        result.reserve(2);
         result.push_back(make_vertex_result<Point, Calc>(hull[0]));
         result.push_back(make_vertex_result<Point, Calc>(hull[1]));
         return result;
@@ -535,8 +536,7 @@ line_degenerate_convex_hull_intersection(const std::vector<Point> &hull,
 
     if ((first_sign < 0 && second_sign > 0) ||
         (first_sign > 0 && second_sign < 0)) {
-        result.push_back(
-            make_edge_result<Point, Calc>(line_a, line_b, hull[0], hull[1]));
+        result.push_back(make_edge_result<Point, Calc>(line, hull[0], hull[1]));
     }
 
     return result;
@@ -545,24 +545,19 @@ line_degenerate_convex_hull_intersection(const std::vector<Point> &hull,
 template <class Point, class Calc>
 std::vector<result_value_t<Point, Calc>>
 line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
-                                        const Point &line_a,
-                                        const Point &line_b) {
+                                        const LineParameters<Calc> &line) {
     const int n = static_cast<int>(polygon.size());
-    assert(n >= 3);
 
     auto vertex = [&](int index) -> const Point & {
-        return polygon[positive_mod(index, n)];
+        return polygon[wrap_nearby_index(index, n)];
     };
 
     auto height = [&](int index) -> Calc {
-        return line_height<Point, Calc>(vertex(index), line_a, line_b);
+        return line_height<Point, Calc>(vertex(index), line);
     };
 
     auto chain_index = [&](int start, int step, int offset) -> int {
-        assert(0 <= start && start < n);
-        assert(step == 1 || step == -1);
-        assert(0 <= offset && offset <= n);
-        return line_convex_polygon_intersection_internal::positive_mod(
+        return line_convex_polygon_intersection_internal::wrap_nearby_index(
             start + step * offset, n);
     };
 
@@ -570,18 +565,21 @@ line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
         find_extreme_vertices(n, height);
     const Calc minimum_value = height(minimum_index);
     const Calc maximum_value = height(maximum_index);
+    const int minimum_sign = sign_value(minimum_value);
+    const int maximum_sign = sign_value(maximum_value);
 
     LinePolygonIntersectionResult<Point, Calc> result;
 
-    if (sign_value(minimum_value) > 0 || sign_value(maximum_value) < 0) {
+    if (minimum_sign > 0 || maximum_sign < 0) {
         return result;
     }
+    result.reserve(2);
 
     const int forward_length =
         distance_forward(minimum_index, maximum_index, n);
     const int backward_length = n - forward_length;
 
-    if (sign_value(minimum_value) == 0) {
+    if (minimum_sign == 0) {
         const int forward_zero =
             last_non_positive(forward_length, [&](int offset) {
                 return height(minimum_index + offset);
@@ -604,7 +602,7 @@ line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
         return result;
     }
 
-    if (sign_value(maximum_value) == 0) {
+    if (maximum_sign == 0) {
         const int forward_length_from_max =
             distance_forward(maximum_index, minimum_index, n);
         const int backward_length_from_max = n - forward_length_from_max;
@@ -635,14 +633,15 @@ line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
         return height(minimum_index + offset);
     });
     const int first_cross_index = chain_index(minimum_index, +1, first_cross);
+    const Calc first_cross_height = height(first_cross_index);
 
-    if (sign_value(height(first_cross_index)) == 0) {
+    if (sign_value(first_cross_height) == 0) {
         result.push_back(
             make_vertex_result<Point, Calc>(vertex(first_cross_index)));
     } else {
         const int prev_index = chain_index(minimum_index, +1, first_cross - 1);
         result.push_back(make_edge_result<Point, Calc>(
-            line_a, line_b, vertex(prev_index), vertex(first_cross_index)));
+            line, vertex(prev_index), vertex(first_cross_index)));
     }
 
     const int second_cross =
@@ -650,14 +649,15 @@ line_strict_convex_polygon_intersection(const std::vector<Point> &polygon,
             return height(minimum_index - offset);
         });
     const int second_cross_index = chain_index(minimum_index, -1, second_cross);
+    const Calc second_cross_height = height(second_cross_index);
 
-    if (sign_value(height(second_cross_index)) == 0) {
+    if (sign_value(second_cross_height) == 0) {
         result.push_back(
             make_vertex_result<Point, Calc>(vertex(second_cross_index)));
     } else {
         const int prev_index = chain_index(minimum_index, -1, second_cross - 1);
         result.push_back(make_edge_result<Point, Calc>(
-            line_a, line_b, vertex(prev_index), vertex(second_cross_index)));
+            line, vertex(prev_index), vertex(second_cross_index)));
     }
 
     return result;
@@ -682,16 +682,19 @@ line_convex_hull_intersection(const std::vector<Point> &hull,
                       lpi_internal::is_signed_v<Number>,
                   "integer calculation type must be signed");
 
-    assert((!lpi_internal::equals_point<Point, Number>(line_a, line_b)));
+    const auto line =
+        lpi_internal::make_line_parameters<Point, Number>(line_a, line_b);
+    assert(lpi_internal::sign_value(line.direction_x) != 0 ||
+           lpi_internal::sign_value(line.direction_y) != 0);
 
     if (hull.size() <= 2) {
         return lpi_internal::line_degenerate_convex_hull_intersection<Point,
                                                                       Number>(
-            hull, line_a, line_b);
+            hull, line);
     }
 
     return lpi_internal::line_strict_convex_polygon_intersection<Point, Number>(
-        hull, line_a, line_b);
+        hull, line);
 }
 
 template <class Point, class Calc = void>

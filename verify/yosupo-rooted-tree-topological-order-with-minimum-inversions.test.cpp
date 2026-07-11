@@ -19,15 +19,14 @@ build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
 
     std::vector<int> parent(n, -2);
     parent[root] = -1;
-    std::vector<int> stack{root};
+    std::vector<int> stack;
+    stack.reserve(n);
+    stack.push_back(root);
     while (!stack.empty()) {
         const int v = stack.back();
         stack.pop_back();
         for (int to : graph[v]) {
             if (to == parent[v]) {
-                continue;
-            }
-            if (parent[to] != -2) {
                 continue;
             }
             parent[to] = v;
@@ -44,6 +43,9 @@ build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
 
     struct QueueCompare {
         bool operator()(const QueueNode &a, const QueueNode &b) const {
+            if (a.zero == b.zero && a.one == b.one) {
+                return a.vertex < b.vertex;
+            }
             if (a.one == 0 && b.one == 0) {
                 return a.vertex < b.vertex;
             }
@@ -52,6 +54,15 @@ build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
             }
             if (b.one == 0) {
                 return true;
+            }
+            if (a.zero == 0 && b.zero == 0) {
+                return a.vertex < b.vertex;
+            }
+            if (a.zero == 0) {
+                return true;
+            }
+            if (b.zero == 0) {
+                return false;
             }
             const long long lhs = a.zero * b.one;
             const long long rhs = b.zero * a.one;
@@ -65,8 +76,8 @@ build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
         }
     };
 
-    std::vector<int> leader(n), up = parent, version(n, 0), head(n), tail(n),
-                                next(n, -1);
+    std::vector<int> leader(n), up = std::move(parent), version(n, 0), head(n),
+                                tail(n), next(n, -1);
     std::vector<long long> zero = c0, one = c1;
     for (int v = 0; v < n; ++v) {
         leader[v] = v;
@@ -82,7 +93,10 @@ build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
         return v;
     };
 
-    std::priority_queue<QueueNode, std::vector<QueueNode>, QueueCompare> que;
+    std::vector<QueueNode> queue_storage;
+    queue_storage.reserve(n);
+    std::priority_queue<QueueNode, std::vector<QueueNode>, QueueCompare> que(
+        QueueCompare{}, std::move(queue_storage));
     auto push = [&](int v) {
         if (up[v] != -1) {
             que.push(QueueNode{v, version[v], zero[v], one[v]});
@@ -94,17 +108,18 @@ build_01_on_tree_order(int n, const std::vector<std::pair<int, int>> &edges,
     }
 
     for (int merge_count = 0; merge_count < n - 1; ++merge_count) {
-        QueueNode current{};
+        int v = -1;
         while (true) {
-            current = que.top();
+            const QueueNode &current = que.top();
+            const int current_vertex = current.vertex;
+            const int current_version = current.version;
             que.pop();
-            const int v = find(current.vertex);
-            if (v == current.vertex && current.version == version[v]) {
+            v = find(current_vertex);
+            if (v == current_vertex && current_version == version[v]) {
                 break;
             }
         }
 
-        const int v = current.vertex;
         const int p = find(up[v]);
         next[tail[p]] = head[v];
         tail[p] = tail[v];

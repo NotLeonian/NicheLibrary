@@ -215,7 +215,7 @@ void self_test() {
     }
 
     for (int h = 1; h <= 3; ++h) {
-        for (int w = 1; w <= 3; ++w) {
+        for (int w = 0; w <= 3; ++w) {
             const int states = 1 << (h * w);
             for (int mask = 0; mask < states; ++mask) {
                 check_updates(matrix_from_mask(h, w, mask));

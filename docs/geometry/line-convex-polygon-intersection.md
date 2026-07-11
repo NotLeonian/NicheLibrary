@@ -68,5 +68,5 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 
 `hull` のサイズ を $N$ とおく。
 
-- 時間: $O(\log N)$
-- 空間: $O(1)$
+- 時間計算量: $O(\log N)$
+- 空間計算量: $O(1)$
