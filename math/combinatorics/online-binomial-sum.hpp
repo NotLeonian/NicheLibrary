@@ -5,7 +5,11 @@
 // 0 <= l <= u と 0 <= m <= max_m を仮定する。
 // n と m のバケット境界および上端の直積で累積和をサンプルし、
 // クエリの点に 2 次元的に最も近いサンプル点から復元する。
-// T は素数を法とする体の型で、法 p について max_m < p を仮定する。
+// T は素数を法とする体の型である。
+// std::numeric_limits<T>::is_integer が false であり、
+// 法 p について max_m < p であることを仮定する。
+// r = 0 では、バケットサイズを指定しない場合もその計算を行わない。
+// 前計算とクエリは時間計算量、空間計算量ともに O(1)。
 // r = -1 では交代二項和の閉形式を用いる。
 // B をバケットサイズとして、r が 0, -1 でない場合の時間計算量は
 // 前計算 O(max_m^2 / B + max_m)、クエリ O(B)。
@@ -17,7 +21,7 @@
 
 template <class T> struct OnlineBinomialSum {
     static_assert(!std::numeric_limits<T>::is_integer,
-                  "T must be a prime-field element type.");
+                  "std::numeric_limits<T>::is_integer must be false.");
 
   public:
     int max_m;
@@ -107,7 +111,8 @@ template <class T> struct OnlineBinomialSum {
     }
 
     explicit OnlineBinomialSum(int max_m, T r = T(1))
-        : OnlineBinomialSum(max_m, r, default_bucket_size(max_m)) {}
+        : OnlineBinomialSum(max_m, r,
+                            r == T() ? 1 : default_bucket_size(max_m)) {}
 
     T binom_prefix_sum(int n, int m) const {
         assert(n >= 0);

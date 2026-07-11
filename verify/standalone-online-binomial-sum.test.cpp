@@ -138,7 +138,8 @@ void verify(const std::vector<std::vector<mint>> &binomial,
 
 int main() {
     constexpr int max_m = 30;
-    static_assert(max_m < static_cast<int>(mint::mod));
+    static_assert(max_m < static_cast<int>(mint::mod),
+                  "max_m must be less than the modulus.");
 
     std::vector<std::vector<mint>> binomial(max_m + 1,
                                             std::vector<mint>(max_m + 1));
@@ -154,6 +155,9 @@ int main() {
     for (long long r_value : {-3, -2, -1, 0, 1, 2, 3}) {
         const mint r(r_value);
         OnlineBinomialSum<mint> online_binomial_sum(max_m, r);
+        if (r == mint(0)) {
+            assert(online_binomial_sum.bucket_size == 1);
+        }
         verify(binomial, online_binomial_sum, max_m, r);
 
         for (int bucket_size : bucket_size_list) {

@@ -99,7 +99,8 @@ int main() {
 
     constexpr int max_n = 200000;
     constexpr int max_m = 400000;
-    static_assert(max_m < static_cast<int>(modint998244353::mod));
+    static_assert(max_m < static_cast<int>(modint998244353::mod),
+                  "max_m must be less than the modulus.");
 
     OnlineBinomialSum<modint998244353> online_binomial_sum(max_m,
                                                            modint998244353(-2));
