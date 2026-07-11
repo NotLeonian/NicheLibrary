@@ -119,18 +119,16 @@ constexpr bool test_uint128_div_mod_fast_paths() {
     UInt128 quotient;
     UInt128 remainder;
 
-    UInt128::div_mod(
-        UInt128::from_words(0, ~std::uint64_t{}),
-        UInt128::from_words(0, (std::uint64_t{1} << 63) + 1), quotient,
-        remainder);
+    UInt128::div_mod(UInt128::from_words(0, ~std::uint64_t{}),
+                     UInt128::from_words(0, (std::uint64_t{1} << 63) + 1),
+                     quotient, remainder);
     if (quotient != UInt128(1) ||
-        remainder !=
-            UInt128::from_words(0, (std::uint64_t{1} << 63) - 2)) {
+        remainder != UInt128::from_words(0, (std::uint64_t{1} << 63) - 2)) {
         return false;
     }
 
-    const UInt128 wide = UInt128::from_words(
-        0x123456789abcdef0ULL, 0xfedcba9876543210ULL);
+    const UInt128 wide =
+        UInt128::from_words(0x123456789abcdef0ULL, 0xfedcba9876543210ULL);
     UInt128::div_mod(wide, UInt128(1), quotient, remainder);
     if (quotient != wide || remainder != UInt128{}) {
         return false;
@@ -141,7 +139,6 @@ constexpr bool test_uint128_div_mod_fast_paths() {
     UInt128::div_mod(smaller, larger, quotient, remainder);
     return quotient == UInt128{} && remainder == smaller;
 }
-
 } // namespace
 
 int main() {
