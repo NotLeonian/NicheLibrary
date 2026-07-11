@@ -3,36 +3,42 @@
 
 // Σ_{i=l}^{u-1} r^i binom(m,i) をオンラインで求める。
 // 0 <= l <= u と 0 <= m <= max_m を仮定する。
-// m のバケット境界の累積和を n のバケット境界でサンプルし、
-// バケット内の二項係数を前計算する。
-// T は四則演算と T() との等値比較を持つ型で、
-// r != T() の場合は r で除算できることを前提とする。
-// std::numeric_limits<T>::is_integer が false の場合は、
-// さらに T(1) から T(max_m) で除算できることを前提とする。
-// B をバケットサイズとして、
-// 時間計算量は前計算 O(max_m^2 / B + B^2 + max_m)、クエリ O(B)。
-// 空間計算量は O((max_m / B)^2 + B^2 + max_m)。
+// n と m のバケット境界および上端の直積で累積和をサンプルし、
+// クエリの点に 2 次元的に最も近いサンプル点から復元する。
+// T は素数を法とする体の型で、法 p について max_m < p を仮定する。
+// r = -1 では交代二項和の閉形式を用いる。
+// B をバケットサイズとして、r が 0, -1 でない場合の時間計算量は
+// 前計算 O(max_m^2 / B + max_m)、クエリ O(B)。
+// 空間計算量は O((max_m / B + 1)^2 + max_m)。
 
 #include <cassert>
 #include <limits>
 #include <vector>
 
 template <class T> struct OnlineBinomialSum {
+    static_assert(!std::numeric_limits<T>::is_integer,
+                  "T must be a prime-field element type.");
+
   public:
     int max_m;
     int bucket_size;
     T r;
+    T r_plus_one;
     bool r_is_zero;
-    std::vector<int> prefix_sum_offset;
-    std::vector<T> prefix_sum_table;
-    std::vector<T> prefix_term_table;
-    std::vector<int> weighted_binomial_offset;
-    std::vector<T> weighted_binomial_table;
+    bool r_is_minus_one;
+    T r_plus_one_inverse;
+    std::vector<T> factorial;
+    std::vector<T> inverse_factorial;
     std::vector<T> integer_inverse;
-    T r_inverse;
+    std::vector<T> power_r;
+    std::vector<int> sample_n_list;
+    std::vector<int> sample_m_list;
+    std::vector<T> sample_sum_table;
 
     explicit OnlineBinomialSum(int max_m, T r, int bucket_size)
-        : max_m(max_m), bucket_size(bucket_size), r(r), r_is_zero(r == T()) {
+        : max_m(max_m), bucket_size(bucket_size), r(r), r_plus_one(r + T(1)),
+          r_is_zero(r == T()), r_is_minus_one(r_plus_one == T()),
+          r_plus_one_inverse(T()) {
         assert(max_m >= 0);
         assert(bucket_size > 0);
 
@@ -40,80 +46,74 @@ template <class T> struct OnlineBinomialSum {
             return;
         }
 
-        weighted_binomial_offset.assign(bucket_size + 1, 0);
-        for (int d = 0; d < bucket_size; ++d) {
-            weighted_binomial_offset[d + 1] =
-                weighted_binomial_offset[d] + d + 1;
-        }
-        weighted_binomial_table.assign(weighted_binomial_offset[bucket_size],
-                                       T());
-        weighted_binomial_table[0] = T(1);
-        for (int d = 1; d < bucket_size; ++d) {
-            weighted_binomial_table[weighted_binomial_offset[d]] = T(1);
-            for (int j = 1; j < d; ++j) {
-                weighted_binomial_table[weighted_binomial_offset[d] + j] =
-                    weighted_binomial_table[weighted_binomial_offset[d - 1] +
-                                            j] +
-                    r * weighted_binomial_table
-                            [weighted_binomial_offset[d - 1] + j - 1];
-            }
-            weighted_binomial_table[weighted_binomial_offset[d] + d] =
-                r * weighted_binomial_table[weighted_binomial_offset[d - 1] +
-                                            d - 1];
+        factorial.assign(max_m + 1, T(1));
+        for (int i = 1; i <= max_m; ++i) {
+            factorial[i] = factorial[i - 1] * T(i);
         }
 
-        if constexpr (!std::numeric_limits<T>::is_integer) {
-            r_inverse = T(1) / r;
-            integer_inverse.assign(max_m + 1, T());
-            for (int i = 1; i <= max_m; ++i) {
-                integer_inverse[i] = T(1) / T(i);
-            }
+        inverse_factorial.assign(max_m + 1, T(1));
+        inverse_factorial[max_m] = T(1) / factorial[max_m];
+        for (int i = max_m; i >= 1; --i) {
+            inverse_factorial[i - 1] = inverse_factorial[i] * T(i);
         }
 
-        const int bucket_count = max_m / bucket_size + 1;
-        prefix_sum_offset.assign(bucket_count + 1, 0);
-        for (int b = 0; b < bucket_count; ++b) {
-            prefix_sum_offset[b + 1] = prefix_sum_offset[b] + b + 2;
+        if (r_is_minus_one) {
+            return;
         }
 
-        prefix_sum_table.assign(prefix_sum_offset[bucket_count], T());
-        prefix_term_table.assign(prefix_sum_offset[bucket_count], T());
+        r_plus_one_inverse = T(1) / r_plus_one;
 
-        for (int b = 0; b < bucket_count; ++b) {
-            const int base = b * bucket_size;
-            const int offset = prefix_sum_offset[b];
+        integer_inverse.assign(max_m + 1, T());
+        for (int i = 1; i <= max_m; ++i) {
+            integer_inverse[i] = factorial[i - 1] * inverse_factorial[i];
+        }
+
+        power_r.assign(max_m + 2, T());
+        power_r[0] = T(1);
+        for (int i = 0; i <= max_m; ++i) {
+            power_r[i + 1] = power_r[i] * r;
+        }
+
+        sample_n_list = make_sample_list(max_m + 1);
+        sample_m_list = make_sample_list(max_m);
+        sample_sum_table.assign(sample_n_list.size() * sample_m_list.size(),
+                                T());
+
+        const int sample_n_count = static_cast<int>(sample_n_list.size());
+        const int sample_m_count = static_cast<int>(sample_m_list.size());
+        for (int sample_m_index = 0; sample_m_index < sample_m_count;
+             ++sample_m_index) {
+            const int sample_m = sample_m_list[sample_m_index];
             T sum = T();
             T term = T(1);
-            for (int i = 0; i <= base; ++i) {
-                if (i % bucket_size == 0) {
-                    const int q = i / bucket_size;
-                    prefix_sum_table[offset + q] = sum;
-                    prefix_term_table[offset + q] = term;
-                }
-                if (i < base) {
+            int current_n = 0;
+
+            for (int sample_n_index = 0; sample_n_index < sample_n_count;
+                 ++sample_n_index) {
+                const int sample_n = sample_n_list[sample_n_index];
+                while (current_n < sample_n && current_n <= sample_m) {
                     sum += term;
-                    term *= r;
-                    term *= T(base - i);
-                    if constexpr (std::numeric_limits<T>::is_integer) {
-                        term /= T(i + 1);
-                    } else {
-                        term *= integer_inverse[i + 1];
+                    if (current_n < sample_m) {
+                        term *= r;
+                        term *= T(sample_m - current_n);
+                        term *= integer_inverse[current_n + 1];
                     }
+                    ++current_n;
                 }
+                sample_sum_table[sample_m_index * sample_n_count +
+                                 sample_n_index] = sum;
             }
-            sum += term;
-            prefix_sum_table[offset + b + 1] = sum;
-            prefix_term_table[offset + b + 1] = T();
         }
     }
 
     explicit OnlineBinomialSum(int max_m, T r = T(1))
-        : OnlineBinomialSum<T>(max_m, r, default_bucket_size(max_m)) {}
+        : OnlineBinomialSum(max_m, r, default_bucket_size(max_m)) {}
 
     T binom_prefix_sum(int n, int m) const {
         assert(n >= 0);
         assert(m >= 0);
         assert(m <= max_m);
+
         if (n == 0) {
             return T();
         }
@@ -123,140 +123,104 @@ template <class T> struct OnlineBinomialSum {
         if (r_is_zero) {
             return T(1);
         }
-
-        const int bucket = m / bucket_size;
-        const int base = bucket * bucket_size;
-        const int d = m - base;
-        const int prefix_offset = prefix_sum_offset[bucket];
-        const int weight_offset = weighted_binomial_offset[d];
-
-        int last_j = d;
-        if (last_j >= n) {
-            last_j = n - 1;
-        }
-        const int first_n = n - last_j;
-
-        int sample_index = first_n / bucket_size;
-        if (sample_index > bucket + 1) {
-            sample_index = bucket + 1;
-        }
-        int next_sample_index = sample_index + 1;
-        if (next_sample_index > bucket + 1) {
-            next_sample_index = bucket + 1;
-        }
-        const auto restore_cost = [&](int index) -> int {
-            const int sample_n = index * bucket_size;
-            if (sample_n < first_n) {
-                return n - sample_n;
+        if (r_is_minus_one) {
+            if (m == 0) {
+                return T(1);
             }
-            if (sample_n > n) {
-                return sample_n - first_n;
+
+            T ans = binomial(m - 1, n - 1);
+            if ((n - 1) % 2 == 1) {
+                ans = T() - ans;
             }
-            return n - first_n;
-        };
-        if (restore_cost(next_sample_index) < restore_cost(sample_index)) {
-            sample_index = next_sample_index;
+            return ans;
         }
 
-        const int sample_n = sample_index * bucket_size;
-        const int sample_offset = prefix_offset + sample_index;
-        const T base_term = prefix_term_table[prefix_offset + bucket];
+        const int sample_n_index = nearest_sample_index(sample_n_list, n);
+        const int sample_m_index = nearest_sample_index(sample_m_list, m);
+        const int sample_n_count = static_cast<int>(sample_n_list.size());
+        int current_n = sample_n_list[sample_n_index];
+        int current_m = sample_m_list[sample_m_index];
+        T sum =
+            sample_sum_table[sample_m_index * sample_n_count + sample_n_index];
 
-        const auto move_right = [&](int current_n, T &sum, T &term) -> void {
-            sum += term;
-            if (current_n < base) {
-                term *= r;
-                term *= T(base - current_n);
-                if constexpr (std::numeric_limits<T>::is_integer) {
-                    term /= T(current_n + 1);
-                } else {
-                    term *= integer_inverse[current_n + 1];
-                }
-            } else {
-                term = T();
-            }
-        };
-        const auto move_left = [&](int current_n, T &sum, T &term) -> void {
-            if (current_n > base + 1) {
-                term = T();
-                return;
-            }
-            if (current_n == base + 1) {
-                term = base_term;
-                sum -= term;
-                return;
-            }
-            if constexpr (std::numeric_limits<T>::is_integer) {
-                term /= r;
-                term *= T(current_n);
-                term /= T(base - current_n + 1);
-            } else {
-                term *= r_inverse;
-                term *= T(current_n);
-                term *= integer_inverse[base - current_n + 1];
-            }
-            sum -= term;
-        };
-
-        T sum = prefix_sum_table[sample_offset];
-        T term = prefix_term_table[sample_offset];
-        T ans = T();
-        if (sample_n < first_n) {
-            for (int current_n = sample_n; current_n < first_n; ++current_n) {
-                move_right(current_n, sum, term);
-            }
-            for (int current_n = first_n; current_n <= n; ++current_n) {
-                const int j = n - current_n;
-                ans += weighted_binomial_table[weight_offset + j] * sum;
-                if (current_n < n) {
-                    move_right(current_n, sum, term);
-                }
-            }
-        } else if (sample_n > n) {
-            for (int current_n = sample_n; current_n > n; --current_n) {
-                move_left(current_n, sum, term);
-            }
-            for (int current_n = n; current_n >= first_n; --current_n) {
-                const int j = n - current_n;
-                ans += weighted_binomial_table[weight_offset + j] * sum;
-                if (current_n > first_n) {
-                    move_left(current_n, sum, term);
-                }
-            }
-        } else {
-            T right_sum = sum;
-            T right_term = term;
-            for (int current_n = sample_n; current_n <= n; ++current_n) {
-                const int j = n - current_n;
-                ans += weighted_binomial_table[weight_offset + j] * right_sum;
-                if (current_n < n) {
-                    move_right(current_n, right_sum, right_term);
-                }
-            }
-            T left_sum = sum;
-            T left_term = term;
-            for (int current_n = sample_n; current_n > first_n; --current_n) {
-                move_left(current_n, left_sum, left_term);
-                const int j = n - current_n + 1;
-                ans += weighted_binomial_table[weight_offset + j] * left_sum;
-            }
+        while (current_n < n) {
+            sum += power_r[current_n] * binomial(current_m, current_n);
+            ++current_n;
         }
-        return ans;
+
+        while (current_n > n) {
+            --current_n;
+            sum -= power_r[current_n] * binomial(current_m, current_n);
+        }
+
+        while (current_m < m) {
+            sum *= r_plus_one;
+            sum -= power_r[current_n] * binomial(current_m, current_n - 1);
+            ++current_m;
+        }
+
+        while (current_m > m) {
+            --current_m;
+            sum += power_r[current_n] * binomial(current_m, current_n - 1);
+            sum *= r_plus_one_inverse;
+        }
+
+        return sum;
     }
 
     T binom_sum(int l, int u, int m) const {
         assert(l >= 0);
         assert(l <= u);
+
         return binom_prefix_sum(u, m) - binom_prefix_sum(l, m);
     }
 
   private:
+    T binomial(int n, int k) const {
+        if (k < 0 || k > n) {
+            return T();
+        }
+
+        return factorial[n] * inverse_factorial[k] * inverse_factorial[n - k];
+    }
+
+    std::vector<int> make_sample_list(int limit) const {
+        const int full_bucket_count = limit / bucket_size;
+        std::vector<int> sample_list;
+        sample_list.reserve(full_bucket_count + 2);
+        for (int index = 0; index <= full_bucket_count; ++index) {
+            sample_list.push_back(index * bucket_size);
+        }
+        if (sample_list.back() != limit) {
+            sample_list.push_back(limit);
+        }
+
+        return sample_list;
+    }
+
+    int nearest_sample_index(const std::vector<int> &sample_list,
+                             int value) const {
+        int index = value / bucket_size;
+        const int sample_count = static_cast<int>(sample_list.size());
+        if (index >= sample_count) {
+            index = sample_count - 1;
+        }
+        if (index + 1 >= sample_count) {
+            return index;
+        }
+        if (value - sample_list[index] <= sample_list[index + 1] - value) {
+            return index;
+        }
+
+        return index + 1;
+    }
+
     static int default_bucket_size(int max_m) {
         assert(max_m >= 0);
 
         int bucket_size = 1;
         while (4LL * bucket_size * bucket_size <= max_m) {
-            bucket_size <<= 1;
+            bucket_size *= 2;
         }
 
         return bucket_size;
