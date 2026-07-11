@@ -24,5 +24,5 @@ documentation_of: other/minimum-mod-range-increment-decrement-operations.hpp
 
 入力列の長さを $N$ とおく。
 
-- 平均時間 $O(N)$
-- 空間 $O(N)$
+- 平均時間計算量: $O(N)$
+- 空間計算量:  $O(N)$

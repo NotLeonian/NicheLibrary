@@ -46,4 +46,4 @@ documentation_of: structure/others/dynamic-median.hpp
 
 - `add`, `erase`: 時間 $O(\log N)$
 - `median`: 時間 $O(1)$
-- 空間 $O(N)$
+- 空間計算量: $O(N)$

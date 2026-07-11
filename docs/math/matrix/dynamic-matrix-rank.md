@@ -21,10 +21,10 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
   - 空に構築する。後で `build(matrix)` を呼ぶ。
 - `DynamicMatrixRank(const std::vector<std::vector<T>>& matrix)`
   - `matrix` で構築する。
-  - 前提: `matrix` は長方形であり、`T` は体を成す。
+  - 前提: `matrix` は長方形であり、`T` は体をなす。
 - `void build(const std::vector<std::vector<T>>& matrix)`
   - `matrix` を現在の行列として前処理し直す。
-  - 前提: `matrix` は長方形であり、`T` は体を成す。
+  - 前提: `matrix` は長方形であり、`T` は体をなす。
 - `void build()`
   - 現在保持している行列から前処理し直す。
 - `int rank() const`
@@ -39,25 +39,25 @@ documentation_of: math/matrix/dynamic-matrix-rank.hpp
   - 現在の行列を密行列として返す。
 - `int rank_after_rank_one_update(const std::vector<T>& column_vector, const std::vector<T>& row_vector) const`
   - $A+uv^{\top}$ の階数を返す。
-  - 前提: `column_vector` の長さは行数、`row_vector` の長さは列数。
+  - 前提: `column_vector` の長さは行数に等しく、`row_vector` の長さは列数に等しい。
   - 備考: 内部状態は変更しない。
 - `int rank_after_row_replacement(int row_index, const std::vector<T>& new_row) const`
   - `row_index` 行目を `new_row` に差し替えた行列の階数を返す。
-  - 前提: $0\le i<r$ 、`new_row` の長さは列数。
+  - 前提: $0\le i<r$ 、`new_row` の長さは列数に等しい。
   - 備考: 内部状態は変更しない。
 - `int rank_after_column_replacement(int column_index, const std::vector<T>& new_column) const`
   - `column_index` 列目を `new_column` に差し替えた行列の階数を返す。
-  - 前提: $0\le j<c$ 、`new_column` の長さは行数。
+  - 前提: $0\le j<c$ 、`new_column` の長さは行数に等しい。
   - 備考: 内部状態は変更しない。
 - `int apply_rank_one_update(const std::vector<T>& column_vector, const std::vector<T>& row_vector)`
   - $A+uv^{\top}$ に内部状態を更新し、その階数を返す。
-  - 前提: `column_vector` の長さは行数、`row_vector` の長さは列数。
+  - 前提: `column_vector` の長さは行数に等しく、`row_vector` の長さは列数に等しい。
 - `int apply_row_replacement(int row_index, const std::vector<T>& new_row)`
   - `row_index` 行目を `new_row` に差し替え、変更後の階数を返す。
-  - 前提: $0\le i<r$ 、`new_row` の長さは列数。
+  - 前提: $0\le i<r$ 、`new_row` の長さは列数に等しい。
 - `int apply_column_replacement(int column_index, const std::vector<T>& new_column)`
   - `column_index` 列目を `new_column` に差し替え、変更後の階数を返す。
-  - 前提: $0\le j<c$ 、`new_column` の長さは行数。
+  - 前提: $0\le j<c$ 、`new_column` の長さは行数に等しい。
 
 ## 計算量
 

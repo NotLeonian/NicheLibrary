@@ -39,5 +39,5 @@ documentation_of: math/number-theory/generalized-floor-sum-degree-le-2.hpp
 
 ## 計算量
 
-- 時間 $O(\log m)$
-- 空間 $O(\log m)$ （再帰）
+- 時間計算量: $O(\log m)$
+- 空間計算量: $O(\log m)$ （再帰）
