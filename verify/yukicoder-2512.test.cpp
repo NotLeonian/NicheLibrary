@@ -10,77 +10,87 @@ class modint998244353 {
   public:
     static constexpr std::uint32_t mod = 998244353;
 
-    modint998244353() : v_(0) {}
-    modint998244353(long long x) {
-        long long y = x % static_cast<long long>(mod);
-        if (y < 0) {
-            y += mod;
+    modint998244353() : value_(0) {}
+
+    modint998244353(long long value) {
+        long long reduced = value % static_cast<long long>(mod);
+        if (reduced < 0) {
+            reduced += mod;
         }
-        v_ = static_cast<std::uint32_t>(y);
+        value_ = static_cast<std::uint32_t>(reduced);
     }
 
-    std::uint32_t val() const { return v_; }
+    std::uint32_t val() const { return value_; }
+
     modint998244353 inv() const { return pow(*this, mod - 2); }
+
     modint998244353 &operator+=(const modint998244353 &rhs) {
-        std::uint32_t x = v_ + rhs.v_;
-        if (x >= mod) {
-            x -= mod;
+        std::uint32_t value = value_ + rhs.value_;
+        if (value >= mod) {
+            value -= mod;
         }
-        v_ = x;
+        value_ = value;
         return *this;
     }
+
     modint998244353 &operator-=(const modint998244353 &rhs) {
-        std::uint32_t x = (v_ >= rhs.v_) ? (v_ - rhs.v_) : (v_ + mod - rhs.v_);
-        v_ = x;
+        const std::uint32_t value = value_ >= rhs.value_
+                                        ? value_ - rhs.value_
+                                        : value_ + mod - rhs.value_;
+        value_ = value;
         return *this;
     }
+
     modint998244353 &operator*=(const modint998244353 &rhs) {
-        std::uint64_t x = static_cast<std::uint64_t>(v_) * rhs.v_ % mod;
-        v_ = static_cast<std::uint32_t>(x);
+        const std::uint64_t value =
+            static_cast<std::uint64_t>(value_) * rhs.value_ % mod;
+        value_ = static_cast<std::uint32_t>(value);
         return *this;
     }
+
     modint998244353 &operator/=(const modint998244353 &rhs) {
         return *this *= rhs.inv();
     }
+
     friend modint998244353 operator+(modint998244353 lhs,
                                      const modint998244353 &rhs) {
         return lhs += rhs;
     }
+
     friend modint998244353 operator-(modint998244353 lhs,
                                      const modint998244353 &rhs) {
         return lhs -= rhs;
     }
+
     friend modint998244353 operator*(modint998244353 lhs,
                                      const modint998244353 &rhs) {
         return lhs *= rhs;
     }
+
     friend modint998244353 operator/(modint998244353 lhs,
                                      const modint998244353 &rhs) {
         return lhs /= rhs;
     }
+
     friend bool operator==(const modint998244353 &lhs,
                            const modint998244353 &rhs) {
-        return lhs.v_ == rhs.v_;
-    }
-    friend bool operator!=(const modint998244353 &lhs,
-                           const modint998244353 &rhs) {
-        return lhs.v_ != rhs.v_;
+        return lhs.value_ == rhs.value_;
     }
 
   private:
-    static modint998244353 pow(modint998244353 a, long long e) {
-        modint998244353 r(1);
-        while (e > 0) {
-            if (e & 1) {
-                r *= a;
+    static modint998244353 pow(modint998244353 base, long long exponent) {
+        modint998244353 result(1);
+        while (exponent > 0) {
+            if (exponent % 2 == 1) {
+                result *= base;
             }
-            a *= a;
-            e >>= 1;
+            base *= base;
+            exponent /= 2;
         }
-        return r;
+        return result;
     }
 
-    std::uint32_t v_;
+    std::uint32_t value_;
 };
 
 int main() {
@@ -89,24 +99,28 @@ int main() {
 
     constexpr int max_n = 200000;
     constexpr int max_m = 400000;
-    OnlineBinomialSum<modint998244353> binom_sum(max_m, modint998244353(-2));
+    static_assert(max_m < static_cast<int>(modint998244353::mod),
+                  "max_m must be less than the modulus.");
 
+    OnlineBinomialSum<modint998244353> online_binomial_sum(max_m,
+                                                           modint998244353(-2));
     const modint998244353 minus_inv2 = modint998244353(-1) / modint998244353(2);
-    std::vector<modint998244353> pow_minus_inv2(max_n + 2);
-    pow_minus_inv2[0] = modint998244353(1);
+    std::vector<modint998244353> power_minus_inv2(max_n + 2);
+    power_minus_inv2[0] = modint998244353(1);
     for (int i = 0; i <= max_n; ++i) {
-        pow_minus_inv2[i + 1] = pow_minus_inv2[i] * minus_inv2;
+        power_minus_inv2[i + 1] = power_minus_inv2[i] * minus_inv2;
     }
 
-    int t;
-    std::cin >> t;
-    while (t--) {
+    int test_count;
+    std::cin >> test_count;
+    while (test_count--) {
         int n, m;
         std::cin >> n >> m;
-        const modint998244353 s = binom_sum.binom_prefix_sum(n + 1, 2 * m);
+        const modint998244353 sum =
+            online_binomial_sum.binom_prefix_sum(n + 1, 2 * m);
         const modint998244353 ans =
-            (s - modint998244353(1)) *
-            (modint998244353(0) - pow_minus_inv2[n + 1]);
+            (sum - modint998244353(1)) *
+            (modint998244353(0) - power_minus_inv2[n + 1]);
         std::cout << ans.val() << '\n';
     }
 
