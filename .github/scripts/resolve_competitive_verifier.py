@@ -78,6 +78,7 @@ def read_source_ref(source: dict[str, Any]) -> tuple[str, str]:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
         text=True,
+        check=False,
     )
     if check.returncode != 0:
         error(f"competitive-verifier tag name is invalid: {tag!r}")
@@ -91,6 +92,7 @@ def resolve_tag_to_commit(git_url: str, tag: str) -> str:
         ["git", "ls-remote", "--tags", git_url, ref_name, f"{ref_name}^{{}}"],
         capture_output=True,
         text=True,
+        check=False,
     )
     if proc.returncode != 0:
         error(f"Could not fetch the competitive-verifier tag: {tag!r}")
