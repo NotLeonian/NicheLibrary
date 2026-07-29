@@ -59,6 +59,9 @@
 # Shell
 *.sh    text diff=bash
 
+# JSON
+*.json  text
+
 # YAML
 *.yml   text
 *.yaml  text
