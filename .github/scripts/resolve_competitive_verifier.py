@@ -42,7 +42,7 @@ def normalize_git_url(source: dict[str, Any]) -> str:
 
     git_url = cast(str, _git_url)
 
-    url_without_suffix = git_url[:-4] if git_url.endswith(".git") else git_url
+    url_without_suffix = git_url.removesuffix(".git")
     if url_without_suffix != EXPECTED_GIT_URL:
         error(f"competitive-verifier URL does not match the expected URL: {git_url!r}")
 
