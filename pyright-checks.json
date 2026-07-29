@@ -1,0 +1,17 @@
+{
+	"extends": "./pyproject.toml",
+	"exclude": [
+		"**/node_modules",
+		"**/__pycache__",
+		"**/.git",
+		"**/.env",
+		"**/.venv",
+		"**/env",
+		"**/venv",
+		"**/ENV",
+		"**/env.bak",
+		"**/venv.bak",
+		".competitive-verifier/cache"
+	],
+	"include": ["**/*.py"]
+}

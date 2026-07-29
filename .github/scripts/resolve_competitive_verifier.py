@@ -6,13 +6,13 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Never, cast
 
 EXPECTED_GIT_URL = "https://github.com/NotLeonian/competitive-verifier"
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 
 
-def error(message: str) -> None:
+def error(message: str) -> Never:
     print(f"::error::{message}", file=sys.stderr)
     raise SystemExit(1)
 
@@ -44,9 +44,7 @@ def normalize_git_url(source: dict[str, Any]) -> str:
 
     url_without_suffix = git_url[:-4] if git_url.endswith(".git") else git_url
     if url_without_suffix != EXPECTED_GIT_URL:
-        error(
-            f"competitive-verifier URL does not match the expected URL: {git_url!r}"
-        )
+        error(f"competitive-verifier URL does not match the expected URL: {git_url!r}")
 
     return EXPECTED_GIT_URL + ".git"
 
@@ -61,9 +59,7 @@ def read_source_ref(source: dict[str, Any]) -> tuple[str, str]:
     has_tag = "tag" in source
 
     if has_rev == has_tag:
-        error(
-            "competitive-verifier must be pinned by exactly one of rev or tag."
-        )
+        error("competitive-verifier must be pinned by exactly one of rev or tag.")
 
     if has_rev:
         rev = source["rev"]
@@ -115,8 +111,9 @@ def resolve_tag_to_commit(git_url: str, tag: str) -> str:
 
     resolved = peeled_sha or direct_sha
     if resolved is None or not SHA_RE.fullmatch(resolved):
-        error(f"Could not resolve the competitive-verifier tag to a commit SHA: {tag!r}")
-        assert False  # 上の error で落ちる、型注釈のエラーを防ぐため
+        error(
+            f"Could not resolve the competitive-verifier tag to a commit SHA: {tag!r}"
+        )
 
     return resolved.lower()
 

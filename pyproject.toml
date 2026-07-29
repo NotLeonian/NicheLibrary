@@ -9,8 +9,16 @@ dependencies = []
 [dependency-groups]
 dev = [
     "competitive-verifier",
+    "mypy>=2.3.0",
+    "pyright>=1.1.411",
     "ruff>=0.15.12",
 ]
+
+[tool.mypy]
+python_version = "3.13"
+
+[tool.pyright]
+pythonVersion = "3.13"
 
 [tool.ruff.format]
 quote-style = "preserve"

@@ -32,6 +32,10 @@ insert_final_newline = unset
 [*.sh]
 indent_size = 2
 
+# JSON
+[*.json]
+indent_style = tab
+
 # YAML
 [*.{yml,yaml}]
 indent_size = 2
