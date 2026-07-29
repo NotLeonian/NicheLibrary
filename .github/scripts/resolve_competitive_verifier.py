@@ -6,13 +6,13 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Never, cast
 
 EXPECTED_GIT_URL = "https://github.com/NotLeonian/competitive-verifier"
 SHA_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 
 
-def error(message: str) -> None:
+def error(message: str) -> Never:
     print(f"::error::{message}", file=sys.stderr)
     raise SystemExit(1)
 
@@ -114,7 +114,6 @@ def resolve_tag_to_commit(git_url: str, tag: str) -> str:
         error(
             f"Could not resolve the competitive-verifier tag to a commit SHA: {tag!r}"
         )
-        assert False  # 上の error で落ちる、型注釈のエラーを防ぐため
 
     return resolved.lower()
 

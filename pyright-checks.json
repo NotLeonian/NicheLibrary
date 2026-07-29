@@ -1,0 +1,5 @@
+{
+	"extends": "./pyproject.toml",
+	"exclude": ["**/node_modules", "**/__pycache__"],
+	"include": ["*.py", ".github/scripts"]
+}

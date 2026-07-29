@@ -91,7 +91,7 @@ Python ソースコードのフォーマットと静的検査には以下のコ�
 ```sh
 uv run ruff format .
 uv run ruff check .
-uv run pyright
+uv run pyright --project pyright-checks.json
 git ls-files --cached --others --exclude-standard -- '*.py' |
   awk -F/ '{ print NF == 1 ? $0 : $1 }' |
   sort -u |
