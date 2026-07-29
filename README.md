@@ -92,11 +92,8 @@ Python ソースコードのフォーマットと静的検査には以下のコ�
 uv run ruff format .
 uv run ruff check .
 uv run pyright --project pyright-checks.json
-git ls-files --cached --others --exclude-standard -- '*.py' |
-  awk -F/ '{ print NF == 1 ? $0 : $1 }' |
-  sort -u |
-  tee /dev/stderr |
-  xargs -r uv run mypy
+git ls-files -z --cached --others --exclude-standard -- '*.py' |
+  xargs -0 -r uv run mypy
 ```
 
 ## Contributing
