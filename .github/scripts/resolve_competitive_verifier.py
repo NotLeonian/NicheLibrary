@@ -89,8 +89,7 @@ def resolve_tag_to_commit(git_url: str, tag: str) -> str:
     ref_name = f"refs/tags/{tag}"
     proc = subprocess.run(
         ["git", "ls-remote", "--tags", git_url, ref_name, f"{ref_name}^{{}}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
     )
     if proc.returncode != 0:
