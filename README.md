@@ -84,6 +84,17 @@ bash .github/scripts/local_verify.sh "$@"
 ' _ --no-prev-result
 ```
 
+## Python checks
+
+Python ソースコードのフォーマットと静的検査には以下のコマンドを使用できます。
+
+```sh
+uv run ruff format .
+uv run ruff check .
+uv run pyright
+uv run mypy .
+```
+
 ## Contributing
 
 不具合の指摘または修正の Issue, Pull Request は歓迎します。  
