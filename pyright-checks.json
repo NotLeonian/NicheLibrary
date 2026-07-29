@@ -1,5 +1,11 @@
 {
 	"extends": "./pyproject.toml",
-	"exclude": ["**/node_modules", "**/__pycache__"],
-	"include": ["*.py", ".github/scripts"]
+	"exclude": [
+		"**/node_modules",
+		"**/__pycache__",
+		"**/.git",
+		"**/.venv",
+		".competitive-verifier/cache"
+	],
+	"include": ["**/*.py"]
 }
