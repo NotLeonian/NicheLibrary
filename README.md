@@ -93,7 +93,7 @@ uv run ruff format .
 uv run ruff check .
 uv run pyright
 git ls-files --cached --others --exclude-standard -- '*.py' |
-  awk -F/ 'NF > 1 { print $1 }' |
+  awk -F/ '{ print NF == 1 ? $0 : $1 }' |
   sort -u |
   tee /dev/stderr |
   xargs -r uv run mypy
