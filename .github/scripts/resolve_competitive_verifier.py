@@ -42,7 +42,7 @@ def normalize_git_url(source: dict[str, Any]) -> str:
 
     git_url = cast(str, _git_url)
 
-    url_without_suffix = git_url[:-4] if git_url.endswith(".git") else git_url
+    url_without_suffix = git_url.removesuffix(".git")
     if url_without_suffix != EXPECTED_GIT_URL:
         error(f"competitive-verifier URL does not match the expected URL: {git_url!r}")
 
@@ -78,6 +78,7 @@ def read_source_ref(source: dict[str, Any]) -> tuple[str, str]:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
         text=True,
+        check=False,
     )
     if check.returncode != 0:
         error(f"competitive-verifier tag name is invalid: {tag!r}")
@@ -89,9 +90,9 @@ def resolve_tag_to_commit(git_url: str, tag: str) -> str:
     ref_name = f"refs/tags/{tag}"
     proc = subprocess.run(
         ["git", "ls-remote", "--tags", git_url, ref_name, f"{ref_name}^{{}}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
     if proc.returncode != 0:
         error(f"Could not fetch the competitive-verifier tag: {tag!r}")
