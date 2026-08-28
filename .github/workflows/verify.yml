@@ -31,7 +31,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+      - name: install npm dependencies
+        run: npm ci
+      - name: npm formatting check
+        run: npm run format:check
       - name: install clang-format 20
         run: |
           sudo apt-get update
@@ -48,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Resolve competitive-verifier package
         id: competitive-verifier-package
         shell: bash
@@ -70,7 +78,7 @@ jobs:
         run: |
           echo "count=$(find .competitive-verifier/bundled -type f | wc -l)" >> $GITHUB_OUTPUT
       - name: Upload bundled
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: steps.test-bundled.outputs.count > 0
         with:
           name: Bundled-${{ runner.os }}
@@ -87,7 +95,7 @@ jobs:
         # prettier-ignore
         index: ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Resolve competitive-verifier package
@@ -97,7 +105,7 @@ jobs:
       - name: Restore previous verify result
         id: restore-cached-results
         if: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify)) }}
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
           key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -133,7 +141,7 @@ jobs:
           FULL_VERIFY: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify) }}
           CI_PREV_RESULT: ${{ !(github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_verify)) && steps.restore-cached-results.outputs.cache-matched-key != '' && format('{0}/competitive-verifier-ci-result/merged-result.json', runner.temp) || '' }}
       - name: Upload result artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: Result-${{ runner.os }}-${{ matrix.index }}
           path: ${{ runner.temp }}/result.json
@@ -144,7 +152,7 @@ jobs:
     needs: [verify]
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Resolve competitive-verifier package
@@ -194,7 +202,7 @@ jobs:
     outputs:
       upload-pages: ${{ steps.upload-pages.outcome == 'success' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2147483647
       - name: Resolve competitive-verifier package
@@ -260,7 +268,7 @@ jobs:
           destination: _jekyll
           write-summary: true
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
@@ -270,12 +278,13 @@ jobs:
         run: python3 .github/scripts/check_generated_site.py _site
       - name: Upload artifact
         id: upload-pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+          include-hidden-files: true
       - name: Save current verify result
         if: always() && github.event_name != 'pull_request' && steps.merge-result.outcome == 'success'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
           key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -290,7 +299,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
   verify-status:
     if: ${{ always() }}
     needs: [formatting-check, setup, verify, check, docs]

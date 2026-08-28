@@ -1,0 +1,33 @@
+{
+	"name": "nichelibrary",
+	"version": "1.0.0",
+	"description": "[![Actions Status](https://github.com/NotLeonian/NicheLibrary/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/NotLeonian/NicheLibrary/actions/workflows/verify.yml?query=branch%3Amain) [![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=NicheLibrary+&color=brightgreen&logo=github)](https://notleonian.github.io/NicheLibrary/)",
+	"main": "index.js",
+	"directories": {
+		"doc": "docs"
+	},
+	"scripts": {
+		"format": "npm run format:biome && npm run format:prettier",
+		"format:check": "npm run format:biome:check && npm run format:prettier:check",
+		"format:biome": "biome format --write .",
+		"format:biome:check": "biome format .",
+		"format:prettier": "prettier --write \"**/*.{md,mdx}\"",
+		"format:prettier:check": "prettier --check \"**/*.{md,mdx}\""
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/NotLeonian/NicheLibrary.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "CC0-1.0",
+	"type": "commonjs",
+	"bugs": {
+		"url": "https://github.com/NotLeonian/NicheLibrary/issues"
+	},
+	"homepage": "https://github.com/NotLeonian/NicheLibrary#readme",
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.11",
+		"prettier": "^3.9.6"
+	}
+}

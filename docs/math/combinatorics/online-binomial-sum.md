@@ -13,6 +13,7 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - バケットサイズを指定できる。
 
 以下、クエリで与えられる $m$ の最大値を $M$ 、バケットサイズを $B$ とする。
+
 - $r=0$ の場合は閉形式を用いる。
 - $r=-1$ の場合は $\displaystyle F(n,m)=(-1)^{n-1}\binom{m-1}{n-1}$ を用い、 $r+1$ による除算を行わない。ただし、 $n=0$ または $m=0$ の場合は別に処理する。
 - $r$ が $0$ でも $-1$ でもない場合、 $n$ 方向の遷移には境界項 $\displaystyle r^n\binom{m}{n}$ を用いる。 $m$ 方向の遷移にはパスカルの三角形の等式から得られる $\displaystyle F(n,m+1)=(r+1)F(n,m)-r^n\binom{m}{n-1}$ を用いる。
