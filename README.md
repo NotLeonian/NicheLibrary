@@ -1,4 +1,5 @@
 # NicheLibrary
+
 [![Actions Status](https://github.com/NotLeonian/NicheLibrary/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/NotLeonian/NicheLibrary/actions/workflows/verify.yml?query=branch%3Amain)
 [![GitHub Pages](https://img.shields.io/static/v1?label=GitHub+Pages&message=NicheLibrary+&color=brightgreen&logo=github)](https://notleonian.github.io/NicheLibrary/)
 
@@ -7,6 +8,7 @@ C++ library for competitive programming
 競技プログラミング用の C++ ライブラリです。
 
 ## 方針
+
 このライブラリは、名前通りニッチなもののみを実装しています。
 
 - [Luzhiled's Library](https://ei1333.github.io/library/), [Nyaan's Library](https://nyaannyaan.github.io/library/), [cp-library-cpp](https://suisen-cp.github.io/cp-library-cpp/) のどれにも自分の求める要件を満たす実装が存在しないデータ構造、アルゴリズムのみを実装します。
