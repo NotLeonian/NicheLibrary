@@ -1,0 +1,9 @@
+# Biome でフォーマットするファイル
+*.js
+*.ts
+*.json
+*.jsonc
+
+# competitive-verifier が生成するファイル
+.competitive-verifier/bundled/
+.competitive-verifier/cache/
