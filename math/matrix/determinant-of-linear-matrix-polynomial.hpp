@@ -1,12 +1,13 @@
 #ifndef MATH_MATRIX_DETERMINANT_OF_LINEAR_MATRIX_POLYNOMIAL_HPP
 #define MATH_MATRIX_DETERMINANT_OF_LINEAR_MATRIX_POLYNOMIAL_HPP
 
-// 一次行列多項式 det(M0 + x M1) を係数列として求める。
-// 体上でのみ動作する（除算が必要）。M0, M1 は N×N。
+// 1 次行列多項式 det(M0 + x M1) を係数列として求める。
+// M0, M1 は体上の N×N 行列である。
 // 多項式は a[0] + a[1]x + ... + a[N]x^N の昇順で返す。
 // M1 を掃き出して I にし、det(xI + A) を特性多項式に帰着させる。
-// M1 が特異でも列に x を掛ける操作を挟むことで次数 1 を保つ。
-// 計算量 O(N^3)。
+// M1 の列を処理するときにピボットがない場合は、その列の M1 の成分を消してから
+// 行列多項式の同じ列に x を掛け、行列式に生じる因子 x を記録する。
+// 時間計算量は O(N^3) である。
 
 #include <cassert>
 #include <utility>
@@ -132,8 +133,8 @@ determinant_of_linear_matrix_polynomial(std::vector<std::vector<T>> M0,
         return {T(1)};
     }
 
-    int multiply_by_x = 0; // 特定の列に x を掛ける操作の回数
-    T det_inv = T(1);      // 1 / (det A det B)
+    int multiply_by_x = 0; // 列に x を掛けた回数
+    T det_inv = T(1);      // 行基本変形による行列式の変化を戻す係数
 
     for (int p = 0; p < n; ++p) {
         int pivot = -1;

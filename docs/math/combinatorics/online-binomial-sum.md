@@ -5,11 +5,12 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 
 ## 概要
 
-- 整数 $n,m$ と重み $r$ に対する二項係数の prefix sum を $\displaystyle F(n,m)=\sum_{i=0}^{n-1}r^i\binom{m}{i}$ とおく。
-- 半開区間の左端、右端をそれぞれ $l,u$ とする。 $\displaystyle \sum_{i=l}^{u-1}r^i\binom{m}{i}$ をオンラインで求める。
+- 整数 $n,m$ と重み $r$ に対して、 $\displaystyle F(n,m)=\sum_{i=0}^{n-1}r^i\binom{m}{i}$ と定める。
+- 半開区間の左端、右端をそれぞれ $l,u$ とする。クエリごとに $\displaystyle \sum_{i=l}^{u-1}r^i\binom{m}{i}$ を求める。
 - $\binom{m}{i}=0\;(i>m)$ として扱う。
-- $n$ と $m$ をそれぞれバケットに分け、バケット境界と各軸の上端をサンプル座標とする。両軸のサンプル座標の直積で $F(n,m)$ を前計算する。
-- クエリでは、マンハッタン距離が最小であるサンプル点から $n$ 方向と $m$ 方向に遷移する。
+- $n>m+1$ の場合は和の値が変わらないため、 $n=m+1$ として処理する。
+- $n$ 軸と $m$ 軸をそれぞれバケットに分け、バケットの境界と各軸の上端をサンプル座標とする。両軸のサンプル座標の直積をサンプル点とし、各点で $F(n,m)$ を前計算する。
+- クエリでは、クエリ点とのマンハッタン距離が最小であるサンプル点から、 $n$ 方向と $m$ 方向に遷移する。
 - バケットサイズを指定できる。
 
 以下、クエリで与えられる $m$ の最大値を $M$ 、バケットサイズを $B$ とする。
@@ -17,12 +18,12 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - $r=0$ の場合は閉形式を用いる。
 - $r=-1$ の場合は $\displaystyle F(n,m)=(-1)^{n-1}\binom{m-1}{n-1}$ を用い、 $r+1$ による除算を行わない。ただし、 $n=0$ または $m=0$ の場合は別に処理する。
 - $r$ が $0$ でも $-1$ でもない場合、 $n$ 方向の遷移には境界項 $\displaystyle r^n\binom{m}{n}$ を用いる。 $m$ 方向の遷移にはパスカルの三角形の等式から得られる $\displaystyle F(n,m+1)=(r+1)F(n,m)-r^n\binom{m}{n-1}$ を用いる。
-- バケットサイズ $B$ を指定しない場合、 $r=0$ であれば $B=1$ とし、既定のバケットサイズを計算しない。
-- バケットサイズ $B$ を指定せず、 $r\ne 0$ の場合、 $B^2>M$ を満たす最小の $2$ の冪が選ばれる。
+- バケットサイズ $B$ を指定しない場合、 $r=0$ であれば $B=1$ とし、 $B$ を求めるための計算を省く。
+- バケットサイズ $B$ を指定せず、 $r\ne 0$ の場合、 $B^2>M$ を満たす最小の $2$ の冪を $B$ とする。
 
 ## 使い方
 
-`max_m` を $M$ 、`bucket_size` を $B$ とおく。
+`max_m`, `bucket_size` をそれぞれ $M,B$ とおく。
 
 - `OnlineBinomialSum(int max_m, T r, int bucket_size)`
   - $0\le m\le M$ のクエリに対する前計算を行う。
@@ -36,8 +37,8 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - `OnlineBinomialSum(int max_m, T r = T(1))`
   - $0\le m\le M$ のクエリに対する前計算を行う。
   - `r` は重みであり、省略時は $1$ である。
-  - $r=0$ の場合、バケットサイズ $B$ は $1$ であり、既定のバケットサイズを計算しない。
-  - $r\ne 0$ の場合、バケットサイズ $B$ は、 $B^2>M$ を満たす最小の $2$ の冪が選ばれる。
+  - $r=0$ の場合、バケットサイズ $B$ を $1$ とし、 $B$ を求めるための計算を省く。
+  - $r\ne 0$ の場合、 $B^2>M$ を満たす最小の $2$ の冪をバケットサイズ $B$ とする。
   - 前提: $M\ge 0$ 。
   - 前提: `T` は素数 $p$ を法とする体の型であり、整数からの構築、四則演算、等値比較を持つ。
   - 前提: `std::numeric_limits<T>::is_integer` は `false` である。
@@ -46,15 +47,15 @@ documentation_of: math/combinatorics/online-binomial-sum.hpp
 - `T binom_prefix_sum(int n, int m) const`
   - $\displaystyle \sum_{i=0}^{n-1}r^i\binom{m}{i}$ を返す。
   - 前提: $n\ge 0,\;0\le m\le M$ 。
-  - 備考: $n>m+1$ の場合も assert 違反にせず、全体の和を返す。
+  - 備考: $n>m+1$ の場合も `assert` による検査には失敗せず、全体の和を返す。
 - `T binom_sum(int l, int u, int m) const`
   - $\displaystyle \sum_{i=l}^{u-1}r^i\binom{m}{i}$ を返す。
   - 前提: $0\le l\le u,\;0\le m\le M$ 。
-  - 備考: $u>m+1$ または $l>m$ の場合も assert 違反にしない。
+  - 備考: $u>m+1$ または $l>m$ の場合も `assert` による検査には失敗しない。
 
 ## 計算量
 
-`max_m` を $M$ 、`bucket_size` を $B$ とおく。
+`max_m`, `bucket_size` をそれぞれ $M,B$ とおく。
 
 $r$ が $0$ でも $-1$ でもない場合、
 

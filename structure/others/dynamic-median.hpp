@@ -1,11 +1,12 @@
 #ifndef STRUCTURE_OTHERS_DYNAMIC_MEDIAN_HPP
 #define STRUCTURE_OTHERS_DYNAMIC_MEDIAN_HPP
 
-// 値の多重集合に対して追加、削除、中央値取得を行う。
+// 値の多重集合に値を追加または削除し、中央値を求める。
 // 中央値は下側、上側、両側の算術平均から選べる。
-// T はコピー可能で、std::multiset で扱える比較を持つ型を仮定する。
-// median は空でないことを仮定する。
-// add, erase は O(log N)、median は O(1) である。
+// T はコピー可能であり、< によって狭義弱順序が定まることを仮定する。
+// median を呼び出すときは、多重集合が空でないことを仮定する。
+// 要素数を N とすると、各操作の時間計算量は
+// add, erase が O(log N)、median が O(1) である。
 
 #include <cassert>
 #include <set>
@@ -81,8 +82,9 @@ template <class T> struct DynamicMedian {
 
   private:
     void balance() {
-        // add または erase でこの関数が呼び出される位置と
-        // この関数を呼ばない関数についての不変条件より、移動は高々 1 回でよい。
+        // 公開関数の開始時には、lower_values の要素数は upper_values の要素数と
+        // 等しいか 1 大きい。add または erase で要素を 1 個変更した直後なので、
+        // 高々 1 個を移せばこの不変条件を復元できる。
         if (lower_values.size() < upper_values.size()) {
             lower_values.insert(upper_values.extract(upper_values.begin()));
         } else if (lower_values.size() > upper_values.size() + 1) {

@@ -1,9 +1,12 @@
 #ifndef OTHER_ENUMERATE_MAXIMUM_INDEPENDENT_SET_PATH_SUMS_HPP
 #define OTHER_ENUMERATE_MAXIMUM_INDEPENDENT_SET_PATH_SUMS_HPP
 
-// 長さ n の列から隣り合わない k 個を選ぶ総和の最大値または最小値を全ての k について求める。
-// 符号なし整数型は使用できない。
-// 比較ソートによる実装は O(n log n)、バケットソートによる実装は非負整数列の総和を S として O(n + S)。
+// 長さ n の列について、互いに隣り合わない k 個の要素の総和の最大値または最小値を
+// 0 <= k <= ceil(n / 2) の各 k に対して求める。
+// 比較ソート版には符号なし整数型を使用できない。
+// バケットソート版は非負整数列に使用する。
+// 比較ソート版の時間計算量は O(n log n) である。
+// 列の総和を S とすると、バケットソート版の時間計算量は O(n + S) である。
 
 #include <algorithm>
 #include <cassert>
@@ -63,7 +66,7 @@ std::vector<T> marginal_values(const std::vector<T> &a) {
     return res;
 }
 
-// x の絶対値が offset 以下であることを呼び出し元で保証する。
+// 呼び出し元は、x の絶対値が offset 以下であることを保証する。
 template <class T>
 std::size_t bucket_index(const T x, const std::size_t offset) {
     if (T(0) <= x) {

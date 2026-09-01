@@ -2,10 +2,10 @@
 #define MATH_MULTIPLICATIVE_FUNCTION_PRIME_COUNTING_MODULO_HPP
 
 // N 以下の素数を、m で割った余りごとに数える。
-// Lucy DP のテーブルを余りごとに持ち、素数 x によるふるいを同時に行う。
-// N は非負、m は正を仮定する。
-// 戻り値のテーブルの 1 つ目の添字は m で割った余りである。
-// 計算量 O(m N^{3/4} / log N)、空間 O(m sqrt(N))。
+// Lucy DP のテーブルを各剰余類について持ち、素数 x によるふるいを同時に行う。
+// N が非負であり、m が正であることを仮定する。
+// 返す 2 次元のテーブルでは、第 1 添字が m で割った余りを表す。
+// 時間 O(m N^{3/4} / log N)、空間 O(m sqrt(N))。
 
 #include <cassert>
 #include <type_traits>

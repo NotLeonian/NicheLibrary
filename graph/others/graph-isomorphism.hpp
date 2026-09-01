@@ -1,11 +1,11 @@
 #ifndef GRAPH_OTHERS_GRAPH_ISOMORPHISM_HPP
 #define GRAPH_OTHERS_GRAPH_ISOMORPHISM_HPP
 
-// 重みなし一般無向グラフの同型性を判定する。
-// 頂点は 0-based indexing、自己ループと多重辺を許す。
-// 不正な頂点番号は assert で落とす。
-// 1-WL 色分割と個別化による探索を用いる。
-// 最悪指数時間である。
+// 重みのない 2 つの無向グラフが同型かどうかを判定する。
+// 頂点番号は 0-based indexing とし、自己ループと多重辺を許す。
+// 範囲外の頂点番号を与えると assert に失敗する。
+// 1-WL による色分割と、頂点の個別化による探索を用いる。
+// 訪問する探索状態の数の粗い上界は O(n!) である。
 
 #include <algorithm>
 #include <array>

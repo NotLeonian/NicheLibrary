@@ -1,11 +1,11 @@
 ---
-title: 値の追加、削除と中央値取得
+title: 値の追加または削除に伴う中央値の計算
 documentation_of: structure/others/dynamic-median.hpp
 ---
 
 ## 概要
 
-- 値の追加または削除を行いながら、中央値を求める。
+- 多重集合に値を追加または削除しながら、中央値を求める。
 - 下側中央値、上側中央値、両側の算術平均を選べる。
 - `median()` は下側中央値を返す。
 - `lower_values` と `upper_values` の $2$ つの多重集合で値を分けて持つ。
@@ -13,25 +13,26 @@ documentation_of: structure/others/dynamic-median.hpp
 ## 使い方
 
 - `DynamicMedian<T>()`
-  - 空で構築する。
-  - 前提: `T` はコピー可能で、`std::multiset<T>` で扱える比較を持つ。
+  - 空の状態で構築する。
+  - 前提: `T` はコピー可能であり、`<` によって狭義弱順序が定まる。
 - `DynamicMedianMode`
   - 要素数を $N$ とおく。
-  - `Lower` は昇順で $0$ 始まりの $(N - 1) / 2$ 番目の値を指定する。
-  - `Upper` は昇順で $0$ 始まりの $N / 2$ 番目の値を指定する。
+  - `Lower` は昇順に並べたときの $\lfloor (N - 1) / 2 \rfloor$ 番目 (0-based indexing) の値を指定する。
+  - `Upper` は昇順に並べたときの $\lfloor N / 2 \rfloor$ 番目 (0-based indexing) の値を指定する。
   - `Average` は `Lower` と `Upper` の算術平均を指定する。
   - 備考: 要素数が奇数の場合、 $3$ 種類は同じ値になる。
 - `void add(T x)`
   - 値 $x$ を $1$ 個追加する。
 - `bool erase(const T &x)`
   - 値 $x$ を $1$ 個削除する。
-  - 返り値: 削除に成功した場合は `true`、値 $x$ が存在しなかった場合は `false` が返る。
+  - 削除に成功した場合は `true`、値 $x$ が存在しなかった場合は `false` を返す。
   - 備考: 同じ値が複数ある場合はいずれか $1$ 個だけを削除する。
 - `template <class Result = T> Result median(DynamicMedianMode mode = DynamicMedianMode::Lower) const`
   - `mode` で指定した中央値を返す。
   - 前提: 要素数が $1$ 以上である。
-  - 前提: `Average` を使う場合、`Result` へ変換した値の加算と $2$ での除算ができる。
-  - 備考: `Result` が整数型の場合は、中央 $2$ 値の和を $2$ で割る整数除算の値を、和のオーバーフローを避けて返す。
+  - 前提: 返り値または算術平均の計算に使う中央の値を、値を変えずに `T` から `Result` へ変換できる。
+  - 前提: `Average` を使う場合、`Result` へ変換した値の加算と $2$ での除算ができ、必要な演算結果が `Result` の範囲に収まる。
+  - 備考: `Result` が整数型の場合は、中央の $2$ 値の和を $2$ で割った整数除算の値を、和のオーバーフローを避けて返す。
   - 備考: 平均を小数で返したい場合は `median<long double>(DynamicMedianMode::Average)` のように指定する。
 - `std::multiset<T> lower_values`
   - 小さい側の値を持つ。

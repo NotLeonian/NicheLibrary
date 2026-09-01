@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# GitHub Actions で使用することを前提とするため、shebang は uv としない
+# GitHub Actions では uv を介さず実行するため、shebang には python3 を指定する
 
 import re
 import subprocess

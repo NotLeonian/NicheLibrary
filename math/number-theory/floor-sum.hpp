@@ -3,10 +3,10 @@
 
 // 一次式の床関数の和 Σ_{i=0}^{n-1} floor((a i + b) / m) を求める。
 // n は非負、m は正を仮定する。
-// T は std::numeric_limits<T>::is_integer が true である型。
+// T は std::numeric_limits<T>::is_integer が true である型とする。
 // T が符号付きの場合、a, b は負でもよい（数学的な床除算で扱う）。
 // 中間計算と戻り値が T の範囲に収まることを仮定する。
-// 計算量 O(log m)。
+// 時間計算量は O(log m)、空間計算量は O(1) である。
 
 #include <cassert>
 #include <limits>

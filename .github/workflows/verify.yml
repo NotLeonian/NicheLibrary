@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       full_verify:
-        description: "キャッシュを削除して全ての verify を再実行する"
+        description: "過去の verify 結果を使用せず、全ての verify を実行する"
         required: false
         default: false
         type: boolean
@@ -21,7 +21,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
-# 同時に複数のデプロイが実行できないように設定
+# 同じグループに属するワークフローの実行が重なった場合は、
+# 進行中の古い実行をキャンセルして新しい実行を優先
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -61,12 +62,12 @@ jobs:
         id: competitive-verifier-package
         shell: bash
         run: python3 .github/scripts/resolve_competitive_verifier.py >> "$GITHUB_OUTPUT"
+      # verify の対象となるファイルを決定するため、competitive-verifier を準備
       - name: Set up competitive-verifier
         uses: competitive-verifier/actions/setup@v2
         with:
           cache-pip: true
           package: ${{ steps.competitive-verifier-package.outputs.package }}
-      # verify の対象の resolve に必要な環境を準備
       - name: Resolve verify files
         run: bash .github/scripts/resolve_verify_files.sh verify_files.json
       - name: Upload verify_files.json

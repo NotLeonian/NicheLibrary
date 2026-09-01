@@ -1,12 +1,12 @@
 #ifndef OTHER_RECTANGLE_ADD_MAX_GET_HPP
 #define OTHER_RECTANGLE_ADD_MAX_GET_HPP
 
-// 2 次元平面上の重み付き半開長方形を加算し、最大値を求める。
+// 2 次元平面上に重み付き半開長方形を追加し、指定した範囲内で重みの総和の最大値を求める。
 // RectangleAddMaxGet は座標圧縮せず、x 座標を 1 ずつ走査する。
 // CompressedRectangleAddMaxGet は座標圧縮して平面走査する。
 // 面積 0 の長方形は無視する。
-// 重みは負でもよいが、正の面積で符号付き整数型の最小値は使わない。
-// 計算量は各 calc の説明を参照する。
+// 重みは負でもよいが、正の面積を持つ長方形の重みには符号付き整数型の最小値を使わない。
+// 計算量は計算範囲と実装によって異なる。詳細は対応するドキュメントに記載する。
 
 #include <algorithm>
 #include <cassert>
@@ -33,7 +33,7 @@ template <class C> void assert_valid_weight([[maybe_unused]] const C &w) {
     }
 }
 
-// 呼び出し元で l <= r が保証されていることを仮定する。
+// 呼び出し元は l <= r を保証する。
 template <class T> CoordinateLength<T> coordinate_difference(T l, T r) {
     return static_cast<CoordinateLength<T>>(r) -
            static_cast<CoordinateLength<T>>(l);
@@ -367,7 +367,8 @@ template <class T, class C> struct CompressedRectangleAddMaxGet {
                 }
                 found = true;
             } else if (ret.max_value == now.max_value) {
-                // x 座標を昇順に走査しているため、最小の点は更新せず、最大の点は常に更新する。
+                // x 座標を昇順に走査しているため、辞書順最小の点は更新せず、
+                // 辞書順最大の点は常に更新する。
                 ret.maximum_x = maximum_x;
                 ret.maximum_y = now.maximum_y;
                 if constexpr (NeedArea) {
@@ -646,7 +647,8 @@ template <class T, class C> struct RectangleAddMaxGet {
             }
             found = true;
         } else if (ret.max_value == value) {
-            // x 座標を昇順に走査しているため、最小の点は更新せず、最大の点は常に更新する。
+            // x 座標を昇順に走査しているため、辞書順最小の点は更新せず、
+            // 辞書順最大の点は常に更新する。
             ret.maximum_x = maximum_x;
             ret.maximum_y = maximum_y;
             if constexpr (NeedArea) {
