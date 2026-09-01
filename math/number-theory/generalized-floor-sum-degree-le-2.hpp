@@ -2,11 +2,14 @@
 #define MATH_NUMBER_THEORY_GENERALIZED_FLOOR_SUM_DEGREE_LE_TWO_HPP
 
 // 一般化 floor sum（次数 2 以下）のうち、（0, 1）、（1, 1）、（0, 2）をまとめて求める。
-// ans_01 = Σ floor((a i + b) / m)、ans_11 = Σ i floor((a i + b) / m)、
-// ans_02 = Σ floor((a i + b) / m)^2。
+// ans_01 = Σ_{i=0}^{n-1} floor((a i + b) / m)。
+// ans_11 = Σ_{i=0}^{n-1} i floor((a i + b) / m)。
+// ans_02 = Σ_{i=0}^{n-1} floor((a i + b) / m)^2。
 // n >= 0、m > 0 を仮定する。T が符号付きの場合、a, b は負でもよい。
-// T および明示的に指定する Internal は整数型であり、内部計算が内部型の範囲に収まることを仮定する。
-// 計算量 O(log m)。
+// T と内部計算に用いる型は bool 以外の整数型である。
+// 内部計算に用いる型は T の全ての値を表せるものとする。
+// 計算途中の値が内部計算に用いる型の範囲に収まることを仮定する。
+// 時間計算量は O(log m)、空間計算量は O(log m)（再帰）である。
 
 #include <cassert>
 #include <limits>

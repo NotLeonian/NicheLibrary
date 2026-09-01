@@ -3,6 +3,10 @@
 
 // 128 bit 符号なし整数型 UInt128 と 128 bit 符号付き整数型 Int128 を提供する。
 // GCC 拡張には依存しない。
+// UInt128 の加算、減算、乗算は 2^128 を法として計算する。
+// Int128 の算術演算では、結果が表現可能な範囲に収まることを仮定する。
+// 除数は 0 でないものとし、Int128 の最小値を -1 で割る演算は行わない。
+// 算術演算は、固定回数の 64 bit 整数演算で処理する。
 
 #include <bit>
 #include <cassert>
@@ -182,7 +186,7 @@ class UInt128 {
         return length;
     }
 
-    // divisor ≠ 0 が呼び出し元で保証されていることを仮定する。
+    // 呼び出し元は、divisor が 0 でないことを保証する。
     static constexpr UInt128 div_mod_uint32(UInt128 value,
                                             std::uint32_t divisor,
                                             std::uint32_t &remainder) {
@@ -337,7 +341,7 @@ class UInt128 {
         }
     }
 
-    // 呼び出し元で lhs >= rhs > 0 が保証されていることを仮定する。
+    // 呼び出し元は、lhs >= rhs > 0 が成り立つことを保証する。
     static constexpr void div_mod_32bit_words(UInt128 lhs, UInt128 rhs,
                                               UInt128 &quotient,
                                               UInt128 &remainder) {
@@ -365,7 +369,7 @@ class UInt128 {
         remainder = from_32bit_words(remainder_words);
     }
 
-    // rhs ≠ 0 が呼び出し元で保証されていることを仮定する。
+    // 呼び出し元は、rhs が 0 でないことを保証する。
     static constexpr void div_mod_unchecked(UInt128 lhs, UInt128 rhs,
                                             UInt128 &quotient,
                                             UInt128 &remainder) {
@@ -589,8 +593,8 @@ class Int128 {
         return from_unsigned_unchecked(value, negative);
     }
 
-    // 引数 negative で指定した通りに符号を付けた value が
-    // Int128 の範囲に収まることを仮定する。
+    // 呼び出し元は、value に negative が示す符号を付けた値が
+    // Int128 の範囲に収まることを保証する。
     static constexpr Int128 from_unsigned_unchecked(UInt128 value,
                                                     bool negative) {
         return from_twos_complement(negative ? -value : value);
@@ -603,7 +607,7 @@ class Int128 {
 };
 
 namespace int128_internal {
-// first < text.size() が呼び出し元で保証されていることを仮定する。
+// 呼び出し元は、first < text.size() が成り立つことを保証する。
 inline UInt128 read_uint128_decimal(const std::string &text,
                                     std::size_t first) {
     UInt128 value = 0;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# GitHub Actions でも使用するため、shebang は uv としない
+# GitHub Actions でも uv を介さず実行するため、shebang には python3 を指定する
 from __future__ import annotations
 
 import argparse

@@ -89,7 +89,7 @@ std::vector<RealPoint> convex_cut(const std::vector<Point> &polygon,
         const Point &now = polygon[i];
         const Point &next = polygon[(i + 1) % n];
 
-        // AOJ CGL_4_C は有向直線 line_a -> line_b の左側を残す。
+        // AOJ CGL_4_C では、line_a から line_b へ向かう有向直線の左側を残す。
         const __int128_t current = cross_value(direction, now - line_a);
         const __int128_t next_value = cross_value(direction, next - line_a);
 

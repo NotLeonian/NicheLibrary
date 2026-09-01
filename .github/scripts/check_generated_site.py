@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# GitHub Actions で使用することを前提とするため、shebang は uv としない
+# GitHub Actions では uv を介さず実行するため、shebang には python3 を指定する
 
 import sys
 from html.parser import HTMLParser
@@ -55,7 +55,7 @@ def normalized_script_type(value: str | None) -> str:
     if value is None:
         return ""
 
-    # `; charset=utf-8` などの MIME パラメータを削除
+    # script 要素の type 属性から `; charset=utf-8` などの MIME パラメータを取り除く
     return value.split(";", 1)[0].strip().lower()
 
 

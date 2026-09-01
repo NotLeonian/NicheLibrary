@@ -1,11 +1,12 @@
 #ifndef OTHER_MINIMUM_MOD_RANGE_INCREMENT_DECREMENT_OPERATIONS_HPP
 #define OTHER_MINIMUM_MOD_RANGE_INCREMENT_DECREMENT_OPERATIONS_HPP
 
-// 数列を mod m 上で見たとき、区間に +1 または -1 を加える操作の最小回数を求める。
-// 区間に整数 x を加える操作の最小 sum |x| と同値である。
-// a, b は同じ長さで、各要素は [0, m) を仮定する。
-// T は 64 bit 整数型、m <= 10^9 を想定する。
-// 平均計算量 O(N)。
+// 法 m で数列 a を b に一致させるために、
+// 連続区間の全要素に +1 または -1 を加える操作の最小回数を求める。
+// 連続区間に任意の整数 x を加える操作を繰り返す場合の、各 |x| の総和の最小値と等しい。
+// a, b は同じ長さで、各要素は [0, m) に属すると仮定する。
+// T は 64 bit 以上の整数型であることを仮定する。
+// 入力列の長さを N とすると、平均時間計算量は O(N) である。
 
 #include <algorithm>
 #include <cassert>

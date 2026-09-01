@@ -4,9 +4,10 @@ IndentWidth: 4
 InsertBraces: true
 MaxEmptyLinesToKeep: 1
 KeepEmptyLines:
-  # AtEndOfFile: false は BasedOnStyle: LLVM に含まれる
+  # BasedOnStyle: LLVM では AtEndOfFile: false になる
   AtStartOfBlock: false
-  # AtStartOfFile: false は自動保存によるフォーマットとの相性が悪いため不使用
+  # ファイル先頭に空行を入力している途中で自動保存されると、その空行が削除されて
+  # 入力しにくくなるため、AtStartOfFile: false は設定しない
 WrapNamespaceBodyWithEmptyLines: Never
 RemoveEmptyLinesInUnwrappedLines: true
 ReflowComments: false

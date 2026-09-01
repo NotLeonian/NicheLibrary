@@ -5,29 +5,31 @@ documentation_of: graph/tree/hl-rec-dp.hpp
 
 ## 概要
 
-- 根付き木の部分木を、1 本の `State` から `K` 本の `State` の組へ写す変換として再帰的に計算する。
-- 各頂点では最大部分木サイズの子を重い子とし、重い子だけは全レーンをまとめて 1 回再帰する。
+- 根付き木の各部分木について、1 つの `State` を入力として `K` 個の `State` を計算する処理を再帰的に行う。
+- 各頂点では、部分木のサイズが最大の子を重い子とする。重い辺を連ねたパスでは、全レーンの状態をまとめて処理する。
 - 軽い子は各レーンごとに再帰し、`Spec` 側の関数で親側の状態に戻す。
-- `before_vertex` と `after_vertex` により、固定した根のもとで各頂点を部分木の根とする値を列挙できる。
+- `before_vertex` と `after_vertex` は、固定した根のもとで各頂点を部分木の根として扱うときの値を記録するために使える。
 
 ## 使い方
 
 - `hl_rec_dp(n, edges, root, initial_state, spec)`
-  - 頂点数が `n` で、無向辺列が `edges` である木を `root` で根付き木にして実行する。
+  - `n` を頂点数とする。`edges` で辺を与えた木について、`root` を根に定めて重軽再帰 DP を実行する。
   - 頂点番号は 0-based indexing とする。
   - `edges` はサイズ $n-1$ の木の辺の列である。
-  - `initial_state` は各重パスの根側から渡す初期状態である。
-  - `spec` の `before_vertex`, `add_vertex`, `after_vertex` などを呼び出し、`spec` の中の答えの配列を更新する。
+  - `initial_state` は、根の部分木を計算するときの入力状態である。軽い子を処理するときは、親側の各レーンの状態を新たな入力として使う。
+  - `spec` の `make_pack`, `take_heavy`, `take_light`, `before_vertex`, `add_vertex`, `after_vertex` を呼び出す。
   - 返り値は `root` を通常の頂点として加えた後の `std::array<Spec::State, Spec::K>` である。
-  - 前提: `root` を $r$ として $n\ge 1,\,0\le r<n$ が成り立ち、`edges` は木の辺の列である。
+  - 前提: `root` を $r$ として $n\ge 1,\,0\le r<n$ が成り立ち、`edges` は木を表す。頂点番号が範囲外である場合や、自己ループ、閉路、根から到達できない頂点がある場合は `assert` に失敗する。
 - `Spec`
   - `using State = ...;` と `static constexpr int K = ...;` を持つ。
-  - `make_pack(v, in)` は、子をまだ処理していない頂点 `v` の DP の組を返す。
-  - `take_heavy(v, child, pack)` は、重い子 `child` の返り値を頂点 `v` 側の DP の組に変換して返す。
-  - `take_light(v, child, lane, pack)` は、軽い子 `child` をレーン `lane` だけ処理した結果から、親側の 1 本の `State` を返す。
-  - `before_vertex(v, pack)` は、頂点 `v` を部分木根として扱う値を記録するために呼ばれる。
-  - `add_vertex(v, pack)` は、頂点 `v` を親へ返す通常の頂点として `pack` に反映する。
-  - `after_vertex(v, pack)` は、`add_vertex` 後の値を必要に応じて記録するために呼ばれる。
+  - 前提: $K\ge 1$ である。
+  - `make_pack(v, in)` は、子を持たない頂点 `v` について、入力状態 `in` から DP の組を作って返す。
+  - `take_heavy(v, child, pack)` は、重い子 `child` を処理した後の `pack` を、頂点 `v` 側の DP の組に変換して返す。
+  - `take_light(v, child, lane, pack)` は、親側のレーン `lane` の状態を入力として軽い子 `child` の部分木を処理した結果 `pack` から、親側の新しい `State` を返す。
+  - `before_vertex(v, pack)` は、すべての子を処理してから頂点 `v` を加えるまでの間に呼ばれる。
+  - `add_vertex(v, pack)` は、頂点 `v` の情報を `pack` に反映する。
+  - `after_vertex(v, pack)` は、`add_vertex` の後に呼ばれる。
+  - `before_vertex` と `after_vertex` は、各頂点で 1 回ずつ呼ばれる。
   - `pack` の型は `std::array<State, K>` である。
 
 <details>
@@ -134,11 +136,13 @@ int main() {
 
 ## 計算量
 
-- 木の根付き化と重い子の選択は時間 $O(n)$ 。
-- 軽い辺だけで再帰が深くなるため、再帰段数は $O(\log n)$ 。
-- $K$ を `Spec::K` の値とする。部分木 1 回分の値計算の呼び出し回数は $O(n^{\log_2(K+1)})$ 。
-- 全頂点の `before_vertex` と `after_vertex` を回収する実行については、同様に $K\ge 2$ ならば $O(n^{\log_2(K+1)})$ 回、 $K=1$ ならば $O(n\log n)$ 回である。
-- 各呼び出しで、`Spec` 側の処理時間が掛かる。典型的な場合として $K=2$ 、各処理が $O(X)$ ならば $O(n^{\log_2 3}X)$ である。
+頂点数を $n$ とし、`Spec::K` の値を $K$ とする。
+
+- 木に根を設定して重い子を選ぶ処理には、時間 $O(n)$ が掛かる。
+- 再帰呼び出しは軽い辺を通るときだけ入れ子になるため、再帰の深さは $O(\log n)$ である。
+- 1 つの部分木について 1 つの入力状態から DP の組を計算するとき、`Spec` の関数を呼び出す回数は $O(n^{\log_2(K+1)})$ である。
+- `before_vertex` と `after_vertex` をすべての頂点で呼び出す処理では、`Spec` の関数を呼び出す回数は $K\ge 2$ の場合に $O(n^{\log_2(K+1)})$ である。 $K=1$ の場合は $O(n\log n)$ である。
+- `Spec` の各関数を 1 回呼び出す時間の上界を $X$ とする。典型的な場合として、 $K=2$ ならば全体の時間計算量は $O(n^{\log_2 3}X)$ である。
 
 ## 参考文献
 
