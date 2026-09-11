@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # 間接依存もバージョン更新の対象に含める。
+    allow:
+      - dependency-type: "all"
+    groups:
+      # pydantic が pydantic-core のバージョンを厳密に指定するため、まとめて更新する。
+      pydantic:
+        applies-to: "version-updates"
+        patterns:
+          - "pydantic"
+          - "pydantic-core"
