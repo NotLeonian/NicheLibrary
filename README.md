@@ -21,6 +21,14 @@ C++ library for competitive programming
 - ドキュメントおよびソースコード中のコメントには原則日本語を使用します。
 - Issue および Pull Request の description は日本語以外でも構いません。
 
+## GitHub Actions での verify
+
+[.github/workflows/verify.yml](.github/workflows/verify.yml) は、PR またはブランチごとに並行して実行できます。同じ PR またはブランチで新しい実行が始まると、古い実行をキャンセルします。
+
+CI では、過去の verify 結果をキャッシュから復元し、ソースコードとその依存先に変更がない場合は再利用します。キャッシュは、OS、competitive-verifier の解決済み commit SHA、設定、ワークフロー、スクリプトによって区別します。CI で使う competitive-verifier は commit SHA を指定して導入するため、[uv.lock](uv.lock) や [pyproject.toml](pyproject.toml) の開発用依存関係だけが変わっても、結果を再利用できます。
+
+キャッシュが見つからない場合、月次の定期実行、手動実行で `full_verify` を指定した場合は、全ての verify を実行します。
+
 ## ローカルでの verify
 
 ローカルでの verify は、以下のコマンドで行えます。
