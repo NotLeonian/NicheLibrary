@@ -21,10 +21,9 @@ permissions:
   contents: read
   pages: write
   id-token: write
-# 同じグループに属するワークフローの実行が重なった場合は、
-# 進行中の古い実行をキャンセルして新しい実行を優先
+# PR またはブランチごとに実行を分け、同じ ref の古い実行だけをキャンセルする。
 concurrency:
-  group: "pages"
+  group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 jobs:
   formatting-check:
@@ -109,9 +108,10 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
-          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # CI で使う verifier は resolved_ref で区別し、uv の依存関係の更新では結果を破棄しない。
+          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-
+            competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-
       - name: Download verify_files.json
         id: verify_files
         uses: competitive-verifier/actions/download-verify-artifact@v2
@@ -288,7 +288,7 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
-          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py', 'pyproject.toml', 'uv.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-${{ github.run_id }}-${{ github.run_attempt }}
   deploy:
     if: (success() || failure()) && github.ref == 'refs/heads/main' && needs.docs.outputs.upload-pages == 'true'
     runs-on: ubuntu-latest
