@@ -25,7 +25,7 @@ C++ library for competitive programming
 
 [.github/workflows/verify.yml](.github/workflows/verify.yml) は、PR またはブランチごとに並行して実行できます。同じ PR またはブランチで新しい実行が始まると、古い実行をキャンセルします。
 
-CI では、過去の verify 結果をキャッシュから復元し、ソースコードとその依存先に変更がない場合は再利用します。キャッシュは、OS、competitive-verifier の解決済み commit SHA、設定、ワークフロー、スクリプトによって区別します。CI で使う competitive-verifier は commit SHA を指定して導入するため、[uv.lock](uv.lock) や [pyproject.toml](pyproject.toml) の開発用依存関係だけが変わっても、結果を再利用できます。
+CI では、過去の verify 結果をキャッシュから復元し、ソースコードとその依存先に変更がない場合は再利用します。キャッシュは、OS、competitive-verifier の解決済み commit SHA、[.competitive-verifier/config.toml](.competitive-verifier/config.toml)、[.github/scripts/resolve_verify_files.sh](.github/scripts/resolve_verify_files.sh)、[.github/scripts/run_verify_split.sh](.github/scripts/run_verify_split.sh) によって区別します。ワークフローの整形チェックやドキュメント生成に関する変更では、過去の verify 結果を引き続き利用できます。CI で使う competitive-verifier は commit SHA を指定して導入するため、[uv.lock](uv.lock) や [pyproject.toml](pyproject.toml) の開発用依存関係だけが変わっても、結果を再利用できます。
 
 キャッシュが見つからない場合、月次の定期実行、手動実行で `full_verify` を指定した場合は、全ての verify を実行します。
 

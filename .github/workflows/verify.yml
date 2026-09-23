@@ -40,6 +40,22 @@ jobs:
         run: npm ci
       - name: npm formatting check
         run: npm run format:check
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.13"
+      - name: Python format and lint check
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t python_files < <(git ls-files -z -- '*.py')
+          if [[ "${#python_files[@]}" -eq 0 ]]; then
+            exit 0
+          fi
+
+          uv run --locked ruff format --check "${python_files[@]}"
+          uv run --locked ruff check "${python_files[@]}"
+          uv run --locked pyright --project pyright-checks.json "${python_files[@]}"
+          uv run --locked mypy "${python_files[@]}"
       - name: install clang-format 20
         run: |
           sudo apt-get update
@@ -108,10 +124,10 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
-          # CI で使う verifier は resolved_ref で区別し、uv の依存関係の更新では結果を破棄しない。
-          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # ジャッジの設定や実行方法に関わるファイルだけをハッシュする。
+          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/scripts/resolve_verify_files.sh', '.github/scripts/run_verify_split.sh') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-
+            competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/scripts/resolve_verify_files.sh', '.github/scripts/run_verify_split.sh') }}-
       - name: Download verify_files.json
         id: verify_files
         uses: competitive-verifier/actions/download-verify-artifact@v2
@@ -123,12 +139,12 @@ jobs:
       - name: Verify
         shell: bash
         run: |
+          # ジャッジの制限時間は、キャッシュキーに含まれる run_verify_split.sh で指定する。
           args=(
             --output "$RUNNER_TEMP/result.json"
             --verify-files "$VERIFY_FILES_JSON"
             --split-size "$SPLIT_SIZE"
             --split-index "${{ matrix.index }}"
-            --timeout 1800
           )
           if [[ "$FULL_VERIFY" == "true" ]]; then
             args+=(--full)
@@ -288,7 +304,7 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/competitive-verifier-ci-result/merged-result.json
-          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/workflows/verify.yml', '.github/scripts/*.sh', '.github/scripts/*.py') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: competitive-verifier-ci-result-${{ runner.os }}-verifier-${{ steps.competitive-verifier-package.outputs.resolved_ref }}-inputs-${{ hashFiles('.competitive-verifier/config.toml', '.github/scripts/resolve_verify_files.sh', '.github/scripts/run_verify_split.sh') }}-${{ github.run_id }}-${{ github.run_attempt }}
   deploy:
     if: (success() || failure()) && github.ref == 'refs/heads/main' && needs.docs.outputs.upload-pages == 'true'
     runs-on: ubuntu-latest

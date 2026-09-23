@@ -4,6 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    rebase-strategy: disabled
     # 間接依存もバージョン更新の対象に含める。
     allow:
       - dependency-type: "all"
