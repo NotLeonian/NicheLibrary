@@ -40,7 +40,7 @@ jobs:
         run: npm ci
       - name: npm formatting check
         run: npm run format:check
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: "3.13"
       - name: Python format and lint check
