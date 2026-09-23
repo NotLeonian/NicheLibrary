@@ -40,6 +40,22 @@ jobs:
         run: npm ci
       - name: npm formatting check
         run: npm run format:check
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.13"
+      - name: Python format and lint check
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t python_files < <(git ls-files -z -- '*.py')
+          if [[ "${#python_files[@]}" -eq 0 ]]; then
+            exit 0
+          fi
+
+          uv run --locked ruff format --check "${python_files[@]}"
+          uv run --locked ruff check "${python_files[@]}"
+          uv run --locked pyright --project pyright-checks.json "${python_files[@]}"
+          uv run --locked mypy "${python_files[@]}"
       - name: install clang-format 20
         run: |
           sudo apt-get update
