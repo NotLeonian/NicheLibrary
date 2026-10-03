@@ -27,7 +27,7 @@
 	},
 	"homepage": "https://github.com/NotLeonian/NicheLibrary#readme",
 	"devDependencies": {
-		"@biomejs/biome": "^2.5.11",
+		"@biomejs/biome": "^2.5.14",
 		"prettier": "^3.9.6"
 	}
 }
