@@ -15,3 +15,14 @@ updates:
         patterns:
           - "pydantic"
           - "pydantic-core"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: weekly
+    rebase-strategy: disabled
+    groups:
+      # actions/* に一致する Action のバージョン更新を 1 つの PR にまとめる。
+      actions:
+        applies-to: version-updates
+        patterns:
+          - "actions/*"
