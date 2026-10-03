@@ -20,13 +20,6 @@ updates:
     schedule:
       interval: weekly
     rebase-strategy: disabled
-    groups:
-      # prettier と prettier-plugin-sql-cst のバージョン更新を 1 つの PR にまとめる。
-      prettier:
-        applies-to: version-updates
-        patterns:
-          - prettier
-          - prettier-plugin-sql-cst
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
