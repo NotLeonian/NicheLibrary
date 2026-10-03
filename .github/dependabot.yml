@@ -15,6 +15,11 @@ updates:
         patterns:
           - "pydantic"
           - "pydantic-core"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: weekly
+    rebase-strategy: disabled
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
