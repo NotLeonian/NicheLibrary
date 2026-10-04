@@ -235,8 +235,8 @@ wheels = [
 
 [[package]]
 name = "competitive-verifier"
-version = "4.2.6"
-source = { git = "https://github.com/NotLeonian/competitive-verifier?rev=965bbb017f1fea3371028a5d49e58242205c4140#965bbb017f1fea3371028a5d49e58242205c4140" }
+version = "4.3.0"
+source = { git = "https://github.com/NotLeonian/competitive-verifier?rev=604d80fd40d7ed5474c8ac60674a086de2cce531#604d80fd40d7ed5474c8ac60674a086de2cce531" }
 dependencies = [
     { name = "appdirs" },
     { name = "charset-normalizer" },
@@ -448,7 +448,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "competitive-verifier", git = "https://github.com/NotLeonian/competitive-verifier?rev=965bbb017f1fea3371028a5d49e58242205c4140" },
+    { name = "competitive-verifier", git = "https://github.com/NotLeonian/competitive-verifier?rev=604d80fd40d7ed5474c8ac60674a086de2cce531" },
     { name = "mypy", specifier = ">=2.3.0" },
     { name = "pyright", specifier = ">=1.1.411" },
     { name = "ruff", specifier = ">=0.15.12" },
