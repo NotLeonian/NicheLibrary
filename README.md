@@ -7,6 +7,13 @@ C++ library for competitive programming
 
 競技プログラミング用の C++ ライブラリです。
 
+> [!CAUTION]
+> このライブラリの一部のソースコードの作成には生成 AI を用いています。  
+> AtCoder Beginner Contest, AtCoder Regular Contest, AtCoder Grand Contest においてこのライブラリを使用する場合、[AtCoder生成AI対策ルール - 20261014版](https://info.atcoder.jp/entry/llm-rules-ja)にしたがって提出コードに参照 URL を添付してください。
+>
+> Generative AI was used to create some of the source code in this library.  
+> If you use this library during an AtCoder Beginner Contest, AtCoder Regular Contest, or AtCoder Grand Contest, please include a URL to the source in your submitted code in accordance with [AtCoder Rules against Generative AI - Version 20261014](https://info.atcoder.jp/entry/llm-rules-en).
+
 ## 方針
 
 このライブラリは、その名のとおりニッチなデータ構造やアルゴリズムだけを実装しています。
