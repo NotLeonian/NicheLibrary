@@ -10,4 +10,4 @@ NicheLibrary は、既存の有名なライブラリに要件を満たす実装�
 詳細は、GitHub リポジトリの CONTRIBUTING.md などを参照してください。
 
 このライブラリの一部のソースコードの作成には生成 AI を用いています。  
-**AtCoder のコンテストにおいてこのライブラリを使用する場合、[AtCoder生成AI対策ルール - 20261014版](https://info.atcoder.jp/entry/llm-rules-ja)にしたがって提出コードに参照 URL を添付してください。**
+**AtCoder Beginner Contest, AtCoder Regular Contest, AtCoder Grand Contest においてこのライブラリを使用する場合、[AtCoder生成AI対策ルール - 20261014版](https://info.atcoder.jp/entry/llm-rules-ja)にしたがって提出コードに参照 URL を添付してください。**
