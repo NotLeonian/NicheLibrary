@@ -73,7 +73,8 @@ def add_command_version(command: str) -> None:
         completed = subprocess.run(
             [resolved, "--version"],
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            # 診断メッセージは、コンパイラのバージョン情報として扱わない。
+            stderr=subprocess.DEVNULL,
             text=True,
             timeout=3,
             check=False,
