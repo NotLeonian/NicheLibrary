@@ -10,6 +10,7 @@ SPLIT_SIZE="20"
 SPLIT_INDEX=""
 TIMEOUT="1800"
 PREV_RESULT=""
+CHANGE_DETECTION=""
 FULL_VERIFY="false"
 
 while [[ "$#" -gt 0 ]]; do
@@ -36,6 +37,10 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --prev-result)
       PREV_RESULT="$2"
+      shift 2
+      ;;
+    --change-detection)
+      CHANGE_DETECTION="$2"
       shift 2
       ;;
     --full)
@@ -106,6 +111,9 @@ if [[ -n "$SPLIT_INDEX" ]]; then
 fi
 if [[ -n "$PREV_RESULT" ]]; then
   cmd+=(--prev-result "$PREV_RESULT")
+fi
+if [[ -n "$CHANGE_DETECTION" ]]; then
+  cmd+=(--change-detection "$CHANGE_DETECTION")
 fi
 
 set +e

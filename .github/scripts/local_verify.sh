@@ -232,7 +232,24 @@ RESULT_ROOT="$TMP_DIR/results"
 
 mkdir -p "$RESULT_ROOT"
 
-.github/scripts/resolve_verify_files.sh "$VERIFY_FILES"
+# oj-resolve は対象と依存先を git ls-files で絞るため、ローカルでは未追跡のファイルも含める。
+# Git の呼び出しを置き換えるのは、この resolver を実行する間だけとする。
+GIT_BIN="$(command -v git)"
+mkdir -p "$TMP_DIR/bin"
+cat > "$TMP_DIR/bin/git" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "ls-files" ]]; then
+  shift
+  exec "$LOCAL_VERIFY_GIT_BIN" ls-files --cached --others --exclude-standard "$@"
+fi
+exec "$LOCAL_VERIFY_GIT_BIN" "$@"
+SH
+chmod +x "$TMP_DIR/bin/git"
+
+LOCAL_VERIFY_GIT_BIN="$GIT_BIN" PATH="$TMP_DIR/bin:$PATH" \
+  .github/scripts/resolve_verify_files.sh "$VERIFY_FILES"
 
 prev_result_args=()
 if [[ "$USE_PREV_RESULT" == "true" && -f "$LOCAL_PREV_RESULT" ]]; then
@@ -254,6 +271,7 @@ for i in $(seq 0 "$((SPLIT_SIZE - 1))"); do
     --split-size "$SPLIT_SIZE" \
     --split-index "$index" \
     --timeout "$TIMEOUT" \
+    --change-detection hash \
     "${prev_result_args[@]}"
 
   if [[ ! -s "$output" ]]; then

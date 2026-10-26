@@ -56,6 +56,8 @@ jobs:
           uv run --locked ruff check "${python_files[@]}"
           uv run --locked pyright --project pyright-checks.json "${python_files[@]}"
           uv run --locked mypy "${python_files[@]}"
+      - name: Test local verify cache
+        run: uv run --locked python .github/scripts/test_local_verify.py
       - name: install clang-format 20
         run: |
           sudo apt-get update
