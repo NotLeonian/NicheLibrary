@@ -49,6 +49,9 @@ bash .github/scripts/local_verify.sh
 キャッシュは `${XDG_CACHE_HOME:-$HOME/.cache}/niche-library/local-verify/` 配下に保存され、リポジトリのパス、competitive-verifier の設定、使用するスクリプト、環境変数、コンパイラの情報から計算したフィンガープリントごとに分けられます。  
 [.competitive-verifier/config.toml](.competitive-verifier/config.toml)、[pyproject.toml](pyproject.toml)、[uv.lock](uv.lock)、使用するスクリプト、`CXXFLAGS` などの環境変数、コンパイラのいずれかが変わった場合、以前の verify 結果は `prev-result` として再利用されません。
 
+Git がまだ追跡していない verify ソースコードや依存先も対象に含めます。ただし、[.gitignore](.gitignore) などで無視される未追跡ファイルは除外します。ファイルをステージする必要はありません。  
+verify ソースコードと依存先の内容をハッシュで比較するため、更新時刻が変わらない編集でも、内容が変われば verify を再実行します。内容が変わらなければ、未追跡ファイルについても前回までの成功した結果を再利用できます。
+
 GitHub Actions での verify には専用のキャッシュを使用し、ローカル verify のキャッシュは参照しません。
 
 過去のローカル verify の結果を使わずにローカル verify を実行する場合は、`--no-prev-result` を指定します。
