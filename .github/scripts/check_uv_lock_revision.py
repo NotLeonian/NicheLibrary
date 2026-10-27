@@ -19,10 +19,15 @@ def exists(rev):
     )
 
 
-if os.environ["GITHUB_EVENT_NAME"] == "pull_request":
+event = os.environ["GITHUB_EVENT_NAME"]
+
+if event == "pull_request":
     base = "HEAD^1"
+elif event == "push":
+    base = os.getenv("BEFORE_SHA", "")
 else:
-    base = os.environ["BEFORE_SHA"]
+    print(f"No previous commit for {event}; skipping.")
+    raise SystemExit(0)
 
 # 以前のコミットが存在しない場合は、検査をスキップする。
 if not base or not base.strip("0") or not exists(f"{base}^{{commit}}"):

@@ -74,12 +74,16 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v10.3.0
         with:
           python-version: "3.13"
       - name: Test local verify cache
         run: uv run --locked python .github/scripts/test_local_verify.py
       - name: Check uv.lock revision
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
         run: uv run --locked python .github/scripts/check_uv_lock_revision.py
   setup:
     runs-on: ubuntu-latest
