@@ -53,12 +53,17 @@ class LocalVerifyTest(unittest.TestCase):
             )
             env["COMPETITIVE_VERIFIER_CMD"] = f"{sys.executable} {runner}"
 
-            # バージョンが同じでも、標準エラー出力が呼び出すたびに変わる場合を再現する。
+            # 初回の --version だけが遅く、次回は正常に応答する場合を再現する。
+            # 標準エラー出力も呼び出すたびに変える。
             bin_dir = Path(temp) / "bin"
             bin_dir.mkdir()
             clang = bin_dir / "clang"
             clang.write_text(
                 '#!/usr/bin/env bash\n'
+                'if [[ ! -e "${0}.probed" ]]; then\n'
+                '    touch "${0}.probed"\n'
+                '    sleep 4\n'
+                'fi\n'
                 'printf "test clang version 1\\n"\n'
                 'printf "diagnostic pid=%s\\n" "$$" >&2\n',
                 encoding="utf-8",
@@ -133,10 +138,16 @@ class LocalVerifyTest(unittest.TestCase):
                     str(p.relative_to(cache))
                     for p in cache.glob("*/*/merged-result.json")
                 )
+                fingerprints = {
+                    str(p.parent.relative_to(cache)): json.loads(p.read_text())
+                    for p in sorted(cache.glob("*/*/fingerprint-inputs.json"))
+                }
                 self.assertEqual(
                     actual,
                     expected,
-                    last_output + f"\nCached results: {cached_results}\n",
+                    last_output
+                    + f"\nCached results: {cached_results}\n"
+                    + f"Fingerprint inputs: {json.dumps(fingerprints, indent=2)}\n",
                 )
 
             resolved = run_local()[0]["files"]
@@ -148,6 +159,11 @@ class LocalVerifyTest(unittest.TestCase):
             self.assertNotIn(ignored.relative_to(root).as_posix(), resolved)
             assert_run_count(1)
 
+            run_local()
+            assert_run_count(1)
+
+            stat = clang.stat()
+            os.utime(clang, ns=(stat.st_atime_ns, stat.st_mtime_ns + 10_000_000_000))
             run_local()
             assert_run_count(1)
 
@@ -184,7 +200,7 @@ class LocalVerifyTest(unittest.TestCase):
             run_local("--full")
             assert_run_count(8)
 
-            # ファイルのサイズと更新時刻が同じでも、バージョンが変われば再実行する。
+            # サイズと更新時刻を保ったままコンパイラを書き換えても、再実行する。
             stat = clang.stat()
             clang.write_text(
                 clang.read_text().replace("version 1", "version 2"), encoding="utf-8"

@@ -26,20 +26,23 @@ PY
 }
 
 compute_local_verify_input_key() {
-  "$PYTHON_BIN" - "$ROOT" "$COMPETITIVE_VERIFIER_CMD" <<'PY'
+  "$PYTHON_BIN" - "$ROOT" "$COMPETITIVE_VERIFIER_CMD" "$1" <<'PY'
+import functools
 import hashlib
+import json
 import os
 import pathlib
 import shutil
-import subprocess
 import sys
 
 root = pathlib.Path(sys.argv[1]).resolve()
 competitive_verifier_cmd = sys.argv[2]
 
 h = hashlib.sha256()
+input_hashes: dict[str, str] = {}
 
 def add_bytes(label: str, data: bytes) -> None:
+    input_hashes[label] = hashlib.sha256(data).hexdigest()
     h.update(label.encode("utf-8"))
     h.update(b"\0")
     h.update(data)
@@ -56,36 +59,28 @@ def add_file(rel: str) -> None:
     else:
         add_text(f"file:{rel}:exists", "0")
 
-def add_command_version(command: str) -> None:
+@functools.lru_cache(maxsize=None)
+def executable_hash(path: pathlib.Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file:
+        while chunk := file.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+def add_command(command: str) -> None:
     resolved = shutil.which(command)
     add_text(f"tool:{command}:path", resolved or "")
 
     if not resolved:
         return
 
-    try:
-        stat = pathlib.Path(resolved).stat()
-        add_text(f"tool:{command}:stat", f"{stat.st_size}:{stat.st_mtime_ns}")
-    except OSError as e:
-        add_text(f"tool:{command}:stat-error", repr(e))
+    # --version の応答時間や出力に依存しないよう、実行ファイルの内容を調べる。
+    # 複数のコマンドが同じ実体を指す場合、そのファイルは一度だけ読み込む。
+    executable = pathlib.Path(resolved).resolve(strict=True)
+    add_text(f"tool:{command}:resolved-path", str(executable))
+    add_text(f"tool:{command}:content", executable_hash(executable))
 
-    try:
-        completed = subprocess.run(
-            [resolved, "--version"],
-            stdout=subprocess.PIPE,
-            # 診断メッセージは、コンパイラのバージョン情報として扱わない。
-            stderr=subprocess.DEVNULL,
-            text=True,
-            timeout=3,
-            check=False,
-        )
-    except Exception as e:
-        add_text(f"tool:{command}:version-error", repr(e))
-    else:
-        add_text(f"tool:{command}:version-code", str(completed.returncode))
-        add_text(f"tool:{command}:version-output", completed.stdout[:4096])
-
-add_text("schema", "niche-library-local-verify-cache-v2")
+add_text("schema", "niche-library-local-verify-cache-v3")
 add_text("competitive-verifier-cmd", competitive_verifier_cmd)
 
 for rel in [
@@ -123,8 +118,11 @@ for command in [
     "clang",
     "clang++",
 ]:
-    add_command_version(command)
+    add_command(command)
 
+pathlib.Path(sys.argv[3]).write_text(
+    json.dumps(input_hashes, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+)
 print(h.hexdigest()[:32])
 PY
 }
@@ -221,12 +219,13 @@ prepare_self_ignored_dir() {
 prepare_self_ignored_dir ".competitive-verifier/bundled"
 prepare_self_ignored_dir ".competitive-verifier/cache"
 
-VERIFY_INPUT_CACHE_KEY="$(compute_local_verify_input_key)"
-LOCAL_CACHE_DIR="$LOCAL_REPO_CACHE_DIR/$VERIFY_INPUT_CACHE_KEY"
-LOCAL_PREV_RESULT="$LOCAL_CACHE_DIR/merged-result.json"
-
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/niche-library-local-verify.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
+
+FINGERPRINT_INPUTS="$TMP_DIR/fingerprint-inputs.json"
+VERIFY_INPUT_CACHE_KEY="$(compute_local_verify_input_key "$FINGERPRINT_INPUTS")"
+LOCAL_CACHE_DIR="$LOCAL_REPO_CACHE_DIR/$VERIFY_INPUT_CACHE_KEY"
+LOCAL_PREV_RESULT="$LOCAL_CACHE_DIR/merged-result.json"
 
 VERIFY_FILES="$TMP_DIR/verify_files.json"
 RESULT_ROOT="$TMP_DIR/results"
@@ -304,6 +303,7 @@ MERGED_TMP="$TMP_DIR/merged-result.json"
 if [[ "$SAVE_RESULT" == "true" ]]; then
   mkdir -p "$LOCAL_CACHE_DIR"
   cp "$MERGED_TMP" "$LOCAL_PREV_RESULT"
+  cp "$FINGERPRINT_INPUTS" "$LOCAL_CACHE_DIR/fingerprint-inputs.json"
   cat > "$LOCAL_CACHE_DIR/fingerprint.txt" <<EOF
 repository=$ROOT
 repository_key=$REPO_CACHE_KEY
