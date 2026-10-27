@@ -79,6 +79,8 @@ jobs:
           python-version: "3.13"
       - name: Test local verify cache
         run: uv run --locked python .github/scripts/test_local_verify.py
+      - name: Check uv.lock revision
+        run: uv run --locked python .github/scripts/check_uv_lock_revision.py
   setup:
     runs-on: ubuntu-latest
     timeout-minutes: 30
