@@ -27,4 +27,4 @@ quote-style = "preserve"
 extend-select = ["I"]
 
 [tool.uv.sources]
-competitive-verifier = { git = "https://github.com/NotLeonian/competitive-verifier", rev = "a9e99106d4351cd522f9c049875e0cbf21108bef" }
+competitive-verifier = { git = "https://github.com/NotLeonian/competitive-verifier", rev = "0f3a8b2ff53c2c40020c1577dcbc55866fcac9b7" }
