@@ -86,7 +86,9 @@ C++ の実装では、少なくとも次の点を満たしてください。
 C++ のソースコードは、[.clang-format](.clang-format) に従い clang-format 20 でフォーマットしてください。
 フォーマットされていない場合、CI の formatting check が通りません。
 
-clang-format, clang-tidy, clangd は uv で管理し、メジャーバージョンを 20 に統一します。clangd-tidy も uv で管理しますが、独自にバージョンが付けられています。インストールと各ツールの使い方は [README.md](README.md) の「C++ の開発ツール」の節を参照してください。
+clang-format, clang-tidy, clangd は uv で管理し、メジャーバージョンを 20 に統一します。
+clangd-tidy も uv で管理しますが、独自にバージョンが付けられています。
+インストールと各ツールの使い方は [README.md](README.md) の「C++ の開発ツール」の節を参照してください。
 
 ローカルで verify とフォーマットの確認を行う場合は、次のコマンドを使用できます。
 
