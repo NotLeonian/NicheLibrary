@@ -114,6 +114,11 @@
 ## ドキュメント（共通）
 
 - マークダウンとして記述する。
+- 箇条書きでない文章は、1 文ごとに改行する。
+  - なお、これはマークダウンソースにおいて改行するという意味で、レンダリング結果に改行を入れなければならないという意味ではない。
+  - 改段落でない位置で改行するかどうかは自由とする。
+- レンダリング結果について、改段落でない改行を入れたい場合には `  ` を使用する。
+- レンダリング結果について、改段落を入れたい場合には空行を使用する（`<br>` などでない）。
 - Prettier を用いてフォーマットする。
 - 番号なし箇条書きは `- ` とする（`* ` や `   -  ` などでない）。
 - 番号付き箇条書きは常に `1. ` とする（`2. ` 以降は使用しない）。
@@ -163,6 +168,7 @@
 - リポジトリ内のファイルやディレクトリのパスを、バッククォートで囲まない。
 - リポジトリ内のディレクトリのパスは、末尾に `/` を付けて記述する。
 - リポジトリ内のファイルやディレクトリのパスは、`[path/to/file](path/to/file)` の形でリンクにする。
+  - ただし、マークダウンファイルの 1 行目のタイトルが自身のファイル名になっている場合は除く。
 - リンクの表示文字列がリポジトリ内のファイルやディレクトリのパスである場合は、リンク先にも全く同じパスを使用する（先頭の `./` の有無や末尾の `/` の有無も一致させる）。
   - `[CC0-1.0 license](LICENSE)` のように、パスでない文字列がリポジトリ内の特定のファイルやディレクトリのパスにリンクされていてもよい。
 
@@ -170,6 +176,8 @@
 
 - [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) は、[pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` で、`rev` に 40 文字の commit SHA を指定するか、`tag` にタグ名を指定して固定する（`branch` など、更新される可能性がある参照を指定しない）。
 - [.github/workflows/verify.yml](.github/workflows/verify.yml) には、[NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) の commit SHA やタグを直接書かない。
+- clang-format, clang-tidy, clangd は [pyproject.toml](pyproject.toml) の `dev` グループでメジャーバージョンを 20 に制限し、[uv.lock](uv.lock) で具体的なバージョンを固定する。
+- [.github/dependabot.yml](.github/dependabot.yml) では、上記 4 つのツールのバージョン更新を 1 つの PR にまとめ、clang-format, clang-tidy, clangd のメジャーバージョンを上げる更新を除外する。
 
 ## 設定ファイルなど
 
