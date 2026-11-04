@@ -1,7 +1,7 @@
 #ifndef MATH_MATRIX_DETERMINANT_OF_LINEAR_MATRIX_POLYNOMIAL_HPP
 #define MATH_MATRIX_DETERMINANT_OF_LINEAR_MATRIX_POLYNOMIAL_HPP
 
-// 1 次行列多項式 det(M0 + x M1) を係数列として求める。
+// 1 次行列多項式 M0 + x M1 の行列式 det(M0 + x M1) を係数列として求める。
 // M0, M1 は体上の N×N 行列である。
 // 多項式は a[0] + a[1]x + ... + a[N]x^N の昇順で返す。
 // M1 を掃き出して I にし、det(xI + A) を特性多項式に帰着させる。

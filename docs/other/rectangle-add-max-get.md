@@ -18,7 +18,7 @@ documentation_of: other/rectangle-add-max-get.hpp
 ## 使い方
 
 以降、`lower_y` が表す関数を $f$ 、`upper_y` が表す関数を $g$ とする。
-可変 y 範囲を受け取る API は、各整数 $x$ について、幅 $1$ の半開長方形 $[x,x+1)\times[f(x),g(x))$ を計算対象とする。
+x 座標に応じて y 座標の範囲を指定する API は、各整数 $x$ について、幅 $1$ の半開長方形 $[x,x+1)\times[f(x),g(x))$ を計算対象とする。
 
 - `RectangleAddMaxGet<T, C>()`
   - 座標圧縮を行わない `RectangleAddMaxGet` を空の状態で構築する。
@@ -65,7 +65,7 @@ documentation_of: other/rectangle-add-max-get.hpp
   - 備考: 追加した各長方形と $[l,r)\times[d,u)$ の共通部分だけを計算に含める。
 
 - `template <class Lower, class Upper> std::tuple<C, T, T> calc_max_lexicographically_minimum_point(T l, T r, Lower lower_y, Upper upper_y) const`
-  - $l\le x<r$ である各整数 $x$ について指定した可変 y 範囲内で、重みの総和の最大値と、その最大値を達成する辞書順最小の整数格子点を返す。
+  - $l\le x<r$ である各整数 $x$ について指定した y 座標の範囲内で、重みの総和の最大値と、その最大値を達成する辞書順最小の整数格子点を返す。
   - `RectangleAddMaxGet` のみで使える。
   - 返り値は $(\text{最大値},\,x\text{座標},\,y\text{座標})$ である。
   - 前提: $l<r$ 。
@@ -85,7 +85,7 @@ documentation_of: other/rectangle-add-max-get.hpp
   - 備考: 右端と上端を含まないため、半開長方形全体で最大値を達成する場合の辞書順最大の整数格子点は $(r-1,u-1)$ である。
 
 - `template <class Lower, class Upper> std::tuple<C, T, T> calc_max_lexicographically_maximum_point(T l, T r, Lower lower_y, Upper upper_y) const`
-  - $l\le x<r$ である各整数 $x$ について指定した可変 y 範囲内で、重みの総和の最大値と、その最大値を達成する辞書順最大の整数格子点を返す。
+  - $l\le x<r$ である各整数 $x$ について指定した y 座標の範囲内で、重みの総和の最大値と、その最大値を達成する辞書順最大の整数格子点を返す。
   - `RectangleAddMaxGet` のみで使える。
   - 返り値は $(\text{最大値},\,x\text{座標},\,y\text{座標})$ である。
   - 前提: $l<r$ 。
@@ -109,7 +109,7 @@ documentation_of: other/rectangle-add-max-get.hpp
   - 備考: 境界上で重みの総和が変わっても、境界の面積は $0$ なので返り値の面積には影響しない。
 
 - `template <class T2 = T, class Lower, class Upper> std::pair<C, T2> calc_max_area(T l, T r, Lower lower_y, Upper upper_y) const`
-  - $l\le x<r$ である各整数 $x$ について指定した可変 y 範囲内で、重みの総和の最大値と、その最大値を達成する領域の面積を返す。
+  - $l\le x<r$ である各整数 $x$ について指定した y 座標の範囲内で、重みの総和の最大値と、その最大値を達成する領域の面積を返す。
   - `RectangleAddMaxGet` のみで使える。
   - 返り値は $(\text{最大値},\,\text{面積})$ である。
   - 前提: $l<r$ 。
@@ -125,12 +125,12 @@ documentation_of: other/rectangle-add-max-get.hpp
 計算対象が長方形の場合、その左端を $l$ 、下端を $d$ 、右端を $r$ 、上端を $u$ とし、幅を $W=r-l$ 、高さを $H=u-d$ とする。
 無引数の `calc_...()` では、追加した長方形全体の外接長方形を計算対象とする。
 
-可変 y 範囲では $W=r-l$ とし、 $f(x)<g(x)$ となる整数 $x$ だけを対象として、y 座標全体の幅を $Y=\max_x g(x)-\min_x f(x)$ とする。
+x 座標に応じて y 座標の範囲を指定する場合は $W=r-l$ とし、 $f(x)<g(x)$ となる整数 $x$ だけを対象として、y 座標全体の幅を $Y=\max_x g(x)-\min_x f(x)$ とする。
 `C`, `T2` の演算と $f, g$ の各評価には定数時間がかかるものとする。
 
 - `add_rectangle`: 償却時間 $O(1)$
 - 追加した長方形を保持する空間: $O(N)$
 - `CompressedRectangleAddMaxGet` の各 `calc_...`: 時間 $O(N\log N)$ 、追加の空間 $O(N)$
 - `RectangleAddMaxGet` で計算対象が長方形である各 `calc_...`: 時間 $O(H+W+N\log H)$ 、追加の空間 $O(H+W+N)$
-- `RectangleAddMaxGet` で可変 y 範囲を指定する各 `calc_...`: 時間 $O(Y+(W+N)\log Y)$ 、追加の空間 $O(Y+W+N)$
-- `RectangleAddMaxGet` では、計算対象が長方形の場合は $W, H$ が `int` の範囲に収まり、可変 y 範囲の場合は $W, Y$ が `int` の範囲に収まる必要がある。
+- `RectangleAddMaxGet` で x 座標に応じて y 座標の範囲を指定する各 `calc_...`: 時間 $O(Y+(W+N)\log Y)$ 、追加の空間 $O(Y+W+N)$
+- `RectangleAddMaxGet` では、計算対象が長方形の場合は $W, H$ が `int` の範囲に収まり、x 座標に応じて y 座標の範囲を指定する場合は $W, Y$ が `int` の範囲に収まる必要がある。
