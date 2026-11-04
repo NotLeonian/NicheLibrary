@@ -176,6 +176,8 @@
 
 - [NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) は、[pyproject.toml](pyproject.toml) の `[tool.uv.sources].competitive-verifier` で、`rev` に 40 文字の commit SHA を指定するか、`tag` にタグ名を指定して固定する（`branch` など、更新される可能性がある参照を指定しない）。
 - [.github/workflows/verify.yml](.github/workflows/verify.yml) には、[NotLeonian/competitive-verifier](https://github.com/NotLeonian/competitive-verifier) の commit SHA やタグを直接書かない。
+- clang-format, clang-tidy, clangd は [pyproject.toml](pyproject.toml) の `dev` グループでメジャーバージョンを 20 に制限し、[uv.lock](uv.lock) で具体的なバージョンを固定する。
+- [.github/dependabot.yml](.github/dependabot.yml) では、上記 4 つのツールのバージョン更新を 1 つの PR にまとめ、clang-format, clang-tidy, clangd のメジャーバージョンを上げる更新を除外する。
 
 ## 設定ファイルなど
 
