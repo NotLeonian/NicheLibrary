@@ -30,9 +30,13 @@ C++ library for competitive programming
 
 ## GitHub Actions での verify
 
-[.github/workflows/verify.yml](.github/workflows/verify.yml) は、PR またはブランチごとに並行して実行できます。同じ PR またはブランチで新しい実行が始まると、古い実行をキャンセルします。
+[.github/workflows/verify.yml](.github/workflows/verify.yml) は、PR またはブランチごとに並行して実行できます。
+同じ PR またはブランチで新しい実行が始まると、古い実行をキャンセルします。
 
-CI では、過去の verify 結果をキャッシュから復元し、ソースコードとその依存先に変更がない場合は再利用します。キャッシュは、OS、competitive-verifier の解決済み commit SHA、[.competitive-verifier/config.toml](.competitive-verifier/config.toml)、[.github/scripts/resolve_verify_files.sh](.github/scripts/resolve_verify_files.sh)、[.github/scripts/run_verify_split.sh](.github/scripts/run_verify_split.sh) によって区別します。ワークフローの整形チェックやドキュメント生成に関する変更では、過去の verify 結果を引き続き利用できます。CI で使う competitive-verifier は commit SHA を指定して導入するため、[uv.lock](uv.lock) や [pyproject.toml](pyproject.toml) の開発用依存関係だけが変わっても、結果を再利用できます。
+CI では、過去の verify 結果をキャッシュから復元し、ソースコードとその依存先に変更がない場合は再利用します。
+キャッシュは、OS、competitive-verifier の解決済み commit SHA、[.competitive-verifier/config.toml](.competitive-verifier/config.toml)、[.github/scripts/resolve_verify_files.sh](.github/scripts/resolve_verify_files.sh)、[.github/scripts/run_verify_split.sh](.github/scripts/run_verify_split.sh) によって区別します。
+ワークフローの整形チェックやドキュメント生成に関する変更では、過去の verify 結果を引き続き利用できます。
+CI で使う competitive-verifier は commit SHA を指定して導入するため、[uv.lock](uv.lock) や [pyproject.toml](pyproject.toml) の開発用依存関係だけが変わっても、結果を再利用できます。
 
 キャッシュが見つからない場合、月次の定期実行、手動実行で `full_verify` を指定した場合は、全ての verify を実行します。
 
@@ -49,10 +53,15 @@ bash .github/scripts/local_verify.sh
 キャッシュは `${XDG_CACHE_HOME:-$HOME/.cache}/niche-library/local-verify/` 配下に保存され、リポジトリのパス、competitive-verifier の設定、使用するスクリプト、環境変数、コンパイラの情報から計算したフィンガープリントごとに分けられます。  
 [.competitive-verifier/config.toml](.competitive-verifier/config.toml)、[pyproject.toml](pyproject.toml)、[uv.lock](uv.lock)、使用するスクリプト、`CXXFLAGS` などの環境変数、コンパイラのいずれかが変わった場合、以前の verify 結果は `prev-result` として再利用されません。
 
-コンパイラについては、実行ファイルのパスと内容からハッシュを計算します。`--version` の応答時間や出力、実行ファイルの更新時刻はキーに含めません。キーが変わった理由を調べられるよう、各入力のハッシュもキャッシュ内の `fingerprint-inputs.json` に保存します。
+コンパイラについては、実行ファイルのパスと内容からハッシュを計算します。
+`--version` の応答時間や出力、実行ファイルの更新時刻はキーに含めません。
+キーが変わった理由を調べられるよう、各入力のハッシュもキャッシュ内の `fingerprint-inputs.json` に保存します。
 
-Git がまだ追跡していない verify ソースコードや依存先も対象に含めます。ただし、[.gitignore](.gitignore) などで無視される未追跡ファイルは除外します。ファイルをステージする必要はありません。  
-verify ソースコードと依存先の内容をハッシュで比較するため、更新時刻が変わらない編集でも、内容が変われば verify を再実行します。内容が変わらなければ、未追跡ファイルについても前回までの成功した結果を再利用できます。
+Git がまだ追跡していない verify ソースコードや依存先も対象に含めます。
+ただし、[.gitignore](.gitignore) などで無視される未追跡ファイルは除外します。
+ファイルをステージする必要はありません。  
+verify ソースコードと依存先の内容をハッシュで比較するため、更新時刻が変わらない編集でも、内容が変われば verify を再実行します。
+内容が変わらなければ、未追跡ファイルについても前回までの成功した結果を再利用できます。
 
 GitHub Actions での verify には専用のキャッシュを使用し、ローカル verify のキャッシュは参照しません。
 
@@ -118,10 +127,11 @@ git ls-files -z --cached --others --exclude-standard -- '*.py' |
   xargs -0 -r uv run mypy
 ```
 
-## Contributing
+## 貢献について
 
 不具合を報告または修正する Issue や Pull Request を歓迎します。  
-新しいデータ構造やアルゴリズムを追加する Pull Request も、条件を満たす場合は受け入れることがあります。ただし、追加を求める Issue には基本的に対応しません。
+新しいデータ構造やアルゴリズムを追加する Pull Request も、条件を満たす場合は受け入れることがあります。
+ただし、追加を求める Issue には基本的に対応しません。
 
 詳しくは [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
 
