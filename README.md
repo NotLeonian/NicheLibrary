@@ -36,6 +36,31 @@ CI では、過去の verify 結果をキャッシュから復元し、ソース
 
 キャッシュが見つからない場合、月次の定期実行、手動実行で `full_verify` を指定した場合は、全ての verify を実行します。
 
+## C++ の開発ツール
+
+次のコマンドで、clang-format, clang-tidy, clangd, clangd-tidy をインストールできます。
+
+```sh
+uv sync --locked --group dev
+```
+
+clang-format, clang-tidy, clangd のメジャーバージョンは 20 に統一します。clangd-tidy は独自にバージョンが付けられています。各ツールのバージョンは [pyproject.toml](pyproject.toml) と [uv.lock](uv.lock) で管理します。C++ のコンパイラと標準ライブラリは別途用意してください。
+
+C++ のソースコードのフォーマットは、CI とローカルのどちらでも次のコマンドで確認できます。通常は uv が管理する clang-format を使用します。別の実行ファイルを指定する場合は、`CLANG_FORMAT_BIN` にそのパスを設定してください。
+
+```sh
+bash .github/scripts/check_format.sh
+```
+
+clang-tidy と clangd-tidy は、対象のファイルを指定して実行できます。[compile_flags.txt](compile_flags.txt) に記載した C++20 などのオプションを使用します。
+
+```sh
+uv run --locked clang-tidy structure/others/dynamic-median.hpp
+uv run --locked clangd-tidy structure/others/dynamic-median.hpp
+```
+
+clangd-tidy は clangd を使って診断を取得します。clang-tidy の一部の検査と `--fix` には対応していないため、対応していない検査や自動修正には clang-tidy を使用してください。エディタでも uv が管理する clangd を使うように設定すると、同じバージョンで診断を確認できます。
+
 ## ローカルでの verify
 
 ローカルでの verify は、以下のコマンドで行えます。

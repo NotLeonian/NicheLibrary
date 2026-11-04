@@ -8,6 +8,10 @@ dependencies = []
 
 [dependency-groups]
 dev = [
+    "clang-format>=20,<21",
+    "clang-tidy>=20,<21",
+    "clangd>=20,<21",
+    "clangd-tidy>=1.1.1",
     "competitive-verifier",
     "mypy>=2.3.0",
     "pyright>=1.1.411",
