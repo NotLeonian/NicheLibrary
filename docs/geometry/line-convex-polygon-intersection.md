@@ -15,7 +15,7 @@ documentation_of: geometry/line-convex-polygon-intersection.hpp
 - 座標型が整数ならば、内部計算に用いる型を `T` とすると、返り値の各要素は `LineConvexHullIntersectionPoint<T>` になる。
 - 標準の 64 bit 以下の符号付き整数型を座標型にすると、既定で `NicheLibrary::Int128` を内部計算に用いる。
 - 内部計算の型は明示できる。
-- `std::complex` ベースの点型と `.x`, `.y` ベースの点型の両方を想定している。
+- 点を `std::complex` で表す型と、座標を `.x`, `.y` で取得できる型の両方を想定している。
 
 ## 使い方
 

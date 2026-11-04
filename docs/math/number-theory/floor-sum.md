@@ -16,7 +16,7 @@ documentation_of: math/number-theory/floor-sum.hpp
   - 前提: `std::numeric_limits<T>::is_integer` が `true` である。
   - 前提: $n\ge 0,\;m>0$ 。
   - 備考: `T` が符号付きのとき、 $a,b$ は負でもよい。戻り値も負になり得る。
-  - 備考: 中間計算と戻り値が `T` の範囲に収まる必要がある。
+  - 備考: 計算途中の値と戻り値が `T` の範囲に収まる必要がある。
 
 ## 計算量
 
